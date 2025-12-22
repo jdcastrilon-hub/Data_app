@@ -1,0 +1,209 @@
+<form [formGroup]="formulario">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>TRASLADO ENTRE BODEGAS</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales">
+
+                <div class="bloque">
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="15" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+                                <mat-label>Fecha Movimiento</mat-label>
+                                <input matInput [matDatepicker]="picker" placeholder="dd/mm/yyyy"
+                                    formControlName="fechaMovimiento">
+                                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="15" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>No. Transaccion</mat-label>
+                                <input matInput formControlName="nroDocum">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="70" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Observaciones</mat-label>
+                                <input matInput>
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                @if (!isEditMode){
+                                <mat-label>Bodega Origen</mat-label>
+                                }
+                                <mat-select [formControl]="SelectBodegasOrigenControl" required>
+                                    @for (obj_bodega of list_bodegas_Origen; track obj_bodega) {
+                                    <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectBodegasOrigenControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una Bodega</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                @if (!isEditMode){
+                                <mat-label>Estado Origen</mat-label>
+                                }
+                                <mat-select [formControl]="SelecEstadoOrigenControl" required>
+                                    @for (obj_estado of list_estados_Origen; track obj_estado) {
+                                    <mat-option [value]="obj_estado">{{obj_estado.nomEstado}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelecEstadoOrigenControl.hasError('required')) {
+                                <mat-error>Debe seleccionar un estado</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                @if (!isEditMode){
+                                <mat-label>Bodega Destino</mat-label>
+                                }
+                                <mat-select [formControl]="SelectBodegasDestinoControl" required>
+                                    @for (obj_bodega of list_bodegas_Destino; track obj_bodega) {
+                                    <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectBodegasDestinoControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una Bodega</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                @if (!isEditMode){
+                                <mat-label>Estado Destgino</mat-label>
+                                }
+                                <mat-select [formControl]="SelecEstadoDestinoControl" required>
+                                    @for (obj_estado of list_estados_Destino; track obj_estado) {
+                                    <mat-option [value]="obj_estado">{{obj_estado.nomEstado}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelecEstadoDestinoControl.hasError('required')) {
+                                <mat-error>Debe seleccionar un estado</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+                    <p></p>
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+
+                        <div fxFlex="50" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Filtro Articulo</mat-label>
+                                <input type="text" placeholder="Código o Nombre" matInput [formControl]="searchControl"
+                                    [matAutocomplete]="autoArticulo"> </mat-form-field>
+
+                            <mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida"
+                                (optionSelected)="onArticuloSelected($event)">
+
+                                <mat-option *ngFor="let articulo of (filteredArticulos | async)" [value]="articulo">
+                                    {{ mascaraSalida(articulo) }} </mat-option>
+                            </mat-autocomplete>
+                        </div>
+
+                    </div>
+
+                    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 tabla-compacta"
+                        formArrayName="detalles">
+                        <ng-container matColumnDef="id">
+                            <th mat-header-cell *matHeaderCellDef>Articulo</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('codigoArticulo')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="codigoArticulo">
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="name">
+                            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('nombreArticulo')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="nombreArticulo">
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="ubicacion">
+                            <th mat-header-cell *matHeaderCellDef>Ubicacion</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('idUbicacion')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="idUbicacion">
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="Lote">
+                            <th mat-header-cell *matHeaderCellDef>Lote</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('idLote')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="idLote">
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="stock">
+                            <th mat-header-cell *matHeaderCellDef>Stock</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('cantDisp')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="cantDisp">
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="cantidad">
+                            <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input matInput formControlName="cantidad" placeholder="Nombre" />
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('required')">
+                                    La cantidad es obligatoria.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('min')">
+                                    La cantidad debe ser mayor a 0.
+                                </mat-error>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="actions">
+                            <th mat-header-cell *matHeaderCellDef> Acciones </th>
+                            <td mat-cell *matCellDef="let row; let i = index">
+                                <button mat-icon-button color="primary" type="button"
+                                   >
+                                    <mat-icon>remove</mat-icon>
+                                </button>
+
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                    </table>
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button">Salir</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

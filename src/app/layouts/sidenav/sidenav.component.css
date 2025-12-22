@@ -1,0 +1,10 @@
+.mat-tree-node {
+    cursor: pointer;
+  }
+
+ .mat-tree li {
+    list-style-type: none; /* ❌ Quita el punto */
+    list-style-type: none;
+    margin-left: 10px;
+  
+  }

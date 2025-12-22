@@ -1,0 +1,17 @@
+
+:host {
+    // 1. Fondo gris fuera de la tarjeta
+    display: block;
+    background-color: #e2e2e2;
+
+    // 2. Padding de 8px en todos los ángulos
+    padding: 0px;
+    min-height: 100vh; // Opcional: asegura que el fondo cubra toda la altura
+
+}
+
+
+mat-toolbar {
+    height: 45px !important;
+    min-height: 45px !important;
+}

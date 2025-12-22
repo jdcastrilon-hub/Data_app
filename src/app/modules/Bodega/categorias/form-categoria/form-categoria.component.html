@@ -1,0 +1,98 @@
+<form [formGroup]="formulario">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>REGISTRO DE CATEGORIAS</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales" >
+
+                <div class="bloque">
+                    <div fxLayout="row" fxLayout.lt-md="column" 
+                    fxLayoutAlign="space-between stretch" fxLayoutGap="10px">
+                        <div fxFlex="30" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                @if (!isEditMode){
+                                <mat-label>Empresa</mat-label>
+                                }
+                                <mat-select [formControl]="SelectEmpresaControl" required>
+                                    @for (obj_empresa of list_empresas; track obj_empresa) {
+                                    <mat-option [value]="obj_empresa">{{obj_empresa.nomEmp}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectEmpresaControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una empresa</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="30" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Codigo Categoria</mat-label>
+                                <input matInput formControlName="codCategoria">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="40" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Nombre Categoria</mat-label>
+                                <input matInput formControlName="nomCategoria">
+                            </mat-form-field>
+                        </div>
+
+                    </div>
+                    
+                    <p>Lista de Subcategorías</p>
+                    <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+                    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 tabla-compacta"
+                        formArrayName="subCategorias">
+                        <ng-container matColumnDef="id">
+                            <th mat-header-cell *matHeaderCellDef>SubCategoria</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input matInput formControlName="codSubCategoria" placeholder="Código" />
+                                <mat-error
+                                    *ngIf="row.get('codSubCategoria')?.hasError('required') && (row.get('codSubCategoria')?.touched || row.get('codSubCategoria')?.dirty)">
+                                    Codigo SubCategoria Obligatorio
+                                </mat-error>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="name">
+                            <th mat-header-cell *matHeaderCellDef>Descripcion</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input matInput formControlName="nomSubCategoria" placeholder="Nombre" />
+                                <mat-error
+                                    *ngIf="row.get('nomSubCategoria')?.hasError('required') && (row.get('nomSubCategoria')?.touched || row.get('nomSubCategoria')?.dirty)">
+                                    Nombre SubCategoria Obligatorio
+                                </mat-error>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="actions">
+                            <th mat-header-cell *matHeaderCellDef> Acciones </th>
+                            <td mat-cell *matCellDef="let row; let i = index">
+                                <button mat-icon-button color="primary" type="button" (click)="agregarSubCategoria()">
+                                    <mat-icon>add</mat-icon>
+                                </button>
+                                <button mat-icon-button color="primary" type="button" (click)="eliminarSubCategoria(i)">
+                                    <mat-icon>remove</mat-icon>
+                                </button>
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row *matHeaderRowDef="['id', 'name','actions']"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ['id', 'name','actions'];"></tr>
+                    </table>
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button" (click)="salirSinGuardar()">Salir</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

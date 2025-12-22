@@ -1,0 +1,43 @@
+<main class="contenido">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>TRASLADO ENTRE BODEGAS</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-actions class="mat-accion">
+            <button mat-raised-button color="primary" routerLink="/trasladobodega/new">Nuevo</button>
+        </mat-card-actions>
+        <mat-card-content class="mat-content">
+
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+
+                    <ng-container matColumnDef="codigo">
+                        <th mat-header-cell *matHeaderCellDef>Codigo</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nroDocum}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="nombre">
+                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <td mat-cell *matCellDef="let element">{{ element.fechaMovimiento }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button>
+                                <mat-icon>edit</mat-icon>
+                            </button>
+
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="['codigo', 'nombre', 'actions']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['codigo', 'nombre', 'actions'];"></tr>
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+
+
+        </mat-card-content>
+    </mat-card>
+</main>

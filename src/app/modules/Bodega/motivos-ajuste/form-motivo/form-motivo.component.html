@@ -1,0 +1,52 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>REGISTRO DE MOTIVOS DE STOCK</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales">
+
+                <div class="bloque">
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="35" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Codigo Motivo</mat-label>
+                                <input matInput formControlName="codMotivo">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="35" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Nombre Motivo</mat-label>
+                                <input matInput formControlName="nomMotivo">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="30" fxFlex.lt-md="100%">
+                            <mat-radio-group aria-label="Select an option" color="primary"
+                            formControlName="signo">
+                                <mat-radio-button value="1">Ingreso</mat-radio-button>
+                                <mat-radio-button value="-1">Salida</mat-radio-button>
+                            </mat-radio-group>
+                        </div>
+
+                    </div>
+
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button" (click)="salirSinGuardar()">Salir</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

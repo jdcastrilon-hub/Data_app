@@ -1,0 +1,11 @@
+<mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+    <mat-label>Estado</mat-label>
+    <mat-select [formControl]="SelecEstadoControl" required (selectionChange)="onSelectionChange($event)">
+        @for (obj_estado of list_estados; track obj_estado) {
+        <mat-option [value]="obj_estado">{{obj_estado.nomEstado}}</mat-option>
+        }
+    </mat-select>
+    @if (SelecEstadoControl.hasError('required')) {
+    <mat-error>Debe seleccionar un estado</mat-error>
+    }
+</mat-form-field>

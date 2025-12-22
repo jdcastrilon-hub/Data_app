@@ -1,0 +1,141 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>AJUSTE DE STOCK</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales" style="background-color: brown;">
+                <div class="bloque">
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <combo-bodega [editMode]="isEditMode" [input_objeto]="objeto"
+                                (bodegaSeleccionada)="recibirBodega($event)"></combo-bodega>
+                        </div>
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Motivo</mat-label>
+                                <mat-select [formControl]="SelecMotivosControl" required>
+                                    @for (obj_motivos of lista_motivos; track obj_motivos) {
+                                    <mat-option [value]="obj_motivos">{{obj_motivos.nomMotivo}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelecMotivosControl.hasError('required')) {
+                                <mat-error>Debe seleccionar un motivo</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <combo-estadostock [editMode]="isEditMode" [input_objeto]="objeto"
+                                (estadoSeleccionado)="recibirEstado($event)"></combo-estadostock>
+                        </div>
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+                                <mat-label>Fecha Movimiento</mat-label>
+                                <input matInput [matDatepicker]="picker" placeholder="dd/mm/yyyy"
+                                    formControlName="fechaMovimiento">
+                                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>No.</mat-label>
+                                <input matInput formControlName="nroDocum">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="start stretch" fxLayoutGap="5px">
+
+                        <div fxFlex="40" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto form-field-compacto mat-form-field"
+                                appearance="outline">
+                                <mat-label>Observacion</mat-label>
+                                <input matInput formControlName="observacion">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+
+                    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 tabla-compacta"
+                        formArrayName="detalles">
+                        <ng-container matColumnDef="id">
+                            <mat-header-cell *matHeaderCellDef> Artículo </mat-header-cell>
+                            <mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <articulo-autocomplet formControlName="search"
+                                    (articuloSeleccionado)="onArticuloChange($event, i)"></articulo-autocomplet>
+
+                            </mat-cell>
+                        </ng-container>
+                        <ng-container matColumnDef="ubicacion">
+                            <th mat-header-cell *matHeaderCellDef>Ubicacion</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('idUbicacion')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="idUbicacion">
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="Lote">
+                            <th mat-header-cell *matHeaderCellDef>Lote</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('idLote')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="idLote">
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="stock">
+                            <th mat-header-cell *matHeaderCellDef>Stock</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('cantDisp')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="cantDisp">
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="cantidad">
+                            <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input matInput formControlName="cantidad" placeholder="Nombre" />
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('required')">
+                                    La cantidad es obligatoria.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('min')">
+                                    La cantidad debe ser mayor a 0.
+                                </mat-error>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="actions">
+                            <th mat-header-cell *matHeaderCellDef> Acciones </th>
+                            <td mat-cell *matCellDef="let row; let i = index">
+                                <button mat-icon-button color="primary" type="button"
+                                    (click)="eliminarLineaDetalles(i)">
+                                    <mat-icon>remove</mat-icon>
+                                </button>
+
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                    </table>
+                </div>
+
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" routerLink="/categoria/nuevo">Salir</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

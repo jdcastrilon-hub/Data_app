@@ -1,0 +1,166 @@
+// 2. Carga tu archivo de tema personalizado (Usar @import para evitar el conflicto)
+// La sintaxis @import todavía funciona para archivos locales.//
+@use 'themes/theme-material.scss';
+
+/* ===== Reset base del navegador
+quitar bordes iniciales de la pagina
+===== */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
+
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+
+
+/* ======================================================
+AJUSTE FINAL PARA COMPACTAR LA FILA COMPLETA DEL HEADER
+====================================================== */
+
+/* 1. COMPACTAR LA FILA COMPLETA DEL ENCABEZADO */
+.mat-mdc-table .mat-mdc-header-row {
+    /* Define la altura mínima deseada para la fila */
+    min-height: 36px !important;
+    /* Prueba con 36px o incluso 32px */
+    height: 36px !important;
+    /* Asegura que la altura sea fija */
+}
+
+/* 2. Mantener la compactación de las celdas (lo que ya tenías) */
+.mat-mdc-table .mat-mdc-header-row .mat-mdc-header-cell {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    font-size: 13px;
+}
+
+/* 3. Compactar las filas de datos */
+.mat-mdc-table .mat-mdc-row .mat-mdc-cell {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+/* ======================================================
+AJUSTE FINAL PARA EL CONTENIDO DENTRO DE LAS CELDAS (td)
+====================================================== */
+
+/* 1. COMPACTAR LAS CELDAS DE DATOS (mat-cell) - Lo que ya tenías */
+.mat-mdc-table .mat-mdc-row .mat-mdc-cell {
+    /* Mantenemos el padding bajo */
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    font-size: 12px;
+
+    /* [NUEVO] Asegurar que el texto esté centrado verticalmente */
+    line-height: 1.2;
+
+    /* [NUEVO] Esto a veces ayuda a contener el contenido interno */
+    overflow: hidden;
+    white-space: nowrap;
+    /* Evita que el texto envuelva a la siguiente línea */
+}
+
+/* 2. COMPACTAR LA FILA COMPLETA DE DATOS (mat-row) - Lo que ya tenías */
+.mat-mdc-table .mat-mdc-row {
+    min-height: 36px !important;
+    height: 36px !important;
+}
+
+/* ======================================================
+AJUSTE CRÍTICO: CONTENEDOR DE ICONO (mat-icon-button)
+====================================================== */
+
+/* 1. Apuntar al botón de icono que contiene el ripple (mat-mdc-icon-button) */
+.mat-mdc-table .mat-mdc-row .mat-mdc-icon-button {
+    /* [CLAVE] Forzar el tamaño del botón (y su área de ripple) a un valor compacto */
+    width: 32px !important;
+    /* Ajustar el ancho del botón */
+    height: 32px !important;
+    /* Ajustar el alto del botón */
+
+    /* Eliminar cualquier margen que pueda estar forzando separación */
+    margin: 0 2px !important;
+    padding: 0 !important;
+}
+
+/* 2. Compactación de Iconos (mat-icon) - Lo que ya tenías, para seguridad */
+/* Si el ícono dentro del botón necesita ajuste */
+.mat-mdc-table .mat-mdc-row .mat-mdc-icon-button .mat-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    line-height: 18px !important;
+}
+
+/* 3. Mantenemos el min-height de la fila para que no se expanda por defecto */
+.mat-mdc-table .mat-mdc-row {
+    min-height: 36px !important;
+    height: 36px !important;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+
+//Ajuste para label de form-field
+.mdc-floating-label {
+    font-size: 16px !important;
+    font-weight: 300 !important;
+    font-family: 'Titillium Web', sans-serif !important;
+    color: #383838 !important;
+    /* opcional */
+}
+
+
+.mat-accion-botones {
+    gap: 5px; //Separacion entre botones
+}
+
+.mat-form-field {
+    width: 100%; //tomar el 100% del espacio del text
+}
+
+.form-field-date {
+    width: 100%; //tomar el 100% del espacio del text
+
+    // Ajusta la altura del ícono de toggle dentro del campo compacto
+    .mat-mdc-icon-button {
+        height: 45px; // Altura ligeramente menor para el botón (ajusta si es necesario)
+        width: 45px;
+        margin-left: 0;
+    }
+
+    // Ajusta el padding interno del prefijo/sufijo (donde se ubica el ícono)
+    .mat-mdc-form-field-icon-prefix,
+    .mat-mdc-form-field-icon-suffix {
+        padding-top: 0;
+        margin-top: -3px;
+        margin-bottom: 0;
+
+        // ⭐️ FIX: Asegura que el contenedor del ícono no tiene un margen que lo empuje ⭐️
+        // Esto revierte cualquier desplazamiento horizontal indeseado
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .mat-mdc-text-field-wrapper {
+        // Ajuste para el espacio interno del input si el ícono se mete demasiado
+        // Esto empuja el campo de texto lejos del ícono si se superponen.
+        padding-inline-end: 0.5em;
+    }
+}

@@ -1,0 +1,135 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>INVENTARIO STOCK</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales" style="background-color: brown;">
+                <div class="bloque">
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Empresa</mat-label>
+                                <mat-select [formControl]="SelectEmpresaControl" required>
+                                    @for (obj_empresa of list_empresas; track obj_empresa) {
+                                    <mat-option [value]="obj_empresa">{{obj_empresa.nombreEmpresa}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectEmpresaControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una empresa</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Sucursal</mat-label>
+                                <mat-select [formControl]="SelectSucursalControl" required>
+                                    <mat-option value="TODOS">TODOS</mat-option>
+                                    @for (obj_sucursal of list_sucursal; track obj_sucursal) {
+                                    <mat-option [value]="obj_sucursal">{{obj_sucursal.nomSucursal}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectSucursalControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una empresa</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Bodegas</mat-label>
+                                <mat-select [formControl]="SelectBodegasControl" required>
+                                    <mat-option value="TODOS">TODOS</mat-option>
+                                    @for (obj_bodega of list_bodegas; track obj_bodega) {
+                                    <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectBodegasControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una empresa</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Negocios</mat-label>
+                                <mat-select [formControl]="SelectNegociosControl" required>
+                                    <mat-option value="TODOS">TODOS</mat-option>
+                                    @for (obj_negocios of list_negocios; track obj_negocios) {
+                                    <mat-option [value]="obj_negocios">{{obj_negocios.nombreNegocio}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectNegociosControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una empresa</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Formato de Reporte</mat-label>
+                                <mat-select [formControl]="SelectFormatoControl" required>
+                                    @for (opciones of opcionesFormato; track opciones) {
+                                    <mat-option [value]="opciones">{{opciones}}</mat-option>
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="25" fxFlex.lt-md="100%">
+                            <button mat-raised-button color="primary" (click)="cargarReporte()">
+                                <mat-icon>download</mat-icon> Cargar Reporte
+                            </button>
+                        </div>
+                        <div fxFlex="50" fxFlex.lt-md="100%">
+
+                        </div>
+                    </div>
+                    <!--Sesion para tabla de articulos-->
+                    <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+                    <table mat-table [dataSource]="dataSource">
+
+                        <ng-container matColumnDef="bodega">
+                            <th mat-header-cell *matHeaderCellDef>Bodega</th>
+                            <td mat-cell *matCellDef="let element">{{ element.bodega}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="articulo">
+                            <th mat-header-cell *matHeaderCellDef>Articulo</th>
+                            <td mat-cell *matCellDef="let element">{{ element.codArticulo }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="nombre">
+                            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                            <td mat-cell *matCellDef="let element">{{ element.nomArticulo}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="unidad">
+                            <th mat-header-cell *matHeaderCellDef>Unidad</th>
+                            <td mat-cell *matCellDef="let element">{{ element.unidad }}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="estado">
+                            <th mat-header-cell *matHeaderCellDef>Estado</th>
+                            <td mat-cell *matCellDef="let element">{{ element.estado}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="cantidad">
+                            <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+                            <td mat-cell *matCellDef="let element">{{ element.cantidad }}</td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="['bodega', 'articulo', 'nombre','unidad','estado','cantidad']"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ['bodega', 'articulo', 'nombre','unidad','estado','cantidad'];"></tr>
+                    </table>
+                    <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                        [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+                </div>
+
+            </mat-tab>
+
+            <mat-tab label="Articulos" style="background-color: brown;">
+
+            </mat-tab>
+
+        </mat-tab-group>
+    </mat-card>
+
+</form>

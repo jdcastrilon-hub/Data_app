@@ -1,0 +1,33 @@
+:host {
+    // 1. Fondo gris fuera de la tarjeta
+    display: block;
+    background-color: #e2e2e2;
+
+    // 2. Padding de 8px en todos los ángulos
+    padding: 8px;
+
+}
+
+
+
+.bloque {
+    border: 1px solid #c5c5c5; // gris claro
+    //border-radius: 8px; // opcional: bordes redondeados
+    padding: 16px 16px 0px 16px;
+    background-color: #fcfcfc;
+}
+
+::ng-deep .mat-mdc-form-field {
+    --mat-form-field-container-text-font: 'Titillium Web', sans-serif !important; // change Input placeholder & value font-family
+    --mat-form-field-container-text-size: 16px; // change input lable font-size
+    --mat-form-field-container-text-tracking: 0.03125em; // change lable letter-spacing
+    --mat-form-field-container-text-weight: 400; // change lable font-weight
+    --mat-form-field-container-text-line-height: 24px; // change lable line-height
+
+    --mat-form-field-subscript-text-font: 'Titillium Web', sans-serif !important; // change Input hint font-family
+    --mat-form-field-subscript-text-size: 12px; // change input hint font-size
+    --mat-form-field-subscript-text-tracking: 0.033333333em; // change hint letter-spacing
+    --mat-form-field-subscript-text-weight: 400; // change hint font-weight
+    --mat-form-field-subscript-text-line-height: 20px; // change hint line-height
+
+}

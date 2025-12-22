@@ -1,0 +1,11 @@
+<mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+    <mat-label>Bodega</mat-label>
+    <mat-select [formControl]="SelecBodegaControl" required (selectionChange)="onSelectionChange($event)">
+        @for (obj_bodega of list_bodegas; track obj_bodega) {
+        <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
+        }
+    </mat-select>
+    @if (SelecBodegaControl.hasError('required')) {
+    <mat-error>Debe seleccionar una bodega</mat-error>
+    }
+</mat-form-field>

@@ -1,0 +1,123 @@
+<h2 mat-dialog-title>{{ data.titulo }}</h2>
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+  <mat-dialog-content class="mat-typography">
+    <div class="bloque">
+
+      <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+
+        <div fxFlex="10">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Tipo</mat-label>
+
+            <mat-select [formControl]="SelecTiposControl" required>
+              @for (obj_tipo of list_tipos; track obj_tipo) {
+              <mat-option [value]="obj_tipo">{{obj_tipo.codigoTipoDocumento}}</mat-option>
+              }
+
+            </mat-select>
+
+            @if (SelecTiposControl.hasError('required')) {
+            <mat-error>Debe seleccionar una empresa</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div fxFlex="20">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Numero.</mat-label>
+            <input matInput formControlName="codigoTitular">
+            <mat-error>Codigo requerido</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div fxFlex="25">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombres">
+            <mat-error>Codigo requerido</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div fxFlex="25">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Apellido</mat-label>
+            <input matInput formControlName="apellidos">
+            <mat-error>Codigo requerido</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div fxFlex="20">
+          <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+            <mat-label>Fecha Nacimiento</mat-label>
+            <input matInput [matDatepicker]="picker" placeholder="dd/mm/yyyy" formControlName="fechaNacimiento">
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+      </div>
+
+      <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+
+        <div fxFlex="10">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Sexo</mat-label>
+            <mat-select [formControl]="SelecSexoControl" required>
+              @for (obj_tipo of list_sexos; track obj_tipo) {
+              <mat-option [value]="obj_tipo">{{obj_tipo}}</mat-option>
+              }
+            </mat-select>
+            @if (SelecSexoControl.hasError('required')) {
+            <mat-error>Debe seleccionar una opcion</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div fxFlex="20">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Direccion</mat-label>
+            <input matInput formControlName="direccion">
+            <mat-error>Codigo requerido</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div fxFlex="25">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Telefono</mat-label>
+            <input matInput formControlName="telefono">
+            <mat-error>Codigo requerido</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div fxFlex="25">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Mail</mat-label>
+            <input matInput formControlName="email">
+            <mat-error>Codigo requerido</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div fxFlex="20">
+          <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+            <mat-label>Ciudad</mat-label>
+            <mat-select [formControl]="SelecCiudadControl" required>
+              @for (obj_ciudad of list_ciudades; track obj_ciudad) {
+              <mat-option [value]="obj_ciudad">{{obj_ciudad.nomCiudad}}</mat-option>
+              }
+            </mat-select>
+            @if (SelecCiudadControl.hasError('required')) {
+            <mat-error>Debe seleccionar una empresa</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+      </div>
+
+    </div>
+
+  </mat-dialog-content>
+  <mat-dialog-actions>
+    <button mat-button type="submit">Confirmar</button>
+    <button mat-button mat-dialog-close>Cancelar</button>
+  </mat-dialog-actions>
+</form>

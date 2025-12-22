@@ -1,0 +1,170 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+
+    <mat-card appearance="raised" class="mat-tab">
+
+        <mat-card-content class="mat-content">
+
+            <!-- Bloque general **************************************************** -->
+            <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                <div fxFlex="30">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Negocio</mat-label>
+                        <mat-select [formControl]="SelectNegocioControl" required>
+                            @for (obj_negocio of list_negocios; track obj_negocio) {
+                            <mat-option [value]="obj_negocio">{{obj_negocio.nombreNegocio}}</mat-option>
+                            }
+                        </mat-select>
+                        @if (SelectNegocioControl.hasError('required')) {
+                        <mat-error>Debe seleccionar un negocio</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+                <div fxFlex="40">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Categoria</mat-label>
+                        <mat-select [formControl]="SelectCategoriaControl" required>
+
+                            @for (obj_categoria of lista_categorias; track obj_categoria) {
+                            <mat-option
+                                [value]="obj_categoria">{{obj_categoria.codCategoria}}-{{obj_categoria.nomCategoria}}</mat-option>
+                            }
+                        </mat-select>
+                        @if (SelectCategoriaControl.hasError('required')) {
+                        <mat-error>Debe seleccionar una Categoria</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+                <div fxFlex="30">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Sub Categoria</mat-label>
+                        <mat-select [formControl]="SelectSubCategoriaControl" required>
+                            @for (SubCategorias of lista_Subcategorias; track SubCategorias) {
+                            <mat-option
+                                [value]="SubCategorias">{{SubCategorias.codSubCategoria}}-{{SubCategorias.nomSubCategoria}}</mat-option>
+                            }
+                        </mat-select>
+                        @if (SelectSubCategoriaControl.hasError('required')) {
+                        <mat-error>Debe seleccionar una SubCategoria</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                <div fxFlex="30">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Codigo Articulo</mat-label>
+                        <input matInput formControlName="codArticulo">
+                        <mat-error>Codigo requerido</mat-error>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="40">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Nombre Articulo</mat-label>
+                        <input matInput formControlName="nomArticulo">
+                    </mat-form-field>
+                </div>
+                <div fxFlex="30">
+                    <mat-checkbox formControlName="activoComercial" color="primary">Activo Ventas</mat-checkbox>
+                </div>
+            </div>
+            <div>
+                <h4 class="tabla-titulo">Configuracion Inventario</h4>
+            </div>
+            <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+            <br />
+            <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                <div fxFlex="25">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Unidad</mat-label>
+                        <mat-select [formControl]="SelectUnidadControl" required>
+                            @for (obj_unidad of list_unidades; track obj_unidad) {
+                            <mat-option [value]="obj_unidad">{{obj_unidad.nomUnidad}}</mat-option>
+                            }
+                        </mat-select>
+                        @if (SelectUnidadControl.hasError('required')) {
+                        <mat-error>Debe seleccionar Unidad de medida</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+                <div fxFlex="25">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Tipo Costeo</mat-label>
+                        <mat-select [formControl]="SelectTipoCosteoControl" required>
+                            @for (obj_TipoCosteo of list_TipoCosteo; track obj_TipoCosteo) {
+                            <mat-option [value]="obj_TipoCosteo">{{obj_TipoCosteo.nombreCosteo}}</mat-option>
+                            }
+                        </mat-select>
+                        @if (SelectTipoCosteoControl.hasError('required')) {
+                        <mat-error>Debe seleccionar Tipo Costeo</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+                <div fxFlex="25">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Stock Minimo</mat-label>
+                        <input matInput formControlName="stockMin">
+                    </mat-form-field>
+                </div>
+                <div fxFlex="25">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Stock Maximo</mat-label>
+                        <input matInput formControlName="stockMax">
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                <div fxFlex="25">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Cuenta Inventario</mat-label>
+                        <input matInput formControlName="cuentaInventario">
+                    </mat-form-field>
+                </div>
+                <div fxFlex="25">
+                    <mat-checkbox formControlName="activoStock" color="primary">Activo Stock</mat-checkbox>
+                </div>
+
+                <div fxFlex="50"></div>
+            </div>
+
+            <div>
+                <h4 class="tabla-titulo">Configuracion Contable</h4>
+            </div>
+            <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+            <br />
+
+            <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px">
+                <div fxFlex="25">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Grupo Contable</mat-label>
+                        <input matInput formControlName="grupoContable">
+                    </mat-form-field>
+                </div>
+                <div fxFlex="25">
+                    <mat-form-field class="full-width" appearance="outline">
+                        <mat-label>Tasa Impuesto IVA</mat-label>
+                        <mat-select [formControl]="SelectTasaImpuestoControl" required>
+                            @for (obj_tasaImpu of list_TasaImpuesto; track obj_tasaImpu) {
+                            <mat-option [value]="obj_tasaImpu">{{obj_tasaImpu.descripcionTasa}}</mat-option>
+                            }
+                        </mat-select>
+                        @if (SelectTasaImpuestoControl.hasError('required')) {
+                        <mat-error>Debe seleccionar Tasa de impuesto</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+                <div fxFlex="50"></div>
+            </div>
+
+        </mat-card-content>
+
+        <mat-card-actions>
+            <button mat-stroked-button color="primary" style="margin-right: 8px;">Aceptar</button>
+        </mat-card-actions>
+
+
+
+    </mat-card>
+
+</form>

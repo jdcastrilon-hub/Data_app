@@ -1,0 +1,13 @@
+<input matInput type="text" placeholder="Código o Nombre" [formControl]="searchControl" [matAutocomplete]="autoArticulo"
+    class="input-tabla">
+
+<mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
+
+    @for (item of filteredOptions(); track item.idArticulo) {
+    <mat-option [value]="item">
+        {{ item.codArticulo }} - <small>{{ item.nomArticulo }}</small>
+    </mat-option>
+    }
+
+
+</mat-autocomplete>

@@ -1,0 +1,49 @@
+<mat-toolbar color="primary">
+    <button mat-button [matMenuTriggerFor]="menuModuloA">Inventario</button>
+    <button mat-button [matMenuTriggerFor]="menuModuloB">Compras</button>
+    <button mat-button>Ventas</button>
+</mat-toolbar>
+
+<mat-menu #menuModuloA="matMenu">
+    <button mat-menu-item [matMenuTriggerFor]="subMenuAnidado">Maestros</button>
+    <button mat-menu-item [matMenuTriggerFor]="InvMenuTrans">Transacciones</button>
+    <button mat-menu-item [matMenuTriggerFor]="InvMenuReporte">Reportes</button>
+</mat-menu>
+
+<mat-menu #menuModuloB="matMenu">
+    <button mat-menu-item [matMenuTriggerFor]="subMenuCompras">Maestros</button>
+    <button mat-menu-item [matMenuTriggerFor]="InvMenuTrans">Transacciones</button>
+    <button mat-menu-item [matMenuTriggerFor]="InvMenuReporte">Reportes</button>
+</mat-menu>
+
+<mat-menu #subMenuAnidado="matMenu">
+    <button mat-menu-item routerLink="/bodegas">Bodegas</button>
+    <button mat-menu-item routerLink="/articulos">Articulos</button>
+    <button mat-menu-item routerLink="/categorias">Categorias</button>
+    <button mat-menu-item routerLink="/modulo-a/sub/reporte-y">Unidades</button>
+    <button mat-menu-item routerLink="/motivosajuste">Motivos Ajuste</button>
+</mat-menu>
+
+<mat-menu #InvMenuTrans="matMenu">
+    <button mat-menu-item routerLink="/ajustestock">Ajuste Stock</button>
+    <button mat-menu-item routerLink="/trasladobodega">Traslado Bodegas</button>
+</mat-menu>
+
+<mat-menu #AjusteStockList="matMenu">
+    <button mat-menu-item routerLink="/ajustestock">Lista</button>
+</mat-menu>
+
+<mat-menu #InvMenuReporte="matMenu">
+    <button mat-menu-item routerLink="/inventariostock">Inventario</button>
+</mat-menu>
+
+
+<mat-menu #subMenuCompras="matMenu">
+    <button mat-menu-item routerLink="/proveedores">Proveedores</button>
+    <button mat-menu-item routerLink="/compras">Compras</button>
+</mat-menu>
+
+
+<div class="content">
+    <router-outlet></router-outlet>
+</div>

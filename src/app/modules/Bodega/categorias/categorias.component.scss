@@ -1,0 +1,32 @@
+:host {
+  // 1. Fondo gris fuera de la tarjeta
+  display: block;
+  background-color: #e2e2e2;
+
+  // 2. Padding de 8px en todos los ángulos
+  padding: 8px;
+
+}
+
+.table-scroll-container {
+    /* 1. Define la altura máxima. Usa 'vh' (altura de la ventana visible) o 'px'. */
+    max-height: 450px; 
+    /* max-height: 60vh; /* Ejemplo si quieres que ocupe el 60% de la ventana */
+    
+    /* 2. Habilita el scroll vertical cuando el contenido exceda la altura máxima */
+    overflow-y: auto;
+    
+    /* 3. Estilos de caja */
+    display: block; 
+    margin-bottom: 10px; /* Separación con el paginador */
+}
+
+/* Opcional: Para que los encabezados de la tabla (Código, Nombre, Acciones)
+   permanezcan visibles al hacer scroll */
+.data-table thead th {
+    /* Es importante usar 'sticky' en el 'th' o 'tr' dentro del 'thead' */
+    position: sticky; 
+    top: 0;           
+    z-index: 10;
+    background-color: #f5f5f5; /* Color para que cubra las filas al hacer scroll */
+}

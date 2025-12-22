@@ -1,0 +1,58 @@
+$color-fondo-card: #ffffff;
+$color-fondo-header: #f5f5f5;
+$color-texto-header: #333;
+$padding-base: 8px;
+$toolbar-height: 0px;
+$border-light: 1px solid #e0e0e0;
+
+.main-card {
+  margin: $padding-base;
+  padding: $padding-base;
+}
+
+.tab-content {
+  padding: 0;
+}
+
+.custom-card {
+  //background-color: $color-fondo-card;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .card-title {
+    //background-color: $color-fondo-header;
+    padding: $padding-base;
+    //color: $color-texto-header;
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: bold;
+    height: 20%;
+  }
+}
+
+.contenido {
+  margin-top: $toolbar-height;
+  padding: 8px 8px 8px 8px;
+}
+
+.full-width-content {
+  width: 100%;
+  padding: $padding-base;
+  box-sizing: border-box;
+  //background-color: $color-fondo-header;
+}
+
+.mat-header {
+  background-color: #FFFFFF;
+}
+
+.mat-content {
+  background-color: #FFFFFF;
+}
+
+::ng-deep .mat-mdc-header-cell {
+  background-color: rgb(151, 151, 151) !important; // fondo azul
+  color: white !important;                       // texto blanco
+  font-weight: bold !important;                  // negrita
+  text-transform: uppercase;                     // opcional, para estilizar más
+}

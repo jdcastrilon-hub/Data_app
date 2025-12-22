@@ -1,0 +1,94 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>PROVEEDORES</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales" style="background-color: brown;">
+                <div class="bloque">
+                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                        <div fxFlex="40">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Titular</mat-label>
+                                <input type="text" placeholder="Documento o Nombre" matInput
+                                    [formControl]="searchControl" [matAutocomplete]="autoArticulo"> </mat-form-field>
+
+                            <mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida"
+                                (optionSelected)="onPersonaSelected($event)">
+
+                                <mat-option *ngFor="let titular of (filteredArticulos | async)" [value]="titular">
+                                    {{ mascaraSalida(titular) }} </mat-option>
+
+                                <mat-option (click)="ModalcrearNuevaPersona()" class="create-option">
+                                    <mat-icon color="primary">add_circle_outline</mat-icon>
+                                    Crear nueva persona: "{{ searchControl.value }}"
+                                </mat-option>
+                            </mat-autocomplete>
+                        </div>
+                        <div fxFlex="60">
+                            <button mat-icon-button color="primary" (click)="desvincularPersona()">
+                                <mat-icon>remove</mat-icon>
+                            </button>
+
+                        </div>
+                    </div>
+
+                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                        <div fxFlex="25">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Documento</mat-label>
+                                <input matInput formControlName="codigoTitular">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="30">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Razon Social</mat-label>
+                                <input matInput formControlName="razonSocial">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="30">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Regimen</mat-label>
+                                <input matInput formControlName="regimen">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="15">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="activo" color="primary">
+                                    Activo
+                                </mat-checkbox>
+                            </section>
+                        </div>
+                    </div>
+
+                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                        <div fxFlex="50">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Observaciones</mat-label>
+                                <input matInput formControlName="observacion">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50"></div>
+                    </div>
+                </div>
+
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button">Salir</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

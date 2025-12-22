@@ -1,0 +1,89 @@
+@use '@angular/material' as mat;
+
+
+
+$my-primary: mat.m2-define-palette(mat.$m2-indigo-palette, 500);
+$my-accent: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
+$my-warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+$my-theme: mat.m2-define-light-theme((color: (primary: $my-primary,
+        accent: $my-accent,
+        warn: $my-warn ),
+      typography: mat.m2-define-typography-config(),
+      density: 0));
+
+
+
+
+
+// Paletas base (pueden ser las mismas que tu tema light o distintas)
+$primary_dark: mat.m2-define-palette(mat.$m2-blue-grey-palette);
+$accent_dark: mat.m2-define-palette(mat.$m2-teal-palette);
+$warn_dark: mat.m2-define-palette(mat.$m2-red-palette);
+
+// Tema DARK 🎭
+$dark-theme: mat.m2-define-dark-theme((color: (primary: $primary_dark,
+        accent: $accent_dark,
+        warn: $warn_dark ),
+      typography: mat.m2-define-typography-config(),
+      density: 0));
+
+
+// tema claro (modo predeterminado)
+@include mat.all-component-themes($my-theme);
+
+//@include mat.all-component-densities(-2);
+
+.form-field-compacto {
+  // Aplica la máxima densidad para reducir la altura al mínimo
+  @include mat.form-field-density(-3);
+}
+
+// tema oscuro dentro de una clase "dark-theme"
+.dark-theme {
+  @include mat.all-component-colors($dark-theme);
+}
+
+
+
+
+
+/*
+:root {
+  @include mat.toolbar-overrides((container-background-color: #1976d2,
+      container-text-color: black,
+    ));
+}
+
+:root {
+  @include mat.sidenav-overrides((container-text-color: white,
+      content-background-color : #e5eaef,
+      scrim-color: #00b66d,
+    ));
+}
+
+:root {
+  @include mat.list-overrides(( //list-item-label-text-color: orange, //Cuando se seleciona el item
+      active-indicator-shape: red,
+      //list-item-container-color:#191919,
+    ));
+}
+
+
+:root {
+   --mat-table-header-background-color: rgb(53, 10, 241);
+  @include mat.table-overrides(
+     (background-color: rgb(255, 255, 255),
+      row-item-outline-color:#e5eaef,
+    )
+    );
+   
+}
+
+:root {
+  @include mat.tabs-overrides((active-ripple-color:#1976d2,
+      label-text-size:30,
+    ));
+}
+
+*/
