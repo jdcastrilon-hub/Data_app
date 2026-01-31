@@ -32,7 +32,7 @@ import { ComboEstadostockComponent } from '../../../resources/combo-estadostock/
   selector: 'app-form-ajuste',
   standalone: true,
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
-     MatDatepickerModule, ArticuloAutocompletComponent,
+    MatDatepickerModule, ArticuloAutocompletComponent,
     ComboBodegaComponent, ComboEstadostockComponent],
   templateUrl: './form-ajuste.component.html',
   styleUrl: './form-ajuste.component.scss'
@@ -235,12 +235,11 @@ export class FormAjusteComponent {
 
           //Se asignan los valores a la fila de la tabla.
           fila.patchValue({
-            id: this.fb.group({
-              // Datos del artículo (llave compuesta)
+            id: {
               idArticulo: stockData.idArticulo,
-              linea: this.detalles.length + 1,
-              idTrans: null   // Siempre null en la creación , el backen los asigna
-            }),
+              linea: index + 1,
+              idTrans: null
+            },
 
             idUbicacion: stockData.ubicacion,
             idLote: stockData.lote,
@@ -375,7 +374,7 @@ export class FormAjusteComponent {
         this.cargarMotivosStock();
         //Carga Detalle de articulos parte 1.
         this.cargarInformacionArticulos(data);
-        
+
       },
       error => {
         console.error('Error al cargar la categoría:', error);

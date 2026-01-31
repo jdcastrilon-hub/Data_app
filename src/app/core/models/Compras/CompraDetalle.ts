@@ -4,6 +4,7 @@ export class CompraDetalle {
     codigoBarras !: string;
     costoUnit !: number;
     cantidad!: number;
+    idLote !:number;
     stock!: number;
     impuesto1 !: string;
     idTasaimp1 !: number;
@@ -15,4 +16,5 @@ export class CompraDetalle {
     idTasaimp3 !: number;
     valorImpuesto3 !: number;
     costoTotal !: number;
+    importeTotal !:number;
 }

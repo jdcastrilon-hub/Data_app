@@ -4,6 +4,7 @@ import { map, Observable } from 'rxjs';
 import { Ciudades } from '../../models/core/Ciudades';
 import { PersonaSearch } from '../../interfaces/Compras/PersonaSearch';
 import { Proveedores } from '../../models/Compras/Proveedores';
+import { ProveedorSearch } from '../../interfaces/Compras/ProveedorSearch';
 
 interface ApiResponse {
   status: string; // Definición clara como string
@@ -26,12 +27,20 @@ export class ProveedorService {
     return this.http.get<Ciudades[]>(this.url + "Ciudades");
   }
 
-  Search(query: string): Observable<PersonaSearch[]> {
+  PersonaSearch(query: string): Observable<PersonaSearch[]> {
     console.log("Service Search");
     const params = new HttpParams()
       .set('query', String(query));
-    return this.http.get<PersonaSearch[]>(this.url + "Search", { params });
+    return this.http.get<PersonaSearch[]>(this.url + "PersonaSearch", { params });
   }
+
+  ProveedorSearch(query: string): Observable<ProveedorSearch[]> {
+    console.log("Service Search");
+    const params = new HttpParams()
+      .set('query', String(query));
+    return this.http.get<ProveedorSearch[]>(this.url + "ProveedorSearch", { params });
+  }
+
 
   //Guardar Proveedor
   save(objecto: any): Observable<any> {

@@ -1,0 +1,16 @@
+<mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+    <mat-label>Proveedor</mat-label>
+    <input type="text" placeholder="Documento o Nombre" matInput [formControl]="searchControl"
+        [matAutocomplete]="autoArticulo"> </mat-form-field>
+
+<mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida"
+    (optionSelected)="onSelected($event)">
+
+    @for (item of filteredOptions(); track item.idPersona) {
+    <mat-option [value]="item">
+        {{ item.codTit }} - <small>{{ item.nombreCompleto }}</small>
+    </mat-option>
+    }
+
+</mat-autocomplete>
+

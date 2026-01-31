@@ -4,13 +4,12 @@ import { CompraDetalle } from "./CompraDetalle";
 export class Compra {
     idTrans?: number;
     idEmp!: number;
+    idSucursal !: number;
     idProveedor!: number;
     fecDoc!: Date;
     documento!: string;
     nroDocum!: number;
-    factura !: string;
-    idPago !: number;
-    fecVenc!: Date;
+    remito !: string;
     ingresaBodega!: string;
     idBodega!: number;
     idEstado !: number;

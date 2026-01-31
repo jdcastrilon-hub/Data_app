@@ -68,3 +68,118 @@
   --mat-checkbox-label-text-font: 'Titillium Web', sans-serif !important;
   --mat-checkbox-label-text-size: 16px;
 }
+
+/*
+ css para select de tabla
+*/
+
+.input-tabla-select {
+  /* Tamaño y forma */
+  width: 100%;
+  height: 38px;
+  /* Ajusta este valor para que iguale a tus inputs de 'Costo' */
+  padding: 0 12px;
+
+  /* Estilo visual */
+  background-color: #fff;
+  border: 1px solid #ccc;
+  /* Gris suave igual al borde de tus inputs */
+  border-radius: 5px;
+
+  /* Tipografía */
+  font-family: inherit;
+  font-size: 14px;
+  color: #333;
+
+  /* Quitar estilos por defecto del navegador */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Añadir una flechita simple a la derecha */
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="grey" d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 20px;
+
+  cursor: pointer;
+  outline: none;
+}
+
+.input-tabla-select:focus {
+  border: 2px solid #3f51b5;
+  /* Azul de Material al hacer clic */
+  padding: 0 11px;
+  /* Ajuste por el grosor del borde */
+}
+
+/*
+  FIN css para select de tabla
+*/
+
+/* Contenedor principal en 2 columnas (proporción 2:1) */
+.main-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  padding: 1px;
+}
+
+/* Grid interna para los inputs de Facturación */
+.grid-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Grid interna para los inputs de Facturación */
+.grid-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+  padding-top: 15px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Estilo para la sección de totales */
+.totals-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.small-input {
+  width: 80px;
+  border: 1px solid #ccc;
+  text-align: right;
+}
+
+.section {
+  border: 1px solid #ccc;
+  /* Para imitar el estilo de tu dibujo */
+}
+
+.footer-resaltado {
+  background-color: #f5f5f5;
+  /* Un gris claro para diferenciarlo */
+  font-weight: bold;
+}
+
+.mat-column-neto {
+  text-align: right;
+  /* Alinea los números a la derecha, se ve más profesional */
+}

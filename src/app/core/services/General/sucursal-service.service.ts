@@ -15,4 +15,10 @@ export class SucursalServiceService {
   list(): Observable<Sucursal[]> {
     return this.http.get<Sucursal[]>(this.url + "list");
   }
+
+  sucursalesxBodegas(): Observable<Sucursal[]> {
+    return this.http.get<Sucursal[]>(this.url + "sucursalesxBodega");
+  }
+
+  
 }

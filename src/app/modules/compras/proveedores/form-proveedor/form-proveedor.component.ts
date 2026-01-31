@@ -117,7 +117,7 @@ export class FormProveedorComponent {
           console.log("Entró a buscar artículo con query:", query);
 
           // Llama al servicio para buscar en el backend
-          return this.proveedorService.Search(query).pipe(
+          return this.proveedorService.PersonaSearch(query).pipe(
             // 4. Mantiene la funcionalidad de limpieza después de la respuesta
             finalize(() => this.isLoading = false)
           );
