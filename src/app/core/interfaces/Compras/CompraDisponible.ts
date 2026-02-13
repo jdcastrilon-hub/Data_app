@@ -9,7 +9,9 @@ export class CompraDisponible{
     idLote !: string;
     costo !: number;
     neto !: number;
-    impuesto1 !: TasasCombo;
+    objimpuesto1 !: TasasCombo;
+    impuesto1 !: string;
+    tasaimpuesto1 !: number;
     valor_impu1 !: number;
     total !: number;
 

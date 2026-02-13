@@ -32,7 +32,7 @@ import { ComprasService } from '../../../../core/services/Compras/compras.servic
   selector: 'form-compra-directa',
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
     RouterModule, MatDialogModule, ArticuloAutocompletComponent, MatDatepickerModule,
-    MatCheckboxModule, ComboProveedorComponent],
+    MatCheckboxModule, ComboProveedorComponent, ComboEstadostockComponent],
   templateUrl: './form-compra-directa.component.html',
   styleUrl: './form-compra-directa.component.scss'
 })
@@ -268,7 +268,9 @@ Receptores
       idLote: '',
       costo: 0,
       neto: 0,
-      impuesto1: impuesto_base,
+      objimpuesto1: impuesto_base,
+      impuesto1: 'IVA',
+      tasaimpuesto1: 0,
       valor_impu1: 0,
       total: 0
     };
@@ -289,7 +291,7 @@ Receptores
     // Obtenemos referencias a los controles específicos
     const costoCtrl = nuevoDetalle.get('costoUnit');
     const cantidadCtrl = nuevoDetalle.get('cantidad');
-    const impuesto1Ctrl = nuevoDetalle.get('impuesto1');
+    const impuesto1Ctrl = nuevoDetalle.get('objimpuesto1');
 
 
     //subcripcion para columna neto.
@@ -298,12 +300,14 @@ Receptores
         costoCtrl.valueChanges.pipe(startWith(costoCtrl.value)), // Toma el valor actual (0)
         cantidadCtrl.valueChanges.pipe(startWith(cantidadCtrl.value)),
         impuesto1Ctrl.valueChanges.pipe(startWith(impuesto1Ctrl.value)),
-      ]).subscribe(([costo, cantidad, impuesto1]) => {
+      ]).subscribe(([costo, cantidad, objimpuesto1]) => {
         console.log('Calculando...', { costo, cantidad }); // Ahora sí debería entrar
-        console.log('Impuesto...', { impuesto1 }); // Ahora sí debería entrar
+        console.log('Impuesto...', { objimpuesto1 }); // Ahora sí debería entrar
         const neto = (costo || 0) * (cantidad || 0);
-        const valorImpu1 = (neto || 0) * (impuesto1.porcentaje || 0);
+        const valorImpu1 = (neto || 0) * (objimpuesto1.porcentaje || 0);
+        const tasaImpu1 = (objimpuesto1.id);
         nuevoDetalle.get('costoTotal')?.setValue(neto, { emitEvent: false });
+        nuevoDetalle.get('idTasaimp1')?.setValue(tasaImpu1, { emitEvent: false });
         nuevoDetalle.get('valorImpuesto1')?.setValue(valorImpu1, { emitEvent: false });
         nuevoDetalle.get('importeTotal')?.setValue((neto + valorImpu1), { emitEvent: false });
       });
@@ -318,7 +322,7 @@ Receptores
   * @returns No tiene return
   */
   crearDetalleForm(data: CompraDisponible, nextLinea: number, search: ArticuloSearch): FormGroup {
-    
+
     return this.fb.group({
       // Estructura de ID que ya tenías
       id: this.fb.group({
@@ -332,18 +336,19 @@ Receptores
       codigoBarras: "0",
       costoUnit: [0, [Validators.required, Validators.min(0)]],
       cantidad: [0, [Validators.required, Validators.min(0)]],
-      idLote:0,
+      idLote: 0,
       stock: 0,
+      objimpuesto1: [data.objimpuesto1],
       impuesto1: [data.impuesto1],
-      idTasaimp1 : 0,
-      valorImpuesto1 : [{ value: data.valor_impu1, disabled: true }],
-      impuesto2 : "N",
-      idTasaimp2 : 0,
-      valorImpuesto2 : 0,
-      impuesto3 : "N",
-      idTasaimp3 : 0,
-      valorImpuesto3 : 0,
-      costoTotal : [{ value: data.neto, disabled: true }],
+      idTasaimp1: [data.tasaimpuesto1],
+      valorImpuesto1: [{ value: data.valor_impu1, disabled: true }],
+      impuesto2: "N",
+      idTasaimp2: 0,
+      valorImpuesto2: 0,
+      impuesto3: "N",
+      idTasaimp3: 0,
+      valorImpuesto3: 0,
+      costoTotal: [{ value: data.neto, disabled: true }],
       importeTotal: [{ value: data.total, disabled: true }],
 
       // Campo de entrada de usuario
@@ -478,6 +483,7 @@ Receptores
       idBodega: this.SelectBodegasControl.value?.id,
       impNeto: this.totalNeto,
       impTotal: this.totalFinal,
+      ingresaBodega: 'S',
       impuesto1: 'IVA',
       valorImpuesto1: this.totalImpuesto1,
       impuesto2: 'N/A',
@@ -489,6 +495,7 @@ Receptores
       vista: 'AjusteStock',
       fechaMod: new Date().toISOString()
     });
+    console.log("Json original");
     console.log(this.formulario.getRawValue());
 
     if (this.formulario.invalid) {
@@ -500,6 +507,34 @@ Receptores
     this.eliminarUltimaFilaEventsave();
     //Auditoria
     this.agregarLogAuditoria();
+
+
+    // 1. Obtenemos todo el valor del formulario
+    const dataCompleta = this.formulario.getRawValue();
+
+    // 2. Limpiamos solo el arreglo de detalles
+    // Usamos .map para recorrer cada línea y quitar 'search' y lo que no necesites
+    const detallesLimpios = dataCompleta.detalles.map((linea: any) => {
+
+      // Desestructuración: sacamos 'search' y 'refCompras' (o las que no quieras)
+      // El resto de campos se guardarán en la variable 'resto'
+      const { search, objimpuesto1, ...resto } = linea;
+
+      return resto; // Retornamos la línea sin esos campos
+    });
+
+    // 3. Creamos el objeto final que se enviará a la API
+    const jsonParaAPI = {
+      ...dataCompleta,        // Copiamos todo lo del formulario (idTrans, idEmp, etc.)
+      detalles: detallesLimpios, // Reemplazamos los detalles originales por los limpios
+      searchProveedor: undefined // Si también quieres quitar el buscador de proveedor
+    };
+
+    // 4. Ahora sí, enviamos jsonParaAPI al servicio
+    console.log('JSON Limpio:', jsonParaAPI);
+    // this.miServicio.post(jsonParaAPI).subscribe(...);
+
+
 
     //Evento nuevo
     this.compraService.save(this.formulario.getRawValue()).subscribe({
@@ -513,6 +548,7 @@ Receptores
         console.error('Error al guardar:', err);
       }
     });
+
   }
 
 
