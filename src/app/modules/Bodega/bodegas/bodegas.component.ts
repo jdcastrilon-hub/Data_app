@@ -38,6 +38,7 @@ export class BodegasComponent {
 
   ngOnInit() {
     this.cargarBodegasPaginadas();
+    console.log(this.lista_bodegas);
   }
 
   // 1. Método para cargar datos con paginación
