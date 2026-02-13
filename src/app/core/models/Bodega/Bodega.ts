@@ -2,7 +2,7 @@ import { Auditoria } from "../core/Auditoria";
 
 export class Bodega {
     id?: number;
-    idSucusal!: number;
+    idSucursal!: number;
     codBodega!: string;
     nomBodega!: string;
     bodegaPrincipal!: string;

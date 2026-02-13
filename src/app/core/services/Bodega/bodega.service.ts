@@ -5,6 +5,7 @@ import { map, Observable } from 'rxjs';
 import { StockDisponible } from '../../models/Bodega/StockDisponible';
 import { PageResponse } from '../../models/core/PageResponse';
 import { BodegaListView } from '../../interfaces/Bodega/BodegaListView';
+import { environment } from 'src/environments/environment';
 
 interface ApiResponse {
   status: string; // Definición clara como string
@@ -17,7 +18,7 @@ interface ApiResponse {
 })
 export class BodegaService {
 
-  private url: string = 'http://localhost:8080/api/bodega/bodegas/';
+  private url: string = `${environment.baseUrl}/bodega/bodegas/`;
 
   constructor(private http: HttpClient) { }
 
@@ -33,7 +34,7 @@ export class BodegaService {
       .set('page', page.toString())//Pagina 
       .set('size', size.toString())//Cantidad de registros a validar
 
-    return this.http.get<PageResponse<BodegaListView>>(this.url + "pagenation", { params });
+    return this.http.get<PageResponse<BodegaListView>>(this.url + "pagination", { params });
   }
 
   //Lista para seleccion de combox

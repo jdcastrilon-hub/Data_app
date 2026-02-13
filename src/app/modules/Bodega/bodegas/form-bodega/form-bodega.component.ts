@@ -52,7 +52,7 @@ export class FormBodegaComponent {
       fechaMod: [this.objeto.fechaMod],
       logs: this.fb.array([]),
       id: [this.objeto.id],
-      idSucusal : [this.objeto.idSucusal, Validators.required],
+      idSucusal : [this.objeto.idSucursal, Validators.required],
     });
 
     //Validacion si es modo edicion o nuevo
@@ -81,16 +81,16 @@ export class FormBodegaComponent {
 
   //Metodo para cargar lista de sucursales.
   cargarSucursales(): void {
-    this.sucursalService.list().subscribe({
+    this.sucursalService.listCombo().subscribe({
       next: (data) => {
         this.list_sucursal = data;
 
         // Si es metodo edicion y tengo una empresa cargada.
         //La busco en la lista que me retorno el API
-        if (this.isEditMode && this.objeto.idSucusal) {
+        if (this.isEditMode && this.objeto.idSucursal) {
           //busco la sucursal por ID
           const sucursalSeleccinada = this.list_sucursal.find(
-            sucursal => sucursal.id === this.objeto.idSucusal
+            sucursal => sucursal.id === this.objeto.idSucursal
           );
 
           if (sucursalSeleccinada) {
@@ -120,7 +120,7 @@ export class FormBodegaComponent {
     const estadoActivo = this.formulario.get('activo')?.value;
     console.log(estadoBodegaPrincipal);
     this.formulario.patchValue({
-      idSucusal: this.SelectSucursalControl.value?.id,
+      idSucursal: this.SelectSucursalControl.value?.id,
       fechaMod: new Date().toISOString(),
       bodegaPrincipal: estadoBodegaPrincipal ? 'S' : 'N',
       manejaUbicaciones: estadoUbucaciones ? 'S' : 'N',
