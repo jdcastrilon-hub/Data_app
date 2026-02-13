@@ -15,7 +15,7 @@ interface ApiResponse {
 })
 export class ComprasService {
 
-  private url: string = 'http://localhost:8080/api/compras/proveedor/';
+  private url: string = 'http://localhost:8080/api/compras/ocompra/';
 
   constructor(private http: HttpClient) { }
 
