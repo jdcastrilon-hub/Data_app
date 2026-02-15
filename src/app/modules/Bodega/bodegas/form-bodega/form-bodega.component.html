@@ -1,7 +1,12 @@
 <form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
-            <mat-card-title>REGISTRO DE BODEGAS</mat-card-title>
+            <mat-card-title class="titulo-con-boton">
+                <a mat-icon-button color="primary" routerLink="/bodegas">
+                    <mat-icon>list</mat-icon>
+                </a>
+                <span>REGISTRO DE BODEGAS</span>
+            </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
         <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
@@ -84,7 +89,7 @@
         <mat-card-actions class="mat-accion-botones">
             <button mat-raised-button color="primary" type="submit">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button">Salir</button>
+            <button mat-raised-button color="warn" type="button">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

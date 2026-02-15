@@ -91,7 +91,7 @@ export class FormAjusteComponent {
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
-      const id = params.get('id'); // Obtener el valor del parámetro 'id'
+    const id = params.get('id'); // Obtener el valor del parámetro 'id'
 
       if (id) {
         // Si hay un ID, estamos en modo Edición

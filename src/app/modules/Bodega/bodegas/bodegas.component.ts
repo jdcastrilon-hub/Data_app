@@ -57,11 +57,20 @@ export class BodegasComponent {
     });
   }
 
-  // 2. Método para manejar el cambio de página/tamaño
+  //Método para manejar el cambio de página/tamaño
   cambiarPagina(event: PageEvent) {
     this.paginaActual = event.pageIndex;
     this.pageSize = event.pageSize;
     this.cargarBodegasPaginadas(); // Llama al API con los nuevos parámetros
+  }
+
+  //Edicion del registro
+  editarBodega(id: number): void {
+    // Navega a '/categoria/edit/5' si el ID es 5
+    console.log("Entro a editar");
+    console.log(id);
+    this.router.navigate(['/bodegas/edit', id]);
+      
   }
 
 

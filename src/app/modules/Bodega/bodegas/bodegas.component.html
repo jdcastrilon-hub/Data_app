@@ -21,17 +21,29 @@
                         <th mat-header-cell *matHeaderCellDef>Nombre</th>
                         <td mat-cell *matCellDef="let element">{{ element.nomBodega }}</td>
                     </ng-container>
+                    <ng-container matColumnDef="bprincipal">
+                        <th mat-header-cell *matHeaderCellDef>Bod. Principal</th>
+                        <td mat-cell *matCellDef="let element">{{ element.bodegaPrincipal }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="activo">
+                        <th mat-header-cell *matHeaderCellDef>Estado</th>
+                        <td mat-cell *matCellDef="let element">{{ element.activo }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef>Ult. Modificacion</th>
+                        <td mat-cell *matCellDef="let element">{{ element.fechaMod }}</td>
+                    </ng-container>
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef>Acciones</th>
                         <td mat-cell *matCellDef="let element">
-                            <button mat-icon-button>
+                            <button mat-icon-button (click)="editarBodega(element.id)">
                                 <mat-icon>edit</mat-icon>
                             </button>
 
                         </td>
                     </ng-container>
-                    <tr mat-header-row *matHeaderRowDef="['codigo', 'nombre', 'actions']"></tr>
-                    <tr mat-row *matRowDef="let row; columns: ['codigo', 'nombre', 'actions'];"></tr>
+                    <tr mat-header-row *matHeaderRowDef="['codigo', 'nombre','bprincipal','activo','fecha', 'actions']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['codigo', 'nombre','bprincipal','activo','fecha', 'actions'];"></tr>
                 </table>
             </div>
             <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"

@@ -29,6 +29,7 @@ export const routes: Routes = [
     { path: 'inventariostock', component: InventarioStockComponent },
     { path: 'bodegas', component: BodegasComponent },
     { path: 'bodegas/new', component: FormBodegaComponent },
+    { path: 'bodegas/edit/:id', component: FormBodegaComponent },
     { path: 'trasladobodega', component: TrasladoBodegasComponent },
     { path: 'trasladobodega/new', component: FormTrasladoComponent },
     { path: 'proveedores', component: ProveedoresComponent },
