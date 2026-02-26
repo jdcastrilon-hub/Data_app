@@ -15,13 +15,6 @@
   background-color: #fcfcfc;
 }
 
-.example-section {
-  display: flex;
-  align-content: center;
-  align-items: center;
-  height: 60px;
-}
-
 
 .titulo-con-boton {
   display: flex;
@@ -38,6 +31,13 @@
   letter-spacing: 0.5px;
 }
 
+.example-section {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  height: 60px;
+}
+
 
 ::ng-deep .mat-mdc-form-field {
   --mat-form-field-container-text-font: 'Titillium Web', sans-serif !important; // change Input placeholder & value font-family
@@ -52,10 +52,4 @@
   --mat-form-field-subscript-text-weight: 400; // change hint font-weight
   --mat-form-field-subscript-text-line-height: 20px; // change hint line-height
 
-}
-
-/* Estilos en tu archivo .component.css o styles.css */
-::ng-deep .mat-mdc-checkbox {
-  --mat-checkbox-label-text-font: 'Titillium Web', sans-serif !important;
-  --mat-checkbox-label-text-size: 16px;
 }

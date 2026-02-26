@@ -6,6 +6,7 @@ import { StockDisponible } from '../../models/Bodega/StockDisponible';
 import { PageResponse } from '../../models/core/PageResponse';
 import { BodegaListView } from '../../interfaces/Bodega/BodegaListView';
 import { environment } from 'src/environments/environment';
+import { BodegaCombo } from '../../interfaces/Bodega/BodegaCombo';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -31,11 +32,11 @@ export class BodegaService {
   }
 
   //Lista para seleccion de combox
-  listSelection(): Observable<BodegaListView[]> {
+  listSelection(): Observable<BodegaCombo[]> {
     //const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqdWFuIiwiaWF0IjoxNzQ5OTI2NDQ3LCJleHAiOjE3NDk5MzAwNDd9.FO-f63ntqva-gAKTHnIFHHJQDgolbZUVABk1ed3XOx0'; // o donde tengas guardado el token
     //const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    return this.http.get<BodegaListView[]>(this.url + "selection");
+    return this.http.get<BodegaCombo[]>(this.url + "listCombo");
   }
 
   stockDisponible(idArticulo: number, idBodega: number, idEstado: number): Observable<StockDisponible[]> {
@@ -50,7 +51,7 @@ export class BodegaService {
   save(objecto: any): Observable<any> {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
-
+      
         if (response.status !== 'success') {
           // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
           throw new Error(response.message || 'Error desconocido al guardar la categoría.');

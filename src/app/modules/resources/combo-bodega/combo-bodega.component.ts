@@ -2,8 +2,8 @@ import { Component, input, output } from '@angular/core';
 import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
-import { Bodega } from '../../../core/models/Bodega/Bodega';
 import { BodegaService } from '../../../core/services/Bodega/bodega.service';
+import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
 
 @Component({
   selector: 'combo-bodega',
@@ -18,11 +18,11 @@ export class ComboBodegaComponent {
   editMode = input<boolean>(false);
 
   //salidas
-  bodegaSeleccionada = output<Bodega>();
+  bodegaSeleccionada = output<BodegaCombo>();
 
   //Bodegas
-  list_bodegas: Bodega[] = [];
-  SelecBodegaControl = new FormControl<Bodega | null>(null, Validators.required);
+  list_bodegas: BodegaCombo[] = [];
+  SelecBodegaControl = new FormControl<BodegaCombo | null>(null, Validators.required);
 
   constructor(private fb: FormBuilder,
     private bodegaService: BodegaService
@@ -37,7 +37,7 @@ export class ComboBodegaComponent {
 
   cargaDatos(): void {
     console.log("Componente combo cargarBodegas");
-    this.bodegaService.list().subscribe({
+    this.bodegaService.listSelection().subscribe({
       next: (data) => {
         //Se recupera el Json del API
         this.list_bodegas = data;

@@ -4,6 +4,7 @@ export class Articulo {
     id_articulo?: number;
     codArticulo!: string;
     nomArticulo!: string;
+    TipoProducto! :string;
     idNegocio!: number;
     idsubCategoria!: number;
     idCategoria!:number;

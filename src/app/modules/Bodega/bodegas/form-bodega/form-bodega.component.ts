@@ -98,11 +98,8 @@ export class FormBodegaComponent {
           }
         } else {
           // Condición: Si estamos en modo Nuevo (this.isEditMode es false)
-          // Y la lista de empresas tiene exactamente 1 elemento.
-          if (this.list_sucursal.length === 1) {
             const unicoregistro = this.list_sucursal[0];
             this.SelectSucursalControl.setValue(unicoregistro);
-          }
         }
       },
       error: (err) => {
@@ -169,6 +166,7 @@ export class FormBodegaComponent {
     console.log("OBJECTO2");
     console.log(this.formulario.getRawValue());
 
+
     if (this.isEditMode) {
       //Evento Edicion
       console.log("api ediccion");
@@ -204,6 +202,7 @@ export class FormBodegaComponent {
         }
       });
     }
+     
 
   }
 

@@ -1,4 +1,4 @@
-export class EstadoStock{
+export class EstadoCombo{
      id?: number; 
      codEstado!: string;
      nomEstado!: string;

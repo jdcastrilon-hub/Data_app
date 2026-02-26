@@ -3,13 +3,14 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
 import { Empresas } from '../../models/core/Empresas';
 import { Numerador } from '../../models/core/Numerador';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EmpresaServiceService {
 
-  private url: string = 'http://localhost:8080/api/core/empresa/';
+  private url: string = `${environment.baseUrl}/core/empresas/`;
 
   constructor(private http: HttpClient) { }
 

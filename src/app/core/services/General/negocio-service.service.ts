@@ -1,14 +1,16 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Negocio } from '../../models/General/Negocio';
 import { NegocioxCategoriasDTO } from '../../models/General/NegocioxCategoriasDTO';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NegocioServiceService {
-  private url: string = 'http://localhost:8080/api/bodega/negocios/';
+  
+  private url: string = `${environment.baseUrl}/core/negocios/`;
 
   constructor(private http: HttpClient) { }
 
@@ -17,6 +19,8 @@ export class NegocioServiceService {
   }
 
   listNegociosxCategoria(): Observable<NegocioxCategoriasDTO[]> {
-    return this.http.get<NegocioxCategoriasDTO[]>(this.url + "listaCategorias");
+    const params = new HttpParams()
+      .set('id_empresa', String(1))
+    return this.http.get<NegocioxCategoriasDTO[]>(this.url + "listByNegocios",{params});
   }
 }

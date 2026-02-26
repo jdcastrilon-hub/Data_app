@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { Categoria } from '../../../../core/models/Bodega/Categoria';
 import { MatTableDataSource } from '@angular/material/table';
@@ -11,6 +11,7 @@ import { Auditoria } from '../../../../core/models/core/Auditoria';
 import { SubCategorias } from '../../../../core/models/Bodega/SubCategorias';
 import { CategoriaService } from '../../../../core/services/Bodega/categoria-service.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 
 @Component({
   selector: 'form-categoria',
@@ -30,6 +31,9 @@ export class FormCategoriaComponent {
   selectedValue!: string;
   dataSource = new MatTableDataSource<FormGroup>();
 
+  // Capturamos la referencia del formulario del HTML
+  @ViewChild('formDirective') formDirective!: NgForm;
+
   //constructor
   constructor(
     private fb: FormBuilder,
@@ -37,11 +41,11 @@ export class FormCategoriaComponent {
     private logAuditoria: AuditoriaService,
     private categoriaService: CategoriaService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private notificacion: NotificacionesService
   ) {
     this.objeto = new Categoria();
   }
-
 
   //Empresas
   list_empresas: Empresas[] = [];
@@ -212,6 +216,7 @@ export class FormCategoriaComponent {
 
   //Enviar Datos al formulario prinicipal para consumir el API
   enviarFormulario() {
+    console.log("enviarFormulario");
     //Asignacion de campos en cabezal
     this.formulario.patchValue({
       idEmpresa: this.SelectEmpresaControl.value?.id_emp,
@@ -227,23 +232,12 @@ export class FormCategoriaComponent {
       this.formulario.markAllAsTouched(); // Para mostrar errores visualmente
       return; // Detiene la ejecución si el formulario no es válido
     }
-    console.log("enviarFormulario 2");
-
-    /*
-    const codEmp = this.formulario.value.idEmpresa;
-    const codCategoria = this.formulario.value.codCategoria;
-
-    // Recorres los controles del FormArray y actualizas campos vacíos
-    this.subCategorias.controls.forEach((control: AbstractControl) => {
-      control.get('idEmpresa')?.setValue(codEmp);
-      control.get('codCategoria')?.setValue(codCategoria);
-    });
-    */
 
     //Auditoria
     this.agregarLogAuditoria();
     console.log("OBJECTO");
     console.log(this.formulario.value);
+
 
 
     if (this.isEditMode) {
@@ -252,6 +246,7 @@ export class FormCategoriaComponent {
         next: (categoriaGuardada) => {
           // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
           console.log(categoriaGuardada);
+
           // 4. Redirigir a la vista de lista principal.
           this.router.navigate(['/categorias']);
         },
@@ -260,13 +255,27 @@ export class FormCategoriaComponent {
         }
       });
     } else {
+      console.log("evento nuevo");
+      console.log(this.formulario.getRawValue());
       //Evento nuevo
-      this.categoriaService.save(this.formulario.value).subscribe({
+      this.categoriaService.save(this.formulario.getRawValue()).subscribe({
         next: (categoriaGuardada) => {
           // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
           console.log(categoriaGuardada);
-          // 4. Redirigir a la vista de lista principal.
-          this.router.navigate(['/categorias']);
+          this.notificacion.showSuccess('¡Categoría guardada con éxito!');
+
+          // 2. Limpiar el formulario
+          this.objeto = new Categoria();
+          this.formDirective.resetForm();
+          const logsArray = this.formulario.get('logs') as FormArray;
+          logsArray.clear();
+          // 3. (Opcional) Setear valores por defecto que no deben ser null
+          /* this.formulario.patchValue({
+             idEmpresa: 1,  // O el ID que estés manejando
+             estado: 'A',
+             subcategorias: [] // Limpiar la tabla de subcategorías
+           });
+           */
         },
         error: (err) => {
           console.error('Error al guardar:', err);
@@ -274,15 +283,7 @@ export class FormCategoriaComponent {
       });
     }
 
+
   }
 
-  salirSinGuardar(): void {
-    console.log("salir");
-    // Puedes preguntar al usuario antes de salir (opcional)
-    // if (!confirm('¿Está seguro de que desea salir? Los cambios no guardados se perderán.')) {
-    //     return;
-    // }
-
-    this.router.navigate(['/categorias']);
-  }
 }

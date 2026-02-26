@@ -4,8 +4,6 @@ import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFo
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { RouterModule } from '@angular/router';
 import { TrasladoBodegas } from '../../../../core/models/Bodega/TrasladoBodegas';
-import { Bodega } from '../../../../core/models/Bodega/Bodega';
-import { BodegaListView } from '../../../../core/interfaces/Bodega/BodegaListView';
 import { BodegaService } from '../../../../core/services/Bodega/bodega.service';
 import { EstadosService } from '../../../../core/services/Bodega/estados.service';
 import { EstadoListView } from '../../../../core/interfaces/Bodega/EstadoListView';
@@ -19,6 +17,8 @@ import { TrasladoBodegasDetalle } from '../../../../core/models/Bodega/TrasladoB
 import { MatTableDataSource } from '@angular/material/table';
 import { ArticuloServiceService } from '../../../../core/services/Bodega/articulo-service.service';
 import { StockDisponible } from '../../../../core/models/Bodega/StockDisponible';
+import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
+import { EstadoCombo } from 'src/app/core/interfaces/Bodega/EstadoCombo';
 
 
 @Component({
@@ -38,20 +38,20 @@ export class FormTrasladoComponent {
   isEditMode: boolean = false;
 
   //Bodegas Origen
-  list_bodegas_Origen: BodegaListView[] = [];
-  SelectBodegasOrigenControl = new FormControl<BodegaListView | null>(null, Validators.required);
+  list_bodegas_Origen: BodegaCombo[] = [];
+  SelectBodegasOrigenControl = new FormControl<BodegaCombo | null>(null, Validators.required);
 
   //Bodegas Destino
-  list_bodegas_Destino: BodegaListView[] = [];
-  SelectBodegasDestinoControl = new FormControl<BodegaListView | null>(null, Validators.required);
+  list_bodegas_Destino: BodegaCombo[] = [];
+  SelectBodegasDestinoControl = new FormControl<BodegaCombo | null>(null, Validators.required);
 
   //Estados de Stock Origen
-  list_estados_Origen: EstadoListView[] = [];
-  SelecEstadoOrigenControl = new FormControl<EstadoListView | null>(null, Validators.required);
+  list_estados_Origen: EstadoCombo[] = [];
+  SelecEstadoOrigenControl = new FormControl<EstadoCombo | null>(null, Validators.required);
 
   //Estados de Stock Destino
-  list_estados_Destino: EstadoListView[] = [];
-  SelecEstadoDestinoControl = new FormControl<EstadoListView | null>(null, Validators.required);
+  list_estados_Destino: EstadoCombo[] = [];
+  SelecEstadoDestinoControl = new FormControl<EstadoCombo | null>(null, Validators.required);
 
   //Autocompletar para el articulo
   // 1. Control para el campo de entrada

@@ -1,25 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AjusteStockService } from '../../../../core/services/Bodega/ajuste-stock.service';
 import { AjusteStock } from '../../../../core/models/Bodega/AjusteStock';
 import { BodegaService } from '../../../../core/services/Bodega/bodega.service';
-import { Bodega } from '../../../../core/models/Bodega/Bodega';
 import { MatTableDataSource } from '@angular/material/table';
-import { debounceTime, finalize, Observable, switchMap, tap } from 'rxjs';
 import { ArticuloSearch } from '../../../../core/models/Bodega/ArticuloSearch';
-import { ArticuloServiceService } from '../../../../core/services/Bodega/articulo-service.service';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Numerador } from '../../../../core/models/core/Numerador';
-import { EmpresaServiceService } from '../../../../core/services/core/empresa-service.service';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MotivosAjuste } from '../../../../core/models/Bodega/MotivosAjuste';
-import { MotivosAjusteService } from '../../../../core/services/Bodega/motivos-ajuste.service';
-import { EstadoStock } from '../../../../core/models/Bodega/EstadoStock';
-import { EstadosService } from '../../../../core/services/Bodega/estados.service';
+import { MotivosAjusteService } from '../../../../core/services/Bodega/motivos-ajuste.service'
 import { StockDisponible } from '../../../../core/models/Bodega/StockDisponible';
 import { AjusteStockDetalle } from '../../../../core/models/Bodega/AjusteStockDetalle';
 import { Auditoria } from '../../../../core/models/core/Auditoria';
@@ -27,6 +19,9 @@ import { AjusteStockInfoArticulos } from '../../../../core/interfaces/Bodega/Aju
 import { ArticuloAutocompletComponent } from '../../../resources/articulo-autocomplet/articulo-autocomplet.component';
 import { ComboBodegaComponent } from '../../../resources/combo-bodega/combo-bodega.component';
 import { ComboEstadostockComponent } from '../../../resources/combo-estadostock/combo-estadostock.component';
+import { ServiciosiniService } from 'src/app/core/services/core/serviciosini.service';
+import { MotivosCombo } from 'src/app/core/interfaces/Bodega/MotivoCombo';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 
 @Component({
   selector: 'app-form-ajuste',
@@ -45,8 +40,8 @@ export class FormAjusteComponent {
   isEditMode: boolean = false; //Se define si el modo es nuevo o edicion
 
   //Motivos de Stock
-  lista_motivos: MotivosAjuste[] = [];
-  SelecMotivosControl = new FormControl<MotivosAjuste | null>(null, Validators.required);
+  lista_motivos: MotivosCombo[] = [];
+  SelecMotivosControl = new FormControl<MotivosCombo | null>(null, Validators.required);
 
   //tabla de articulos
   detalle: AjusteStockDetalle[] = [];
@@ -57,14 +52,17 @@ export class FormAjusteComponent {
   //Informacion general de articulos
   list_info_Articulos: AjusteStockInfoArticulos[] = [];
 
+  // Capturamos la referencia del formulario del HTML
+  @ViewChild('formDirective') formDirective!: NgForm;
+
   //constructor
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
     private ajusteService: AjusteStockService,
     private bodegaService: BodegaService,
-    private empresaService: EmpresaServiceService,
+    private serviceIni: ServiciosiniService,
     private motivoService: MotivosAjusteService,
-    private estadoService: EstadosService,
+    private notificacion: NotificacionesService,
     private router: Router,
     private route: ActivatedRoute) {
     this.objeto = new AjusteStock();
@@ -79,7 +77,7 @@ export class FormAjusteComponent {
       nroDocum: [{ value: this.objeto.nroDocum, disabled: true }],
       idCalculo: [this.objeto.idCalculo],
       idEstado: [this.objeto.idEstado, Validators.required],
-      motivoAjuste: [this.objeto.motivoAjuste, Validators.required],
+      idMotivo: [this.objeto.idMotivo, Validators.required],
       observacion: [this.objeto.observacion, Validators.required],
       fechaMovimiento: [new Date(), Validators.required], //this.objeto.fechaMovimiento
       documento: this.objeto.documento,
@@ -91,7 +89,7 @@ export class FormAjusteComponent {
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
-    const id = params.get('id'); // Obtener el valor del parámetro 'id'
+      const id = params.get('id'); // Obtener el valor del parámetro 'id'
 
       if (id) {
         // Si hay un ID, estamos en modo Edición
@@ -126,7 +124,7 @@ export class FormAjusteComponent {
   }
 
   recibirEstado(estado: any) {
-    console.log('El padre recibió la estado:', estado);
+    console.log('El padre recibió el estado:', estado);
     this.formulario.patchValue({
       idEstado: estado.id
     });
@@ -141,7 +139,7 @@ export class FormAjusteComponent {
  * @returns No tiene return , carga directamente en el patchValue de 'nroDocum'
  */
   obtenerNumerador(numerador: string): void {
-    this.empresaService.numeradorNext(numerador).subscribe({
+    this.serviceIni.numeradorNext(numerador).subscribe({
       next: (data: Numerador) => {
         this.formulario.get('nroDocum')?.patchValue(data.next_value);
       },
@@ -153,7 +151,7 @@ export class FormAjusteComponent {
 
   //Metodo para cargar motivos
   cargarMotivosStock(): void {
-    this.motivoService.list().subscribe({
+    this.motivoService.listSelection().subscribe({
       next: (data) => {
         this.lista_motivos = data;
         console.log(data);
@@ -163,7 +161,7 @@ export class FormAjusteComponent {
           console.log("Modelo edicion");
           //busco ajuste por ID
           const motivoSeleccion = this.lista_motivos.find(
-            obj => obj.idMotivo === this.objeto.motivoAjuste.idMotivo
+            obj => obj.idMotivo === this.objeto.idMotivo
           );
 
           if (motivoSeleccion) {
@@ -235,12 +233,9 @@ export class FormAjusteComponent {
 
           //Se asignan los valores a la fila de la tabla.
           fila.patchValue({
-            id: {
-              idArticulo: stockData.idArticulo,
-              linea: index + 1,
-              idTrans: null
-            },
-
+            idTrans: null,
+            idArticulo: stockData.idArticulo,
+            linea: index + 1,
             idUbicacion: stockData.ubicacion,
             idLote: stockData.lote,
             cantDisp: stockData.stock,
@@ -301,12 +296,10 @@ export class FormAjusteComponent {
  */
   crearDetalleForm(data: StockDisponible, nextLinea: number, search: ArticuloSearch): FormGroup {
     return this.fb.group({
-      // Estructura de ID que ya tenías
-      id: this.fb.group({
-        idArticulo: [data.idArticulo, Validators.required],
-        linea: [nextLinea, Validators.required],
-        idTrans: [null]
-      }),
+      //llave compuesta
+      idTrans: [null],
+      idArticulo: [data.idArticulo, Validators.required],
+      linea: [nextLinea, Validators.required],
 
       // Campos informativos (se llenan al seleccionar el artículo)
       idUbicacion: [{ value: data.ubicacion, disabled: true }],
@@ -349,12 +342,11 @@ export class FormAjusteComponent {
         this.formulario.get('nroDocum')?.patchValue(data.nroDocum);
         this.formulario.get('idCalculo')?.patchValue(data.idCalculo);
         this.formulario.get('idEstado')?.patchValue(data.idEstado);
-        this.formulario.get('motivoAjuste')?.patchValue(data.motivoAjuste);
+        this.formulario.get('idMotivo')?.patchValue(data.idMotivo);
         this.formulario.get('observacion')?.patchValue(data.observacion);
         this.formulario.get('fechaMovimiento')?.patchValue(data.fechaMovimiento);
         this.formulario.get('documento')?.patchValue(data.documento);
         this.formulario.get('vista')?.patchValue(data.vista);
-        this.formulario.get('motivoAjuste')?.patchValue(data.motivoAjuste);
 
 
         // Se carga el log acumulado en el objecto.
@@ -452,7 +444,7 @@ export class FormAjusteComponent {
 
     this.formulario.patchValue({
       idCalculo: 1,
-      motivoAjuste: this.SelecMotivosControl.value,
+      idMotivo: this.SelecMotivosControl.value?.idMotivo,
       documento: 'ajuste',
       vista: 'AjusteStock',
       fechaMod: new Date().toISOString()
@@ -477,21 +469,55 @@ export class FormAjusteComponent {
     this.agregarLogAuditoria();
     console.log("OBJECTO");
     console.log(this.formulario.getRawValue());
+    const dataCompleta = this.formulario.getRawValue();
+    dataCompleta.detalles = dataCompleta.detalles.map((detalle: any) => {
+      const { search, ...resto } = detalle;
+      return resto;
+    });
+    console.log(dataCompleta);
 
-    /*
-        //Evento nuevo
-        this.ajusteService.save(this.formulario.getRawValue()).subscribe({
-          next: (ajusteSave) => {
-            // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
-            console.log(ajusteSave);
-            // 4. Redirigir a la vista de lista principal.
-            this.router.navigate(['/ajustestock']);
-          },
-          error: (err) => {
-            console.error('Error al guardar:', err);
-          }
-        });
-    */
+
+    //Evento nuevo
+    this.ajusteService.save(this.formulario.getRawValue()).subscribe({
+      next: (ajusteSave) => {
+        // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
+        console.log(ajusteSave);
+        this.notificacion.showSuccess('¡Ajuste guardado con éxito!');
+        this.resetCampos();
+
+      },
+      error: (err) => {
+        console.error('Error al guardar:', err);
+      }
+    });
+
+  }
+
+  resetCampos() {
+    //Recuperar valores que no cambian
+    const idBodega = this.formulario.value.idBodega;
+    const idEstado = this.formulario.value.idEstado;
+    const nrodocum: number = this.formulario.get('nroDocum')?.value;
+
+    //Limpiar el formulario
+    this.objeto = new AjusteStock();
+    this.formDirective.resetForm();
+    //reset grilla de logs
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.clear();
+    //reset grilla de articulos
+    const detalle = this.formulario.get('detalles') as FormArray;    
+    detalle.clear();
+    // agregas la fila inicial "limpia"
+    this.agregarLineaVacia();
+     
+    //actualizo referencias
+    this.formulario.get('idBodega')?.patchValue(idBodega);
+    this.formulario.get('idEstado')?.patchValue(idEstado);
+    this.formulario.get('fechaMovimiento')?.patchValue(new Date());
+    this.formulario.get('nroDocum')?.patchValue(nrodocum+1);
+    
+
   }
 
   // Método para agregar el log al FormArray

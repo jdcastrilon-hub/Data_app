@@ -1,14 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { TipoCosteo } from '../../models/Bodega/tipoCosteo';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { TipoCosteo } from '../../models/Bodega/TipoCosteo';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TipoCosteoServiceService {
 
-  private url: string = 'http://localhost:8080/api/bodega/tipocosteo/';
+  private url: string = `${environment.baseUrl}/bodega/tipocosteo/`;
   constructor(private http: HttpClient) { }
 
   list(): Observable<TipoCosteo[]> {
