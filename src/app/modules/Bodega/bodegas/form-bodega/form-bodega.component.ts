@@ -24,7 +24,6 @@ export class FormBodegaComponent {
   isEditMode: boolean = false;
 
   //Seleccion para sucursales.
-  //Sucursal
   list_sucursal: Sucursal[] = [];
   SelectSucursalControl = new FormControl<Sucursal | null>(null, Validators.required);
 
@@ -41,7 +40,7 @@ export class FormBodegaComponent {
   }
 
   ngOnInit(): void {
-
+    console.log("form Bodega")
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({
       codBodega: [this.objeto.codBodega, Validators.required],
@@ -52,7 +51,7 @@ export class FormBodegaComponent {
       fechaMod: [this.objeto.fechaMod],
       logs: this.fb.array([]),
       id: [this.objeto.id],
-      idSucusal : [this.objeto.idSucursal, Validators.required],
+      idSucursal: [this.objeto.idSucursal, Validators.required],
     });
 
     //Validacion si es modo edicion o nuevo
@@ -62,6 +61,8 @@ export class FormBodegaComponent {
       if (id) {
         // Si hay un ID, estamos en modo Edición
         console.log("Edicion")
+        this.isEditMode = true;
+        this.ModoEdicion(Number(id)); // Llama al método de carga
 
       } else {
         // Si no hay ID (p. ej., si usas esta misma ruta para crear), estamos en modo Nuevo
@@ -75,8 +76,6 @@ export class FormBodegaComponent {
         this.cargarSucursales();
       }
     });
-
-
   }
 
   //Metodo para cargar lista de sucursales.
@@ -87,7 +86,7 @@ export class FormBodegaComponent {
 
         // Si es metodo edicion y tengo una empresa cargada.
         //La busco en la lista que me retorno el API
-        if (this.isEditMode && this.objeto.idSucursal) {
+        if (this.isEditMode) {
           //busco la sucursal por ID
           const sucursalSeleccinada = this.list_sucursal.find(
             sucursal => sucursal.id === this.objeto.idSucursal
@@ -97,19 +96,46 @@ export class FormBodegaComponent {
             // [CLAVE]: Asigna el OBJETO completo al FormControl
             this.SelectSucursalControl.setValue(sucursalSeleccinada);
           }
-        } else if (!this.isEditMode) {
+        } else {
           // Condición: Si estamos en modo Nuevo (this.isEditMode es false)
-          // Y la lista de empresas tiene exactamente 1 elemento.
-          if (this.list_sucursal.length === 1) {
-            const unicaSucursal = this.list_sucursal[0];
-            this.SelectSucursalControl.setValue(unicaSucursal);
-          }
+            const unicoregistro = this.list_sucursal[0];
+            this.SelectSucursalControl.setValue(unicoregistro);
         }
       },
       error: (err) => {
         console.error('Error cargando empresas', err);
       }
     });
+  }
+
+  /**
+  * Metodo para cargar la informacion de la bodega por el (id)
+  * @returns No tiene return
+  */
+  ModoEdicion(id: number): void {
+    console.log("ModoEdicion");
+    //llama el API para recuperar el objecto categoria
+    this.bodegaService.getBodegaById(id).subscribe(
+      (data: Bodega) => {
+        console.log("Respuesta API");
+        console.log(data);
+        this.objeto = data; // Cargar la data de la categoría en el formulario
+        this.formulario.get('id')?.patchValue(data.id);
+        this.formulario.get('codBodega')?.patchValue(data.codBodega);
+        this.formulario.get('nomBodega')?.patchValue(data.nomBodega);
+        this.formulario.get('bodegaPrincipal')?.patchValue(data.bodegaPrincipal === 'S');
+        this.formulario.get('manejaUbicaciones')?.patchValue(data.manejaUbicaciones === 'S');
+        this.formulario.get('activo')?.patchValue(data.activo === 'S');
+
+        this.cargarSucursales();
+
+      },
+      error => {
+        console.error('Error al cargar la categoría:', error);
+        // Opcional: Redirigir si el ID es inválido o no existe
+        this.router.navigate(['/categorias']);
+      }
+    );
   }
 
   enviarFormulario() {
@@ -137,16 +163,16 @@ export class FormBodegaComponent {
 
     //Auditoria
     this.agregarLogAuditoria();
-    console.log("OBJECTO");
+    console.log("OBJECTO2");
     console.log(this.formulario.getRawValue());
 
 
     if (this.isEditMode) {
       //Evento Edicion
       console.log("api ediccion");
-    } else {
-      //Evento nuevo
-      this.bodegaService.save(this.formulario.value).subscribe({
+      console.log(this.objeto.id)
+      
+      this.bodegaService.edit(this.formulario.getRawValue(),this.objeto.id!).subscribe({
         next: (ObjectSave) => {
           // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
           console.log(ObjectSave);
@@ -157,7 +183,26 @@ export class FormBodegaComponent {
           console.error('Error al guardar:', err);
         }
       });
+      
+    } else {
+      //Evento nuevo
+      const dataCompleta = this.formulario.getRawValue();
+      const { id, ...bodyJson } = dataCompleta;
+      console.log('JSON Limpio:', bodyJson);
+      console.log("api nuevo");
+      this.bodegaService.save(bodyJson).subscribe({
+        next: (ObjectSave) => {
+          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
+          console.log(ObjectSave);
+          // 4. Redirigir a la vista de lista principal.
+          this.router.navigate(['/bodegas/new']);
+        },
+        error: (err) => {
+          console.error('Error al guardar:', err);
+        }
+      });
     }
+     
 
   }
 

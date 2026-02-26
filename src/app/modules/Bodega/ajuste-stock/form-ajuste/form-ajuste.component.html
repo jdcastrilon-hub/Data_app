@@ -1,7 +1,12 @@
-<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
     <mat-card appearance="raised">
-        <mat-card-header class="mat-header">
-            <mat-card-title>AJUSTE DE STOCK</mat-card-title>
+         <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <a mat-icon-button color="primary" routerLink="/categorias">
+                    <mat-icon>list</mat-icon>
+                </a>
+                <span>AJUSTE DE STOCK</span>
+            </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
         <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
@@ -60,7 +65,7 @@
                         </div>
                     </div>
 
-
+                  
                     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 tabla-compacta"
                         formArrayName="detalles">
                         <ng-container matColumnDef="id">
@@ -123,6 +128,7 @@
                         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                     </table>
+                  
                 </div>
 
             </mat-tab>

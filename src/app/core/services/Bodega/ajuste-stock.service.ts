@@ -4,11 +4,12 @@ import { AjusteStock } from '../../models/Bodega/AjusteStock';
 import { map, Observable } from 'rxjs';
 import { AjusteStockListView } from '../../models/Bodega/AjusteStockListView';
 import { AjusteStockInfoArticulos } from '../../interfaces/Bodega/AjusteStockInfoArticulos';
+import { environment } from 'src/environments/environment';
 
-interface ApiResponse {
-  status: string; // Definición clara como string
+interface ApiResponse<T = void> {
+  status: 'success' | 'error'; // Uso de literales para mejor tipado
   message: string;
-  data: AjusteStock;
+  data?: T; // La T es genérica y el ? la hace opcional
 }
 
 @Injectable({
@@ -16,7 +17,7 @@ interface ApiResponse {
 })
 export class AjusteStockService {
 
-  private url: string = 'http://localhost:8080/api/bodega/ajustestock/';
+  private url: string = `${environment.baseUrl}/bodega/ajustestock/`;
 
   constructor(private http: HttpClient) { }
 
@@ -31,7 +32,7 @@ export class AjusteStockService {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
 
-        if (response.status !== 'ok') {
+       if (response.status !== 'success') {
           // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
           throw new Error(response.message || 'Error desconocido al guardar la categoría.');
         }

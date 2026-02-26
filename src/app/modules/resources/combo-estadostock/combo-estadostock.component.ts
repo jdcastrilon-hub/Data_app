@@ -2,8 +2,8 @@ import { Component, input, output } from '@angular/core';
 import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
-import { EstadoStock } from '../../../core/models/Bodega/EstadoStock';
 import { EstadosService } from '../../../core/services/Bodega/estados.service';
+import { EstadoCombo } from 'src/app/core/interfaces/Bodega/EstadoCombo';
 
 @Component({
   selector: 'combo-estadostock',
@@ -19,11 +19,11 @@ export class ComboEstadostockComponent {
   editMode = input<boolean>(false);
 
   //salidas
-  estadoSeleccionado = output<EstadoStock>();
+  estadoSeleccionado = output<EstadoCombo>();
 
   //Estados de Stock
-  list_estados: EstadoStock[] = [];
-  SelecEstadoControl = new FormControl<EstadoStock | null>(null, Validators.required);
+  list_estados: EstadoCombo[] = [];
+  SelecEstadoControl = new FormControl<EstadoCombo | null>(null, Validators.required);
 
 
   constructor(private fb: FormBuilder,
@@ -31,13 +31,14 @@ export class ComboEstadostockComponent {
   ) { }
 
   ngOnInit(): void {
+    console.log("Modelo Estado");
     console.log(this.editMode());
     this.cargaDatos();
   }
 
   cargaDatos(): void {
     console.log("Componente combo estados stock");
-    this.estadoService.list().subscribe({
+    this.estadoService.listSelection().subscribe({
       next: (data) => {
         //Se recupera el Json del API
         this.list_estados = data;

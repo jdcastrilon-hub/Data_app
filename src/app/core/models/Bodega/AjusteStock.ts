@@ -9,7 +9,7 @@ export class AjusteStock {
     nroDocum!: number;
     idCalculo!: number;
     idEstado !: number;
-    motivoAjuste !: MotivosAjuste;
+    idMotivo !: number;
     observacion !: string;
     fechaMovimiento!: Date;
     vista !: string;

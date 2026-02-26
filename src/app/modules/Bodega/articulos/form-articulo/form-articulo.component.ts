@@ -20,7 +20,7 @@ import { NegocioxCategoriasDTO } from '../../../../core/models/General/NegocioxC
 import { UnidadServiceService } from '../../../../core/services/Bodega/unidad-service.service';
 import { Unidad } from '../../../../core/models/Bodega/Unidad';
 import { TipoCosteoServiceService } from '../../../../core/services/Bodega/tipo-costeo-service.service';
-import { TipoCosteo } from '../../../../core/models/Bodega/tipoCosteo';
+import { TipoCosteo } from '../../../../core/models/Bodega/TipoCosteo';
 import { TasaImpuesto } from '../../../../core/models/Impuestos/TasaImpuesto';
 import { TasaImpuestoServiceService } from '../../../../core/services/impuestos/tasa-impuesto-service.service';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';

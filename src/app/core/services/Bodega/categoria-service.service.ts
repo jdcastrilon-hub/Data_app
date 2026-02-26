@@ -4,11 +4,12 @@ import { Categoria } from '../../models/Bodega/Categoria';
 import { Subject, Observable, tap, map } from 'rxjs';
 import { PageResponse } from '../../models/core/PageResponse';
 import { CategoriaListView } from '../../models/Bodega/CategoriaListView';
+import { environment } from 'src/environments/environment';
 
-interface ApiResponse {
-  status: string; // Definición clara como string
+interface ApiResponse<T = void> {
+  status: 'success' | 'error'; // Uso de literales para mejor tipado
   message: string;
-  data: Categoria;
+  data?: T; // La T es genérica y el ? la hace opcional
 }
 
 @Injectable({
@@ -17,8 +18,7 @@ interface ApiResponse {
 
 export class CategoriaService {
 
-
-  private url: string = 'http://localhost:8080/api/bodega/categoria/';
+  private url: string = `${environment.baseUrl}/bodega/categorias/`;
 
   // Subject: El canal que usaremos para emitir la nueva categoría.
   private EventoCategoria = new Subject<any>();
@@ -50,24 +50,19 @@ export class CategoriaService {
       .set('size', size.toString())//Cantidad de registros a validar
     //.set('sort','fechaMod,desc');//Ordenamiento de la lista
 
-    return this.http.get<PageResponse<CategoriaListView>>(this.url + "pagenation", { params });
+    return this.http.get<PageResponse<CategoriaListView>>(this.url + "pagination", { params });
   }
 
   save(objecto: any): Observable<any> {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
-
-        if (response.status !== 'ok') {
+        console.log("save");
+        console.log(response);
+        if (response.status !== 'success') {
           // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
           throw new Error(response.message || 'Error desconocido al guardar la categoría.');
         }
-        //Extraer data de la respuesta.
-        const categoriaGuardada = response.data;
-
-        // Emitir el objeto extraído (el "json" que se creó)
-        this.EventoCategoria.next(categoriaGuardada);
-
-        return categoriaGuardada;
+        return response;
       })
     );
   }

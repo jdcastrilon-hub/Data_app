@@ -1,16 +1,21 @@
-<form [formGroup]="formulario">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
-            <mat-card-title>REGISTRO DE CATEGORIAS</mat-card-title>
+            <mat-card-title class="titulo-con-boton">
+                <a mat-icon-button color="primary" routerLink="/categorias">
+                    <mat-icon>list</mat-icon>
+                </a>
+                <span>REGISTRO DE CATEGORIAS</span>
+            </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
         <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
 
-            <mat-tab label="Datos Generales" >
+            <mat-tab label="Datos Generales">
 
                 <div class="bloque">
-                    <div fxLayout="row" fxLayout.lt-md="column" 
-                    fxLayoutAlign="space-between stretch" fxLayoutGap="10px">
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
                         <div fxFlex="30" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 @if (!isEditMode){
@@ -41,7 +46,7 @@
                         </div>
 
                     </div>
-                    
+
                     <p>Lista de Subcategorías</p>
                     <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
 
@@ -90,7 +95,7 @@
         <mat-card-actions class="mat-accion-botones">
             <button mat-raised-button color="primary" type="submit">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button" (click)="salirSinGuardar()">Salir</button>
+            <button mat-raised-button color="warn" type="button">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

@@ -15,12 +15,13 @@ import { ProveedoresComponent } from './modules/compras/proveedores/proveedores.
 import { FormProveedorComponent } from './modules/compras/proveedores/form-proveedor/form-proveedor.component';
 import { CompraDirectaComponent } from './modules/compras/compra-directa/compra-directa.component';
 import { FormCompraDirectaComponent } from './modules/compras/compra-directa/form-compra-directa/form-compra-directa.component';
+import { FormArticuloComponent } from './modules/Bodega/articulos-stock/form-articulo/form-articulo.component';
 
 export const routes: Routes = [
     { path: 'categorias', component: CategoriasComponent },
     { path: 'categoria/new', component: FormCategoriaComponent },
     { path: 'categoria/edit/:id', component: FormCategoriaComponent },
-    { path: 'articulos', component: ArticulosComponent },
+    { path: 'articulos/new', component: FormArticuloComponent },
     { path: 'ajustestock', component: AjusteStockComponent },
     { path: 'ajustestock/new', component: FormAjusteComponent },
     { path: 'ajustestock/edit/:id', component: FormAjusteComponent },
@@ -29,6 +30,7 @@ export const routes: Routes = [
     { path: 'inventariostock', component: InventarioStockComponent },
     { path: 'bodegas', component: BodegasComponent },
     { path: 'bodegas/new', component: FormBodegaComponent },
+    { path: 'bodegas/edit/:id', component: FormBodegaComponent },
     { path: 'trasladobodega', component: TrasladoBodegasComponent },
     { path: 'trasladobodega/new', component: FormTrasladoComponent },
     { path: 'proveedores', component: ProveedoresComponent },

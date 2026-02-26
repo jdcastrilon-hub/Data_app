@@ -1,16 +1,23 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Articulo } from '../../models/Bodega/Articulo';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { ArticuloDTO } from '../../models/Bodega/ArticuloDTO';
 import { ArticuloSearch } from '../../models/Bodega/ArticuloSearch';
+import { environment } from 'src/environments/environment';
+
+interface ApiResponse<T = void> {
+  status: 'success' | 'error'; // Uso de literales para mejor tipado
+  message: string;
+  data?: T; // La T es genérica y el ? la hace opcional
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ArticuloServiceService {
 
-  private url: string = 'http://localhost:8080/api/bodega/articulo/';
+  private url: string = `${environment.baseUrl}/bodega/articulos/`;
 
   constructor(private http: HttpClient) { }
 
@@ -26,9 +33,20 @@ export class ArticuloServiceService {
     return this.http.get<ArticuloDTO>(this.url + "getedition", { params });
   }
 
-  save(objecto: Articulo): Observable<Articulo> {
-    return this.http.post<Articulo>(this.url + "save", objecto);
+  //Guardar Articulo
+  save(objecto: any): Observable<any> {
+    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
+      map((response: ApiResponse) => {
+
+        if (response.status !== 'success') {
+          // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
+          throw new Error(response.message || 'Error desconocido al guardar el articulo.');
+        }
+        return response.data;
+      })
+    );
   }
+
 
   update(objecto: Articulo): Observable<Articulo> {
     const params = new HttpParams()
@@ -41,7 +59,7 @@ export class ArticuloServiceService {
   Search(query: string): Observable<ArticuloSearch[]> {
     const params = new HttpParams()
       .set('query', String(query));
-    return this.http.get<ArticuloSearch[]>(this.url + "Search", { params });
+    return this.http.get<ArticuloSearch[]>(this.url + "search", { params });
   }
 
 }

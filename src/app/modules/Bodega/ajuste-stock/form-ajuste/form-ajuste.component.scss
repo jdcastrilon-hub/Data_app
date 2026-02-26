@@ -49,6 +49,21 @@
   }
 }
 
+.titulo-con-boton {
+  display: flex;
+  /* Activa el modo Flexbox */
+  align-items: center;
+  /* Alinea verticalmente el icono y el texto al centro */
+  gap: 8px;
+  /* Espacio uniforme entre el botón y el texto */
+}
+
+/* Opcional: Si quieres que el texto tenga un peso específico */
+.titulo-con-boton span {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
 ::ng-deep .mat-mdc-form-field {
   --mat-form-field-container-text-font: 'Titillium Web', sans-serif !important; // change Input placeholder & value font-family
   --mat-form-field-container-text-size: 16px; // change input lable font-size
