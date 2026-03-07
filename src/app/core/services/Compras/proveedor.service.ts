@@ -5,11 +5,12 @@ import { Ciudades } from '../../models/core/Ciudades';
 import { PersonaSearch } from '../../interfaces/Compras/PersonaSearch';
 import { Proveedores } from '../../models/Compras/Proveedores';
 import { ProveedorSearch } from '../../interfaces/Compras/ProveedorSearch';
+import { environment } from 'src/environments/environment';
 
-interface ApiResponse {
-  status: string; // Definición clara como string
+interface ApiResponse<T = void> {
+  status: 'success' | 'error'; // Uso de literales para mejor tipado
   message: string;
-  data: Proveedores;
+  data?: T; // La T es genérica y el ? la hace opcional
 }
 
 
@@ -18,7 +19,7 @@ interface ApiResponse {
 })
 export class ProveedorService {
 
-  private url: string = 'http://localhost:8080/api/compras/proveedor/';
+  private url: string = `${environment.baseUrl}/compras/proveedor/`;
 
   constructor(private http: HttpClient) { }
 
@@ -38,7 +39,7 @@ export class ProveedorService {
     console.log("Service Search");
     const params = new HttpParams()
       .set('query', String(query));
-    return this.http.get<ProveedorSearch[]>(this.url + "ProveedorSearch", { params });
+    return this.http.get<ProveedorSearch[]>(this.url + "proveedorsearch", { params });
   }
 
 
@@ -47,9 +48,9 @@ export class ProveedorService {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
 
-        if (response.status !== 'ok') {
+        if (response.status !== 'success') {
           // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
-          throw new Error(response.message || 'Error desconocido al guardar proveedor.');
+          throw new Error(response.message || 'Error desconocido al guardar la categoría.');
         }
         return response.data;
       })

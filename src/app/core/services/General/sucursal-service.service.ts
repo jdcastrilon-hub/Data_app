@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Sucursal } from '../../models/General/Sucursal';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { SucursalCombo } from '../../interfaces/Core/SucursalCombo';
 
 
 @Injectable({
@@ -22,8 +23,10 @@ export class SucursalServiceService {
     return this.http.get<Sucursal[]>(this.url + "combo");
   }
 
-  sucursalesxBodegas(): Observable<Sucursal[]> {
-    return this.http.get<Sucursal[]>(this.url + "sucursalesxBodega");
+  sucursalesxBodegas(): Observable<SucursalCombo[]> {
+    const params = new HttpParams()
+      .set('id_empresa', String(1))
+    return this.http.get<SucursalCombo[]>(this.url + "comboBybodegas", { params });
   }
 
 }

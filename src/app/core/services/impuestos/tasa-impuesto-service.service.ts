@@ -19,6 +19,6 @@ export class TasaImpuestoServiceService {
   }
 
   ListCombos(): Observable<TasasCombo[]> {
-    return this.http.get<TasasCombo[]>(this.url + "listImpuestos");
+    return this.http.get<TasasCombo[]>(this.url + "listCombo");
   }
 }

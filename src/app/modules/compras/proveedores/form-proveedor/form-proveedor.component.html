@@ -1,7 +1,12 @@
-<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
-            <mat-card-title>PROVEEDORES</mat-card-title>
+            <mat-card-title class="titulo-con-boton">
+                <a mat-icon-button color="primary" routerLink="/proveedores">
+                    <mat-icon>list</mat-icon>
+                </a>
+                <span>REGISTRO PROVEEDOR</span>
+            </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
         <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">

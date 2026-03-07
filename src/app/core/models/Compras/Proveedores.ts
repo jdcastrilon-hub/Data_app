@@ -2,7 +2,8 @@ import { Auditoria } from "../core/Auditoria";
 import { Persona } from "./Personas";
 
 export class Proveedores {
-    id?: number;
+    idProveedor?: number;
+    idPersona!: number;
     persona!: Persona;
     codigoTitular!: string;
     razonSocial!: string;

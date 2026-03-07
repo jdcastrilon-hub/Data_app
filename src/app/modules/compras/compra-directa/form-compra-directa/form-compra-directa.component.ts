@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -27,6 +27,10 @@ import { ProveedorSearch } from '../../../../core/interfaces/Compras/ProveedorSe
 import { TasasCombo } from '../../../../core/interfaces/Impuestos/TasasCombo';
 import { TasaImpuestoServiceService } from '../../../../core/services/impuestos/tasa-impuesto-service.service';
 import { ComprasService } from '../../../../core/services/Compras/compras.service';
+import { ServiciosiniService } from 'src/app/core/services/core/serviciosini.service';
+import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
+import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 
 @Component({
   selector: 'form-compra-directa',
@@ -46,7 +50,7 @@ export class FormCompraDirectaComponent {
   //tabla de articulos
   detalle: CompraDetalle[] = [];
   dataSource = new MatTableDataSource<FormGroup>();
-  todasLasColumnas: string[] = ['id', 'costo', 'cantidad', 'neto', 'impuesto1', 'imp1', 'total', 'Lote', 'stock'];
+  todasLasColumnas: string[] = ['id', 'Lote', 'stock', 'costo', 'cantidad', 'neto', 'impuesto1', 'imp1', 'total'];
   displayedColumns: string[] = [];
 
   //Informacion general de articulos
@@ -58,23 +62,27 @@ export class FormCompraDirectaComponent {
   SelecStatusControl = new FormControl<String | null>(this.defaultStatus, Validators.required);
 
   //Seleccion para sucursales.
-  list_sucursal: Sucursal[] = [];
-  SelectSucursalControl = new FormControl<Sucursal | null>(null, Validators.required);
+  list_sucursal: SucursalCombo[] = [];
+  SelectSucursalControl = new FormControl<SucursalCombo | null>(null, Validators.required);
 
   //Bodegas
-  list_bodegas: Bodega[] = [];
-  SelectBodegasControl = new FormControl<Bodega | null>(null, Validators.required);
+  list_bodegas: BodegaCombo[] = [];
+  SelectBodegasControl = new FormControl<BodegaCombo | null>(null, Validators.required);
 
   //Impuestos
   list_impuestos: TasasCombo[] = [];
   SelectImpuestosControl = new FormControl<TasasCombo | null>(null, Validators.required);
 
+  // Capturamos la referencia del formulario del HTML
+  @ViewChild('formDirective') formDirective!: NgForm;
+
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
     private compraService: ComprasService,
-    private empresaService: EmpresaServiceService,
+    private serviceIni: ServiciosiniService,
     private sucursalService: SucursalServiceService,
     private tasaService: TasaImpuestoServiceService,
+    private notificacion: NotificacionesService,
     private route: ActivatedRoute,
     private router: Router) {
     this.objeto = new Compra();
@@ -176,6 +184,7 @@ Receptores
       searchProveedor: proveedor
     });
     this.formulario.get('searchProveedor')?.disable();
+
     //fila.get('search')?.disable(); //Se bloque la primera columna.
   }
 
@@ -232,7 +241,7 @@ Receptores
   * @returns No tiene return , carga directamente en el patchValue de 'nroDocum'
   */
   obtenerNumerador(numerador: string): void {
-    this.empresaService.numeradorNext(numerador).subscribe({
+    this.serviceIni.numeradorNext(numerador).subscribe({
       next: (data: Numerador) => {
         this.formulario.get('nroDocum')?.patchValue(data.next_value);
       },
@@ -304,7 +313,7 @@ Receptores
         console.log('Calculando...', { costo, cantidad }); // Ahora sí debería entrar
         console.log('Impuesto...', { objimpuesto1 }); // Ahora sí debería entrar
         const neto = (costo || 0) * (cantidad || 0);
-        const valorImpu1 = (neto || 0) * (objimpuesto1.porcentaje || 0);
+        const valorImpu1 = (neto || 0) * ((objimpuesto1.porcentaje / 100) || 0);
         const tasaImpu1 = (objimpuesto1.id);
         nuevoDetalle.get('costoTotal')?.setValue(neto, { emitEvent: false });
         nuevoDetalle.get('idTasaimp1')?.setValue(tasaImpu1, { emitEvent: false });
@@ -325,12 +334,10 @@ Receptores
 
     return this.fb.group({
       // Estructura de ID que ya tenías
-      id: this.fb.group({
-        idArticulo: [data.idArticulo, Validators.required],
-        linea: [nextLinea, Validators.required],
-        idTrans: [null]
-      }),
-
+      //llave compuesta
+      idTrans: [null],
+      idArticulo: [data.idArticulo, Validators.required],
+      linea: [nextLinea, Validators.required],
 
       refCompras: [data.nomArticulo],
       codigoBarras: "0",
@@ -378,11 +385,9 @@ Receptores
 
     const fila = this.detalles.at(index);
     fila.patchValue({
-      id: {
-        idArticulo: articulo.idArticulo,
-        linea: index + 1,
-        idTrans: null
-      },
+      idTrans: null,
+      idArticulo: articulo.idArticulo,
+      linea: index + 1,
       idUbicacion: 0,
       idLote: 0,
       cantDisp: 0,
@@ -403,7 +408,7 @@ Receptores
 
     // 2. Sumamos el campo 'neto' de cada objeto en el array
     return todasLasFilas.reduce((acumulado, fila) => {
-      return acumulado + (Number(fila.valorImpuesto1) || 0);
+      return acumulado + (Number(fila.costoTotal) || 0);
     }, 0);
   }
 
@@ -428,7 +433,7 @@ Receptores
 
     // 2. Sumamos el campo 'neto' de cada objeto en el array
     return todasLasFilas.reduce((acumulado, fila) => {
-      return acumulado + (Number(fila.costoUnit) || 0);
+      return acumulado + (Number(fila.valorImpuesto1) || 0);
     }, 0);
   }
 
@@ -541,13 +546,39 @@ Receptores
       next: (compra) => {
         // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
         console.log(compra);
-        // 4. Redirigir a la vista de lista principal.
-        //this.router.navigate(['/ajustestock']);
+        this.notificacion.showSuccess('¡Ajuste guardado con éxito!');
+        this.resetCampos();
       },
       error: (err) => {
         console.error('Error al guardar:', err);
       }
     });
+
+  }
+
+  resetCampos() {
+    //Recuperar valores que no cambian
+    const idBodega = this.formulario.value.idBodega;
+    const idEstado = this.formulario.value.idEstado;
+    const nrodocum: number = this.formulario.get('nroDocum')?.value;
+
+    //Limpiar el formulario
+    this.objeto = new Compra();
+    this.formDirective.resetForm();
+    //reset grilla de logs
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.clear();
+    //reset grilla de articulos
+    const detalle = this.formulario.get('detalles') as FormArray;
+    detalle.clear();
+    // agregas la fila inicial "limpia"
+    this.agregarLineaVacia();
+
+    //actualizo referencias
+    this.formulario.get('idBodega')?.patchValue(idBodega);
+    this.formulario.get('idEstado')?.patchValue(idEstado);
+    this.formulario.get('nroDocum')?.patchValue(nrodocum + 1);
+
 
   }
 

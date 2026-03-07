@@ -11,6 +11,8 @@ import { TipoDocumentoService } from '../../../../core/services/Compras/tipo-doc
 import { Ciudades } from '../../../../core/models/core/Ciudades';
 import { ProveedorService } from '../../../../core/services/Compras/proveedor.service';
 import { Persona } from '../../../../core/models/Compras/Personas';
+import { CiudadesService } from 'src/app/core/services/core/ciudades.service';
+import { CiudadCombo } from 'src/app/core/interfaces/Core/CiudadCombo';
 //import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 export interface DialogData {
@@ -45,15 +47,15 @@ export class ModalPersonaComponent {
 
   //Ciudades
   defaultCiudad = { idCiudad: 3, codCiudad: '76001', nomCiudad: 'CALI' }; //Valor por defecto
-  list_ciudades: Ciudades[] = [];
-  SelecCiudadControl = new FormControl<Ciudades | null>(this.defaultCiudad, Validators.required);
+  list_ciudades: CiudadCombo[] = [];
+  SelecCiudadControl = new FormControl<CiudadCombo | null>(this.defaultCiudad, Validators.required);
 
 
   // 1. Recibe la referencia del modal y los datos inyectados
   constructor(
     private fb: FormBuilder,
     private tipoService: TipoDocumentoService,
-    private proveedorService: ProveedorService,
+    private ciudadService: CiudadesService,
     public dialogRef: MatDialogRef<ModalPersonaComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) { this.objeto = new Persona(); }
@@ -89,7 +91,7 @@ export class ModalPersonaComponent {
   //Metodo para cargar lista de bodegas.
   CargaTiposDocumento(): void {
     console.log("CargaTiposDocumento");
-    this.tipoService.list().subscribe({
+    this.tipoService.listSelection().subscribe({
       next: (data) => {
         this.list_tipos = data;
 
@@ -115,7 +117,7 @@ export class ModalPersonaComponent {
   //List Ciudades
   CargaCiudades(): void {
     console.log("Carga Ciudades");
-    this.proveedorService.ciudades().subscribe({
+    this.ciudadService.listSelection().subscribe({
       next: (data) => {
         this.list_ciudades = data;
 
@@ -145,13 +147,16 @@ export class ModalPersonaComponent {
   enviarFormulario() {
     //Asignacion de campos en cabezal
     console.log("enviarFormulario");
-
+    const fechaOriginal = new Date(this.formulario.value.fechaNacimiento);
+    // Convertimos a ISO y cortamos en la 'T'
+    const fechaFormateada = fechaOriginal.toISOString().split('T')[0];
     this.formulario.patchValue({
       idTipoDoc: this.SelecTiposControl.value?.id,
       sexo: this.SelecSexoControl.value,
       idCiudad: this.SelecCiudadControl.value?.idCiudad,
       nombreCompleto: this.formulario.get('nombres')?.value + ' ' + this.formulario.get('apellidos')?.value,
-      fechaMod: new Date().toISOString()
+      fechaMod: new Date().toISOString(),
+      fechaNacimiento:fechaFormateada
     });
     console.log(this.formulario.value);
 

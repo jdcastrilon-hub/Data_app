@@ -183,3 +183,29 @@
   text-align: right;
   /* Alinea los números a la derecha, se ve más profesional */
 }
+/* Busca la columna del artículo por su nombre de clase de Material */
+.mat-column-id {
+  vertical-align: middle; /* Alineación base de tabla */
+}
+
+/* El contenedor interno de la celda */
+.celda-articulo-container {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center; /* Centra verticalmente el input y el botón */
+  gap: 8px;            /* Espacio entre el buscador y el botón */
+  width: 100%;
+}
+
+/* Forzamos al autocompletar a ceder espacio al botón */
+articulo-autocomplet {
+  flex: 1;
+  min-width: 0; /* Evita que el flexbox se desborde */
+}
+
+/* Opcional: Haz el botón un poco más compacto */
+.btn-eliminar-compacto {
+  flex-shrink: 0;
+  width: 40px !important;
+  height: 40px !important;
+}

@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -14,6 +14,7 @@ import { Persona } from '../../../../core/models/Compras/Personas';
 import { Proveedores } from '../../../../core/models/Compras/Proveedores';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 
 @Component({
   selector: 'app-form-proveedor',
@@ -40,11 +41,15 @@ export class FormProveedorComponent {
   isLoading = false;
   isPersonSelected = false;
 
+  // Capturamos la referencia del formulario del HTML
+  @ViewChild('formDirective') formDirective!: NgForm;
+
 
   constructor(private fb: FormBuilder,
     private proveedorService: ProveedorService,
     private logAuditoria: AuditoriaService,
     private route: ActivatedRoute,
+    private notificacion: NotificacionesService,
     private router: Router,
     private dialog: MatDialog) {
     this.objeto = new Proveedores();
@@ -53,8 +58,8 @@ export class FormProveedorComponent {
   ngOnInit() {
 
     this.formulario = this.fb.group({
-      isPersona: [false],
-      id: [this.objeto.id],
+      //isPersona: [false],
+      idProveedor: [this.objeto.idProveedor],
       persona: this.objeto_resultado,
       codigoTitular: [this.objeto.codigoTitular, Validators.required],
       razonSocial: [this.objeto.razonSocial, Validators.required],
@@ -225,10 +230,8 @@ export class FormProveedorComponent {
   enviarFormulario() {
     //Asignacion de campos en cabezal
     console.log("enviarFormulario");
-    const estadoBodegaPrincipal = this.formulario.get('bodegaPrincipal')?.value;
-    const estadoUbucaciones = this.formulario.get('manejaUbicaciones')?.value;
     const estadoActivo = this.formulario.get('activo')?.value;
-    console.log(estadoBodegaPrincipal);
+
     this.formulario.patchValue({
       fechaMod: new Date().toISOString(),
       activo: estadoActivo ? 'S' : 'N',
@@ -245,6 +248,7 @@ export class FormProveedorComponent {
     console.log("OBJECTO");
     console.log(this.formulario.getRawValue());
 
+
     if (this.isEditMode) {
       //Evento Edicion
       console.log("api ediccion");
@@ -252,16 +256,15 @@ export class FormProveedorComponent {
       //Evento nuevo
       this.proveedorService.save(this.formulario.value).subscribe({
         next: (ObjectSave) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
-          console.log(ObjectSave);
-          // 4. Redirigir a la vista de lista principal.
-          this.router.navigate(['/proveedores']);
+          this.notificacion.showSuccess('¡Ajuste guardado con éxito!');
+          this.resetCampos();
         },
         error: (err) => {
           console.error('Error al guardar:', err);
         }
       });
     }
+
 
   }
 
@@ -280,6 +283,23 @@ export class FormProveedorComponent {
     // 3. Lo añades al FormArray
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.push(auditoriaGroup);
+  }
+
+  resetCampos() {
+    //Recuperar valores que no cambian
+    const idBodega = this.formulario.value.idBodega;
+    const idEstado = this.formulario.value.idEstado;
+    const nrodocum: number = this.formulario.get('nroDocum')?.value;
+
+    //Limpiar el formulario
+    this.objeto = new Proveedores();
+    this.formDirective.resetForm();
+    this.objeto_resultado= new Persona();
+    //reset grilla de logs
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.clear();
+
+    this.desvincularPersona();
   }
 
 
