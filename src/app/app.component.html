@@ -2,6 +2,8 @@
     <button mat-button [matMenuTriggerFor]="menuModuloA">Inventario</button>
     <button mat-button [matMenuTriggerFor]="menuModuloB">Compras</button>
     <button mat-button>Ventas</button>
+    <button mat-button>Cartera</button>
+    <button mat-button>Produccion</button>
 </mat-toolbar>
 
 <mat-menu #menuModuloA="matMenu">
@@ -12,7 +14,7 @@
 
 <mat-menu #menuModuloB="matMenu">
     <button mat-menu-item [matMenuTriggerFor]="subMenuCompras">Maestros</button>
-    <button mat-menu-item [matMenuTriggerFor]="InvMenuTrans">Transacciones</button>
+    <button mat-menu-item [matMenuTriggerFor]="ComprasMenuTrans">Transacciones</button>
     <button mat-menu-item [matMenuTriggerFor]="InvMenuReporte">Reportes</button>
 </mat-menu>
 
@@ -26,7 +28,7 @@
 
 <mat-menu #InvMenuTrans="matMenu">
     <button mat-menu-item routerLink="/ajustestock/new">Ajuste Stock</button>
-    <button mat-menu-item routerLink="/trasladobodega">Traslado Bodegas</button>
+    <button mat-menu-item routerLink="/trasladobodega/new">Traslado Bodegas</button>
 </mat-menu>
 
 <mat-menu #AjusteStockList="matMenu">
@@ -40,7 +42,10 @@
 
 <mat-menu #subMenuCompras="matMenu">
     <button mat-menu-item routerLink="/proveedores/new">Proveedores</button>
-    <button mat-menu-item routerLink="/compras/new">Compras</button>
+</mat-menu>
+
+<mat-menu #ComprasMenuTrans="matMenu">
+    <button mat-menu-item routerLink="/compras/new">Compras Directa</button>
 </mat-menu>
 
 

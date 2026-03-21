@@ -1,4 +1,5 @@
-<input matInput type="text" placeholder="Código o Nombre" [formControl]="searchControl" [matAutocomplete]="autoArticulo"
+<input #inputInterno matInput type="text" placeholder="Código o Nombre" [formControl]="searchControl" [matAutocomplete]="autoArticulo"
+    [matAutocompleteDisabled]="searchControl.disabled" 
     class="input-tabla">
 
 <mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
@@ -9,5 +10,12 @@
     </mat-option>
     }
 
-
+    @if (mostrarOpcionCrear && filteredOptions().length === 0) {
+    <!--<mat-option (click)="crearNuevo.emit(searchControl.value)">
+        Crear Articulo
+    </mat-option>-->
+    <mat-option (click)="crearNuevo.emit(searchControl.value)">
+        Referenciar Articulo
+    </mat-option>
+    }
 </mat-autocomplete>

@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { TrasladoBodegas } from '../../models/Bodega/TrasladoBodegas';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { PageResponse } from '../../models/core/PageResponse';
 import { TrasladoBodegasView } from '../../interfaces/Bodega/TrasladoBodegasView';
+import { environment } from 'src/environments/environment';
 
-interface ApiResponse {
-  status: string; // Definición clara como string
+interface ApiResponse<T = void> {
+  status: 'success' | 'error'; // Uso de literales para mejor tipado
   message: string;
-  data: TrasladoBodegas;
+  data?: T; // La T es genérica y el ? la hace opcional
 }
 
 @Injectable({
@@ -16,7 +17,7 @@ interface ApiResponse {
 })
 export class TrasladoBodegaService {
 
-  private url: string = 'http://localhost:8080/api/bodega/trasladobodegas/';
+  private url: string = `${environment.baseUrl}/bodega/trasladobodega/`;
 
   constructor(private http: HttpClient) { }
 
@@ -27,5 +28,20 @@ export class TrasladoBodegaService {
 
     return this.http.get<PageResponse<TrasladoBodegasView>>(this.url + "pagenation", { params });
   }
+
+  save(objecto: any): Observable<any> {
+    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
+      map((response: ApiResponse) => {
+
+        if (response.status !== 'success') {
+          // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
+          throw new Error(response.message || 'Error desconocido al guardar la categoría.');
+        }
+
+        return response.data;
+      })
+    );
+  }
+
 
 }

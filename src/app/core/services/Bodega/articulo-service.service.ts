@@ -5,6 +5,7 @@ import { map, Observable } from 'rxjs';
 import { ArticuloDTO } from '../../models/Bodega/ArticuloDTO';
 import { ArticuloSearch } from '../../models/Bodega/ArticuloSearch';
 import { environment } from 'src/environments/environment';
+import { registroarticuloCompra } from '../../interfaces/Compras/registroarticuloCompra';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -56,10 +57,24 @@ export class ArticuloServiceService {
 
   //Servicios adicionales
 
-  Search(query: string): Observable<ArticuloSearch[]> {
+  SearchCodigoBarra(query: string): Observable<ArticuloSearch[]> {
     const params = new HttpParams()
       .set('query', String(query));
-    return this.http.get<ArticuloSearch[]>(this.url + "search", { params });
+    return this.http.get<ArticuloSearch[]>(this.url + "searchCodigoBarra", { params });
+  }
+
+  SearchArticulo(query: string): Observable<ArticuloSearch[]> {
+    const params = new HttpParams()
+      .set('query', String(query));
+    return this.http.get<ArticuloSearch[]>(this.url + "searchCodigoStock", { params });
+  }
+  //buscar si existe el codigo de barra
+  SearchByCodigoBarra(id_articulo : number,codBarra: string): Observable<registroarticuloCompra> {
+    const params = new HttpParams()
+      .set('id_articulo', id_articulo)
+      .set('cod_barra', String(codBarra));
+      
+    return this.http.get<registroarticuloCompra>(`${this.url}searchArticuloByCodigoBarra`, { params });
   }
 
 }

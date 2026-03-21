@@ -2,9 +2,11 @@ import { Component, ViewChild } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Articulo } from 'src/app/core/models/Bodega/Articulo';
 import { Categoria } from 'src/app/core/models/Bodega/Categoria';
+import { CodigosBarra } from 'src/app/core/models/Bodega/CodigosBarra';
 import { SubCategorias } from 'src/app/core/models/Bodega/SubCategorias';
 import { TipoCosteo } from 'src/app/core/models/Bodega/TipoCosteo';
 import { Unidad } from 'src/app/core/models/Bodega/Unidad';
@@ -59,6 +61,9 @@ export class FormArticuloComponent {
   list_TasaImpuesto: TasaImpuesto[] = [];
   SelectTasaImpuestoControl = new FormControl<TasaImpuesto | null>(null, Validators.required);
 
+  //
+  dataSourceCodigoBarras = new MatTableDataSource<FormGroup>();
+
   //Eventos de checkBox
   valorActivoStockSN: string = 'N';
   valorActivoComercialSN: string = 'N';
@@ -105,6 +110,7 @@ export class FormArticuloComponent {
       cuentaInventario: [this.objeto.cuentaInventario],
       idImpuesto: [this.objeto.idImpuesto, Validators.required],
       fechaMod: [this.objeto.fechaMod],
+      codigosBarra: this.fb.array([]),
       logs: this.fb.array([]),
     });
 
@@ -130,6 +136,8 @@ export class FormArticuloComponent {
         this.cargatiposCosteo();
         //Carga de impuestos
         this.cargaTasaImpuesto();
+        //Carga linea vacia
+        this.agregarCodigoBarra();
 
         //Eventos
         //Subcribir los cambios al selecionar el negocio
@@ -172,9 +180,27 @@ export class FormArticuloComponent {
           // Si el checkbox está marcado (true), asigna 'S', de lo contrario, 'N'
           this.valorActivoComercialSN = isChecked ? 'S' : 'N';
         });
+
+        // Escuchar cambios en Codigo Stock
+        this.formulario.get('codArticulo')?.valueChanges.subscribe(nuevoValor => {
+          this.actualizarPrimeraLinea('codigo','codBarra', nuevoValor);
+        });
+
+        // Escuchar cambios en Nombre Articulo
+        this.formulario.get('nomArticulo')?.valueChanges.subscribe(nuevoValor => {
+          this.actualizarPrimeraLinea('referencia','nomBarra', nuevoValor);
+        });
       }
     });
 
+  }
+
+  private actualizarPrimeraLinea(campo: string,columna : string, valor: any) {
+    const primeraLinea = this.getCodigosBarra.at(0);
+    if (primeraLinea) {
+      // emitEvent: false evita que se disparen otros eventos innecesarios
+      primeraLinea.get(columna)?.setValue(valor, { emitEvent: false });
+    }
   }
 
 
@@ -258,6 +284,35 @@ export class FormArticuloComponent {
     });
   }
 
+  get getCodigosBarra(): FormArray {
+    return this.formulario.get('codigosBarra') as FormArray;
+  }
+
+  //agregar lista de codigos de barra
+  agregarCodigoBarra(data?: Partial<CodigosBarra>) {
+    const subCat = this.fb.group({
+      id: [data?.id || null],
+      idArticulo: [data?.id_articulo || null],
+      //codEmp: [data?.codEmp || ''],
+      codBarra: [data?.codBarra || '', Validators.required],
+      nomBarra: [data?.nomBarra || '', Validators.required]
+    });
+    this.getCodigosBarra.push(subCat);
+    this.dataSourceCodigoBarras.data = this.getCodigosBarra.controls as FormGroup[];
+  }
+
+  //eliminar codigo de barra
+  eliminarCodigoBarra(index: number): void {
+    this.getCodigosBarra.removeAt(index);
+    this.dataSourceCodigoBarras.data = this.getCodigosBarra.controls as FormGroup[];
+
+    if (this.getCodigosBarra.length == 0) {
+      this.agregarCodigoBarra();
+    }
+
+
+  }
+
   // Método para agregar el log al FormArray
   agregarLogAuditoria() {
     // 1. Obtienes el objeto de log ya completo y formateado del servicio
@@ -303,6 +358,7 @@ export class FormArticuloComponent {
     console.log(this.formulario.getRawValue());
 
 
+    /*
     if (this.isEditMode) {
       //Evento Edicion
       console.log("api ediccion");
@@ -325,6 +381,8 @@ export class FormArticuloComponent {
         }
       });
     }
+
+    */
 
 
   }

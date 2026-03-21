@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { EmpresaSucursalBodegas } from '../../models/Bodega/EmpresaSucursalBodegas';
 import { ReporteInventarioxBodega } from '../../models/Bodega/Reportes/ReporteInventarioxBodega';
 import { PageResponse } from '../../models/core/PageResponse';
+import { environment } from 'src/environments/environment';
 
 interface ApiResponse {
   status: string; // Definición clara como string
@@ -16,13 +17,15 @@ interface ApiResponse {
 })
 export class ReporteInventarioServiceService {
 
-  private url: string = 'http://localhost:8080/api/bodega/reporteinventario/';
+  private url: string = `${environment.baseUrl}/stock/reporteinventario/`;
 
   constructor(private http: HttpClient) { }
 
 
   list(): Observable<EmpresaSucursalBodegas[]> {
-    return this.http.get<EmpresaSucursalBodegas[]>(this.url + "filtroEmpresa");
+    const params = new HttpParams()
+      .set('id_empresa', 1)//Pagina 
+    return this.http.get<EmpresaSucursalBodegas[]>(this.url + "inventarioBodega", { params });
   }
 
   generarReportexBodega(): Observable<Blob> {
@@ -37,10 +40,11 @@ export class ReporteInventarioServiceService {
 
   generarReportexBodegaPage(page: number, size: number): Observable<PageResponse<ReporteInventarioxBodega>> {
     const params = new HttpParams()
+      .set('bodega_id',1)
       .set('page', page.toString())//Pagina 
       .set('size', size.toString())//Cantidad de registros a validar
     //.set('sort','fechaMod,desc');//Ordenamiento de la lista
 
-    return this.http.get<PageResponse<ReporteInventarioxBodega>>(this.url + "inventarioBodegaPage", { params });
+    return this.http.get<PageResponse<ReporteInventarioxBodega>>(this.url + "inventario", { params });
   }
 }

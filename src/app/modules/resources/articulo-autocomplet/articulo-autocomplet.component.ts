@@ -1,5 +1,5 @@
-import { Component, forwardRef, OnInit, output, signal } from '@angular/core';
-import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { Component, ElementRef, EventEmitter, forwardRef, Input, OnInit, Output, output, signal, ViewChild } from '@angular/core';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { ArticuloSearch } from '../../../core/models/Bodega/ArticuloSearch';
 import { ArticuloServiceService } from '../../../core/services/Bodega/articulo-service.service';
 import { ControlValueAccessor, FormBuilder, FormControl, FormGroup, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
@@ -28,7 +28,7 @@ export class ArticuloAutocompletComponent implements OnInit, ControlValueAccesso
   // Variable para el ID de la bodega (debe venir del formulario principal)
   bodegaSeleccionadaId: number = 1; // ID de la Bodega activa
 
-  isLoading = false;
+
 
   filteredOptions = signal<ArticuloSearch[]>([]);
 
@@ -37,6 +37,13 @@ export class ArticuloAutocompletComponent implements OnInit, ControlValueAccesso
   // Callbacks para ControlValueAccessor
   onChange: any = () => { };
   onTouched: any = () => { };
+
+  @Input() activarAutoCompletar = false;
+  @Input() mostrarOpcionCrear = false;
+  @Output() crearNuevo = new EventEmitter<string>();
+
+  //Para referenciar el autoCompletar
+  @ViewChild(MatAutocompleteTrigger) trigger!: MatAutocompleteTrigger;
 
   constructor(private articuloService: ArticuloServiceService,
     private fb: FormBuilder
@@ -65,7 +72,7 @@ export class ArticuloAutocompletComponent implements OnInit, ControlValueAccesso
       distinctUntilChanged(),
       switchMap(value => {
         if (typeof value === 'string' && value.length > 2) {
-          return this.articuloService.Search(value);
+          return this.articuloService.SearchCodigoBarra(value);
         }
         return of([]);
       })
@@ -81,10 +88,17 @@ export class ArticuloAutocompletComponent implements OnInit, ControlValueAccesso
   mascaraSalida(articulo: ArticuloSearch): string {
     console.log('Lo que recibe el autocomplete:', articulo);
     if (articulo && articulo.idArticulo != 0) {
+
       // Devuelve el código y el nombre para una mejor referencia visual
       return `${articulo.codArticulo} - ${articulo.nomArticulo}`;
     }
     return ''; // Devuelve cadena vacía si no hay objeto (ej: cuando el input está vacío)
+  }
+
+  cerrarPanel() {
+    if (this.trigger) {
+      this.trigger.closePanel();
+    }
   }
 
 }

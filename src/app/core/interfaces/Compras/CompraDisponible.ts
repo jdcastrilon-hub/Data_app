@@ -2,6 +2,7 @@ import { TasasCombo } from "../Impuestos/TasasCombo";
 
 export class CompraDisponible{
     idArticulo !: number;
+    idCodBarra ! : number;
     codArticulo!: string;
     nomArticulo! : string;
     stock!: number;

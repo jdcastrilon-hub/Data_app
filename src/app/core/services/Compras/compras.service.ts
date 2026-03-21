@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Compra } from '../../models/Compras/Compra';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { CompraListView } from '../../interfaces/Compras/CompraListView';
+import { PageResponse } from '../../models/core/PageResponse';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -20,6 +22,15 @@ export class ComprasService {
   private url: string = `${environment.baseUrl}/compras/compradirecta/`;
 
   constructor(private http: HttpClient) { }
+
+  listPaginacion(page: number, size: number): Observable<PageResponse<CompraListView>> {
+    const params = new HttpParams()
+      .set('page', page.toString())//Pagina 
+      .set('size', size.toString())//Cantidad de registros a validar
+      .set('idempresa', 1)//Cantidad de registros a validar
+
+    return this.http.get<PageResponse<CompraListView>>(this.url + "pagination", { params });
+  }
 
   //Guardar Compra
   save(objecto: any): Observable<any> {

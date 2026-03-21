@@ -1,9 +1,9 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ElementRef, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { MatTableDataSource } from '@angular/material/table';
@@ -12,17 +12,13 @@ import { Compra } from '../../../../core/models/Compras/Compra';
 import { CompraDetalle } from '../../../../core/models/Compras/CompraDetalle';
 import { ArticuloSearch } from '../../../../core/models/Bodega/ArticuloSearch';
 import { ArticuloAutocompletComponent } from '../../../resources/articulo-autocomplet/articulo-autocomplet.component';
-import { EmpresaServiceService } from '../../../../core/services/core/empresa-service.service';
 import { Numerador } from '../../../../core/models/core/Numerador';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ComboProveedorComponent } from '../../../resources/combo-proveedor/combo-proveedor.component';
-import { ComboBodegaComponent } from '../../../resources/combo-bodega/combo-bodega.component';
 import { ComboEstadostockComponent } from '../../../resources/combo-estadostock/combo-estadostock.component';
 import { combineLatest, startWith } from 'rxjs';
 import { CompraDisponible } from '../../../../core/interfaces/Compras/CompraDisponible';
-import { Sucursal } from '../../../../core/models/General/Sucursal';
 import { SucursalServiceService } from '../../../../core/services/General/sucursal-service.service';
-import { Bodega } from '../../../../core/models/Bodega/Bodega';
 import { ProveedorSearch } from '../../../../core/interfaces/Compras/ProveedorSearch';
 import { TasasCombo } from '../../../../core/interfaces/Impuestos/TasasCombo';
 import { TasaImpuestoServiceService } from '../../../../core/services/impuestos/tasa-impuesto-service.service';
@@ -31,6 +27,9 @@ import { ServiciosiniService } from 'src/app/core/services/core/serviciosini.ser
 import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
 import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { CodigosBarra } from 'src/app/core/models/Bodega/CodigosBarra';
+import { ModalCodigobarraComponent } from '../modal-codigobarra/modal-codigobarra.component';
+import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'form-compra-directa',
@@ -45,12 +44,13 @@ export class FormCompraDirectaComponent {
   //Variables Generales
   formulario!: FormGroup;
   objeto!: Compra;
+  objeto_resultado!: CodigosBarra;
   isEditMode: boolean = false; //Se define si el modo es nuevo o edicion
 
   //tabla de articulos
   detalle: CompraDetalle[] = [];
   dataSource = new MatTableDataSource<FormGroup>();
-  todasLasColumnas: string[] = ['id', 'Lote', 'stock', 'costo', 'cantidad', 'neto', 'impuesto1', 'imp1', 'total'];
+  todasLasColumnas: string[] = ['id', 'Lote', 'stock', 'costoant', 'costo', 'cantidad', 'neto', 'impuesto1', 'imp1', 'total'];
   displayedColumns: string[] = [];
 
   //Informacion general de articulos
@@ -73,8 +73,18 @@ export class FormCompraDirectaComponent {
   list_impuestos: TasasCombo[] = [];
   SelectImpuestosControl = new FormControl<TasasCombo | null>(null, Validators.required);
 
+  //Para habilitar o deshabilitar el autoCompletar del articulo
+  isModalClosing = true;
+
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
+
+  //Se refrencia el autoCompletar de articulos para cambiar de foco una vez se use.
+  @ViewChildren('inputCosto') inputsCostos!: QueryList<ElementRef>;
+
+  // Capturamos todos los triggers de la tabla
+  @ViewChildren(ArticuloAutocompletComponent) articulosComps!: QueryList<ArticuloAutocompletComponent>;
+
 
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
@@ -84,6 +94,7 @@ export class FormCompraDirectaComponent {
     private tasaService: TasaImpuestoServiceService,
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
+    private dialog: MatDialog,
     private router: Router) {
     this.objeto = new Compra();
   }
@@ -124,6 +135,7 @@ export class FormCompraDirectaComponent {
       vista: this.objeto.vista,
       fechaMod: this.objeto.fechaMod,
       detalles: this.fb.array([]),
+      nuevoCodigoBarra: this.fb.array([]),
       logs: this.fb.array([]),
       searchProveedor: proveedor_filtro
     });
@@ -159,6 +171,9 @@ export class FormCompraDirectaComponent {
         this.list_bodegas = objectoSucusal.list_bodegas!;
         const unicaBodega = this.list_bodegas[0];
         this.SelectBodegasControl.setValue(unicaBodega);
+        this.formulario.patchValue({
+          idBodega: unicaBodega.id
+        });
       } else {
         this.list_bodegas = []; // Limpiar si no hay categoría seleccionada
       }
@@ -270,6 +285,7 @@ Receptores
     //Se carga un metodo vacio de StockDisponible
     let stockData: CompraDisponible = {
       idArticulo: 0,
+      idCodBarra: 0,
       codArticulo: '',
       nomArticulo: '',
       stock: 0,
@@ -336,11 +352,11 @@ Receptores
       // Estructura de ID que ya tenías
       //llave compuesta
       idTrans: [null],
-      idArticulo: [data.idArticulo, Validators.required],
       linea: [nextLinea, Validators.required],
-
+      idArticulo: [data.idArticulo, Validators.required],
+      idCodBarra: [data.idCodBarra, Validators.required],
       refCompras: [data.nomArticulo],
-      codigoBarras: "0",
+      costanterior : 0,
       costoUnit: [0, [Validators.required, Validators.min(0)]],
       cantidad: [0, [Validators.required, Validators.min(0)]],
       idLote: 0,
@@ -359,15 +375,34 @@ Receptores
       importeTotal: [{ value: data.total, disabled: true }],
 
       // Campo de entrada de usuario
-
-      search: search
+      search: search,
+      btoCrearCodBarra: true //Inicializa el boton deshabilitado
     });
+  }
+
+  agregarCodigoBarraAlArray(datos: CodigosBarra, index: number) {
+    const nuevoRegistro = this.fb.group({
+      idArticulo: [datos.id_articulo],
+      idCodBarra: [datos.id],
+      codBarra: [datos.codBarra],
+      nomBarra: [datos.nomBarra], // O los campos que necesite tu API
+      fecha_registro: [new Date()],
+      linea: index
+    });
+
+    this.CodigoBarra.push(nuevoRegistro);
   }
 
   // Método para obtener el FormArray de detalles
   get detalles(): FormArray {
     return this.formulario.get('detalles') as FormArray;
   }
+
+  get CodigoBarra(): FormArray {
+    return this.formulario.get('nuevoCodigoBarra') as FormArray;
+  }
+
+
 
   compareImpuestos(o1: TasasCombo, o2: TasasCombo): boolean {
     return o1 && o2 ? o1.id === o2.id : o1 === o2;
@@ -382,24 +417,43 @@ Receptores
    * @returns No tiene return
    */
   onArticuloChange(articulo: ArticuloSearch, index: number) {
+    console.log("onArticuloChange" + articulo)
+    if (articulo != null) {
 
-    const fila = this.detalles.at(index);
-    fila.patchValue({
-      idTrans: null,
-      idArticulo: articulo.idArticulo,
-      linea: index + 1,
-      idUbicacion: 0,
-      idLote: 0,
-      cantDisp: 0,
-      nombreArticulo: articulo.nomArticulo,
-      codigoArticulo: articulo.codArticulo,
-      cantidad: 0,
-      search: articulo //articulo para bloquear la columna de search
-    });
-    fila.get('search')?.disable(); //Se bloque la primera columna.
+      //Se cargar las variables de bodega y estado , para consultar por el inventario.
+      const idBodega = this.formulario.value.idBodega;
+      const idEstado = this.formulario.value.idEstado;
+      //Con el articulo seleccionado se consulta por API , el stock.
+      this.serviceIni.stkCompraDisponible(articulo.idArticulo!, articulo.idCodBarra!, idBodega!, idEstado!).subscribe({
+        next: (data) => {
+          if (data && data.length > 0) {
+            //El api solo debe responder con una sola linea.
+            const stockData = data[0];
+            console.log(stockData);
 
-    this.agregarLineaVacia();
+            const fila = this.detalles.at(index);
+            fila.patchValue({
+              idTrans: null,
+              idArticulo: articulo.idArticulo,
+              idCodBarra: articulo.idCodBarra,
+              linea: index + 1,
+              costanterior: stockData.costo,
+              stock:  stockData.stock,
+              nombreArticulo: articulo.nomArticulo,
+              codigoArticulo: articulo.codArticulo,
+              search: articulo //articulo para bloquear la columna de search
+            });
+            fila.get('search')?.disable(); //Se bloque la primera columna.
+            fila.get('btoCrearCodBarra')?.setValue(true);
+            this.agregarLineaVacia();
+          }
 
+        },
+        error: (err) => {
+          console.error('Error (onArticuloChange)', err);
+        }
+      });
+    }
   }
 
   get totalNeto(): number {
@@ -450,6 +504,25 @@ Receptores
     }
   }
 
+  /**
+* Metodo para eliminar referencia del proveedor
+* @returns No tiene return
+*/
+  eliminarReferenciaProveedor(): void {
+    let proveedor_filtro: ProveedorSearch = {
+      idProveedor: 0,
+      idPersona: 0,
+      codTit: '',
+      nombreCompleto: ''
+    }
+    this.formulario.get('searchProveedor')?.enable();
+    this.formulario.patchValue({
+      idProveedor: 0,
+      searchProveedor: proveedor_filtro
+    });
+
+  }
+
   ValidarColumnas() {
     this.displayedColumns = this.todasLasColumnas;
   }
@@ -460,6 +533,96 @@ Receptores
       this.detalles.removeAt(total - 1);
       this.dataSource.data = [...this.detalles.controls] as FormGroup[];
     }
+  }
+
+  ModalcrearCodigoBarra(index: number): void {
+    // 1. Abre el diálogo, pasando el componente modal y los datos
+    this.objeto_resultado = new CodigosBarra();
+    //inactivar
+    this.isModalClosing = false;
+    //this.isPersonSelected = true;
+    const dialogRef = this.dialog.open(ModalCodigobarraComponent, {
+      width: '70%', // Define el ancho del modal
+      data: {
+        titulo: 'REGISTRO CODIGO DE BARRA',
+        mensaje: 'Este mensaje fue enviado desde el componente principal.'
+      }
+    });
+
+    // 2. Suscríbete al observable 'afterClosed()' para obtener el resultado
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('El modal se cerró con el resultado:', result);
+
+      // 'result' contendrá 'Resultado Confirmado' o 'undefined' (si se cerró con 'Cancelar')
+      //this.resultadoModal = result || 'Cancelado por el usuario o cerrado por ESC';
+      this.objeto_resultado = result;
+
+
+      if (this.objeto_resultado) {
+
+        //Capturamos el evento de la linea
+        const triggerActual = this.articulosComps.toArray()[index];
+        if (triggerActual) {
+          //Cerramos el panel del autocompletar de esa fila inmediatamente
+          triggerActual.cerrarPanel();
+        }
+
+        // 2. Cargamos los datos
+        const ArticuloAutocompletar: ArticuloSearch = {
+          idArticulo: this.objeto_resultado.id_articulo, // O el campo de ID correcto
+          idCodBarra: this.objeto_resultado.id,
+          codArticulo: this.objeto_resultado.codBarra,
+          nomArticulo: this.objeto_resultado.nomBarra
+        };
+        //Cargamos la linea a la tabla
+        this.onArticuloChange(ArticuloAutocompletar, index);
+        //agregar nuevo objecto al arreglo
+        this.agregarCodigoBarraAlArray(this.objeto_resultado, index);
+        //Pasamos el foco
+        this.enfocarCosto(index);
+
+        setTimeout(() => {
+          this.isModalClosing = true;
+        }, 500);
+
+        // this.searchControl.setValue(personaParaAutocompletar);
+        //this.onPersonaSelected({ option: { value: personaParaAutocompletar } }); // Simular la selección
+      }
+
+    });
+
+
+    console.log("fin modal");
+    console.log(this.objeto_resultado);
+  }
+
+  enfocarCosto(index: number): void {
+
+    setTimeout(() => {
+      const listaCostos = this.inputsCostos.toArray();
+      const inputActual = listaCostos[index];
+
+      if (inputActual) {
+        inputActual.nativeElement.focus();
+        // Opcional: Seleccionar el texto para que el usuario solo tenga que escribir el precio
+        inputActual.nativeElement.select();
+      }
+    }, 150);
+  }
+
+  getSearchText(index: number): string {
+    console.log("getSearchText")
+    const value = this.detalles.at(index).get('search')?.value;
+
+    if (!value) return '';
+
+    // Si es el objeto de la interfaz ArticuloSearch
+    if (typeof value === 'object') {
+      return value.nomArticulo || '';
+    }
+
+    // Si el usuario solo ha escrito texto (string)
+    return value;
   }
 
   // Método para agregar el log al FormArray
@@ -542,17 +705,19 @@ Receptores
 
 
     //Evento nuevo
+
     this.compraService.save(this.formulario.getRawValue()).subscribe({
       next: (compra) => {
         // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
         console.log(compra);
-        this.notificacion.showSuccess('¡Ajuste guardado con éxito!');
+        this.notificacion.showSuccess('compra guardada con éxito!');
         this.resetCampos();
       },
       error: (err) => {
         console.error('Error al guardar:', err);
       }
     });
+
 
   }
 

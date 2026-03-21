@@ -48,6 +48,11 @@
   background-color: #fcfcfc;
 }
 
+.btn-add-compacto {
+  color: #28a745;
+  /* Un verde de éxito, por ejemplo */
+}
+
 ::ng-deep .mat-mdc-form-field {
   --mat-form-field-container-text-font: 'Titillium Web', sans-serif !important; // change Input placeholder & value font-family
   --mat-form-field-container-text-size: 16px; // change input lable font-size
@@ -183,24 +188,40 @@
   text-align: right;
   /* Alinea los números a la derecha, se ve más profesional */
 }
+
 /* Busca la columna del artículo por su nombre de clase de Material */
 .mat-column-id {
-  vertical-align: middle; /* Alineación base de tabla */
+  vertical-align: middle;
+  /* Alineación base de tabla */
 }
 
 /* El contenedor interno de la celda */
 .celda-articulo-container {
   display: flex !important;
   flex-direction: row;
-  align-items: center; /* Centra verticalmente el input y el botón */
-  gap: 8px;            /* Espacio entre el buscador y el botón */
+  align-items: center;
+  /* Centra verticalmente el input y el botón */
+  gap: 8px;
+  /* Espacio entre el buscador y el botón */
   width: 100%;
 }
+
+.proveedor-container {
+  display: flex !important;
+  flex-direction: row;
+  align-items: flex-start;
+  /* Alineamos arriba */
+  gap: 4px;
+  /* Espacio entre el buscador y el botón */
+  width: 100%;
+}
+
 
 /* Forzamos al autocompletar a ceder espacio al botón */
 articulo-autocomplet {
   flex: 1;
-  min-width: 0; /* Evita que el flexbox se desborde */
+  min-width: 0;
+  /* Evita que el flexbox se desborde */
 }
 
 /* Opcional: Haz el botón un poco más compacto */
@@ -208,4 +229,19 @@ articulo-autocomplet {
   flex-shrink: 0;
   width: 40px !important;
   height: 40px !important;
+}
+
+.titulo-con-boton {
+  display: flex;
+  /* Activa el modo Flexbox */
+  align-items: center;
+  /* Alinea verticalmente el icono y el texto al centro */
+  gap: 8px;
+  /* Espacio uniforme entre el botón y el texto */
+}
+
+/* Opcional: Si quieres que el texto tenga un peso específico */
+.titulo-con-boton span {
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }

@@ -3,11 +3,13 @@ import { TrasladoBodegasDetalle } from "./TrasladoBodegasDetalle";
 
 export class TrasladoBodegas {
     idTrans?: number;
-    idBodega!: number;
+    idBodegaOrigen!: number;
+    idBodegaDestino!: number;
+    idEstadoOrigen !: number;
+    idEstadoDestino!: number;
     documento!: string;
     nroDocum!: number;
     idCalculo!: number;
-    idEstado !: number;
     observacion !: string;
     fechaMovimiento!: Date;
     vista !: string;

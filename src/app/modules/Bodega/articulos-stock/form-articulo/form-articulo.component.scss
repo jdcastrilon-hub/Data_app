@@ -25,6 +25,36 @@
   /* Espacio uniforme entre el botón y el texto */
 }
 
+.tabla-compacta {
+  input {
+    width: 100%;
+    height: 35px; // Puedes ajustar aquí la altura
+    padding: 4px 8px;
+    font-size: 13px;
+    border: 1px solid #c0c0c0; // Borde gris claro (cuando no está enfocado)
+    border-radius: 6px; // Bordes redondeados
+    outline: none;
+    box-sizing: border-box;
+    background-color: white;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      border-color: #1976d2; // Azul (color de Angular Material primario)
+    }
+
+    &::placeholder {
+      font-size: 12px;
+      color: #999;
+    }
+  }
+
+  // Opcional: reducir padding de celdas si deseas más compactación
+  .mat-cell,
+  .mat-header-cell {
+    padding: 4px 8px;
+  }
+}
+
 /* Opcional: Si quieres que el texto tenga un peso específico */
 .titulo-con-boton span {
   font-weight: 500;

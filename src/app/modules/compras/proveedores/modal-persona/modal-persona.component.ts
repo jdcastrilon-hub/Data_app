@@ -8,8 +8,6 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { TipoDocumento } from '../../../../core/models/Compras/TipoDocumento';
 import { TipoDocumentoService } from '../../../../core/services/Compras/tipo-documento.service';
-import { Ciudades } from '../../../../core/models/core/Ciudades';
-import { ProveedorService } from '../../../../core/services/Compras/proveedor.service';
 import { Persona } from '../../../../core/models/Compras/Personas';
 import { CiudadesService } from 'src/app/core/services/core/ciudades.service';
 import { CiudadCombo } from 'src/app/core/interfaces/Core/CiudadCombo';

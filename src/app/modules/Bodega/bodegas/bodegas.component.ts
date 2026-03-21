@@ -26,7 +26,7 @@ export class BodegasComponent {
   //Datos generales de paginacion
   totalRegistros: number = 0;
   paginaActual: number = 0;
-  pageSize: number = 10;
+  pageSize: number = 15;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
   constructor(

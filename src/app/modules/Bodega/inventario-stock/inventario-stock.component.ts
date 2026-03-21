@@ -14,6 +14,9 @@ import { Negocio } from '../../../core/models/General/Negocio';
 import { MatTableDataSource } from '@angular/material/table';
 import { ReporteInventarioxBodega } from '../../../core/models/Bodega/Reportes/ReporteInventarioxBodega';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
+import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
+import { NegocioCombo } from 'src/app/core/interfaces/Core/NegocioCombo';
 
 @Component({
   selector: 'inventario-stock',
@@ -33,17 +36,17 @@ export class InventarioStockComponent {
   SelectEmpresaControl = new FormControl<EmpresaSucursalBodegas | null>(null, Validators.required);
 
   //Sucursal
-  list_sucursal: Sucursal[] = [];
-  SelectSucursalControl = new FormControl<Sucursal | 'TODOS' | null>('TODOS', Validators.required);
+  list_sucursal: SucursalCombo[] = [];
+  SelectSucursalControl = new FormControl<SucursalCombo | 'TODOS' | null>('TODOS', Validators.required);
 
   //Bodegas
-  list_bodegas: Bodega[] = [];
-  SelectBodegasControl = new FormControl<Bodega | 'TODOS' | null>('TODOS', Validators.required);
+  list_bodegas: BodegaCombo[] = [];
+  SelectBodegasControl = new FormControl<BodegaCombo | 'TODOS' | null>('TODOS', Validators.required);
 
 
   //Negocios
-  list_negocios: Negocio[] = [];
-  SelectNegociosControl = new FormControl<Negocio | 'TODOS' | null>('TODOS', Validators.required);
+  list_negocios: NegocioCombo[] = [];
+  SelectNegociosControl = new FormControl<NegocioCombo | 'TODOS' | null>('TODOS', Validators.required);
 
   //Formatos de salida para reporte.
   opcionesFormato: string[] = ['PANTALLA', 'PDF', 'EXCEL'];
@@ -153,6 +156,7 @@ export class InventarioStockComponent {
     // Llama al servicio con los parámetros actuales
     this.reporteService.generarReportexBodegaPage(this.paginaActual, this.pageSize).subscribe(data => {
 
+      console.log(data);
       // Mapea la respuesta Page
       this.lista_articulos = data.content; //  Solo el contenido para la tabla
       this.totalRegistros = data.totalElements; //  El total de registros en el DB

@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -44,7 +44,7 @@ export class FormAjusteComponent {
   SelecMotivosControl = new FormControl<MotivosCombo | null>(null, Validators.required);
 
   //tabla de articulos
-  detalle: AjusteStockDetalle[] = [];
+  //detalle: AjusteStockDetalle[] = [];
   dataSource = new MatTableDataSource<FormGroup>();
   todasLasColumnas: string[] = ['id', 'ubicacion', 'Lote', 'stock', 'cantidad', 'actions'];
   displayedColumns: string[] = [];
@@ -86,6 +86,7 @@ export class FormAjusteComponent {
       detalles: this.fb.array([]),
       logs: this.fb.array([]),
     });
+
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -235,12 +236,13 @@ export class FormAjusteComponent {
           fila.patchValue({
             idTrans: null,
             idArticulo: stockData.idArticulo,
+            idCodBarra: stockData.idCodBarra,
             linea: index + 1,
-            idUbicacion: stockData.ubicacion,
-            idLote: stockData.lote,
+            idUbicacion: 0,
+            idLote: 0,
             cantDisp: stockData.stock,
-            nombreArticulo: stockData.nomArticulo,
-            codigoArticulo: stockData.codArticulo,
+            //nombreArticulo: stockData.nomArticulo,
+            //codigoArticulo: stockData.codArticulo,
             cantidad: 0,
             search: articulo //articulo para bloquear la columna de search
           });
@@ -266,15 +268,14 @@ export class FormAjusteComponent {
     //Se carga un metodo vacio de StockDisponible
     let stockData: StockDisponible = {
       idArticulo: 0,
-      codArticulo: '',
-      nomArticulo: '',
+      idCodBarra : 0,
       stock: 0,
-      ubicacion: '',
-      lote: ''
+      costo: 0
     };
     //Se carga un metodo vacio de ArticuloSearch
     let articulo_filtro: ArticuloSearch = {
       idArticulo: 0,
+      idCodBarra:0,
       codArticulo: '',
       nomArticulo: ''
     }
@@ -299,11 +300,12 @@ export class FormAjusteComponent {
       //llave compuesta
       idTrans: [null],
       idArticulo: [data.idArticulo, Validators.required],
+      idCodBarra:  [data.idCodBarra, Validators.required],
       linea: [nextLinea, Validators.required],
 
       // Campos informativos (se llenan al seleccionar el artículo)
-      idUbicacion: [{ value: data.ubicacion, disabled: true }],
-      idLote: [{ value: data.lote, disabled: true }],
+      idUbicacion: 0,
+      idLote: 0,
       cantDisp: [{ value: data.stock, disabled: true }],
 
       // Campo de entrada de usuario
@@ -402,6 +404,7 @@ export class FormAjusteComponent {
           //Se carga un metodo para la creacion de ArticuloSearch
           let search: ArticuloSearch = {
             idArticulo: detalle.id.idArticulo,
+            //idCodBarra : detalle.id.
             codArticulo: codigoArticulo,
             nomArticulo: nombreArticulo
           }
@@ -506,17 +509,17 @@ export class FormAjusteComponent {
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.clear();
     //reset grilla de articulos
-    const detalle = this.formulario.get('detalles') as FormArray;    
+    const detalle = this.formulario.get('detalles') as FormArray;
     detalle.clear();
     // agregas la fila inicial "limpia"
     this.agregarLineaVacia();
-     
+
     //actualizo referencias
     this.formulario.get('idBodega')?.patchValue(idBodega);
     this.formulario.get('idEstado')?.patchValue(idEstado);
     this.formulario.get('fechaMovimiento')?.patchValue(new Date());
-    this.formulario.get('nroDocum')?.patchValue(nrodocum+1);
-    
+    this.formulario.get('nroDocum')?.patchValue(nrodocum + 1);
+
 
   }
 
@@ -536,5 +539,6 @@ export class FormAjusteComponent {
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.push(auditoriaGroup);
   }
+
 
 }

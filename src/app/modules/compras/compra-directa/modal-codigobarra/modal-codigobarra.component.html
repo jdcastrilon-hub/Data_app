@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>{{ data.titulo }}</h2>
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+    <mat-dialog-content class="mat-typography">
+        <div class="bloque">
+
+            <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+
+
+                <div fxFlex="30" >
+                     <combo-articulo  [editMode]="isEditMode" [input_objeto]="objeto_search"
+                                (articuloSeleccionado)="recibirArticulo($event)"></combo-articulo >
+                </div>
+
+                <div fxFlex="30">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Codigo Barra </mat-label>
+                        <input matInput formControlName="codBarra">
+                        <mat-error>Codigo requerido</mat-error>
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex="40">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Referencia </mat-label>
+                        <input matInput formControlName="nomBarra">
+                        <mat-error>Codigo requerido</mat-error>
+                    </mat-form-field>
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </mat-dialog-content>
+    <mat-dialog-actions>
+        <button mat-button type="submit">Confirmar</button>
+        <button mat-button mat-dialog-close>Cancelar</button>
+    </mat-dialog-actions>
+</form>
