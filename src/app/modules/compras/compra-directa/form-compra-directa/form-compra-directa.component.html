@@ -1,11 +1,14 @@
-<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+<form [formGroup]="formulario" #formDirective="ngForm" (keydown.enter)="$event.preventDefault()"
+    (ngSubmit)="enviarFormulario()">
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
                 <a mat-icon-button color="primary" routerLink="/compras">
                     <mat-icon>list</mat-icon>
                 </a>
-                <span>REGISTRO DE COMPRA DIRECTA</span>
+                <span>{{titulo_form}}</span>
+                <span> - {{ objeto.fechaMod | date: 'dd/MM/yyyy HH:mm' }}</span>
+
             </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
@@ -19,9 +22,7 @@
 
                         <div fxFlex="15">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                @if (!isEditMode){
                                 <mat-label>Sucursal</mat-label>
-                                }
                                 <mat-select [formControl]="SelectSucursalControl" required>
                                     @for (obj_sucursal of list_sucursal; track obj_sucursal) {
                                     <mat-option [value]="obj_sucursal">{{obj_sucursal.nomSucursal}}</mat-option>
@@ -33,14 +34,8 @@
                             </mat-form-field>
                         </div>
                         <div fxFlex="40">
-                            <div class="proveedor-container">
-                                <combo-proveedor formControlName="searchProveedor"
-                                    (proveedorSelecionado)="onProveedorChange($event)"></combo-proveedor>
-                                <button mat-icon-button color="warn" type="button"
-                                    (click)="eliminarReferenciaProveedor()">
-                                    <mat-icon>delete_outline</mat-icon>
-                                </button>
-                            </div>
+                            <combo-proveedor formControlName="searchProveedor"
+                                (proveedorSelecionado)="onProveedorChange($event)"></combo-proveedor>
 
                         </div>
                         <div fxFlex="15">
@@ -76,198 +71,248 @@
 
                 </div>
 
+                <div class="container-tabla mat-elevation-z2">
+                    <table mat-table [dataSource]="dataSource" formArrayName="detalles">
+                        <ng-container matColumnDef="position">
+                            <th mat-header-cell *matHeaderCellDef>#</th>
+                            <td mat-cell *matCellDef="let element; let i = index">
+                                {{ i + 1 }}
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+                        <ng-container matColumnDef="id">
+                            <th mat-header-cell *matHeaderCellDef>Artículo</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <div class="celda-articulo-container">
+                                    <articulo-autocomplet formControlName="search" [mostrarOpcionCrear]="true"
+                                        (articuloSeleccionado)="onArticuloChange($event, i)"
+                                        (crearNuevo)="ModalcrearCodigoBarra(i)">
+                                    </articulo-autocomplet>
 
-                <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+                                    <button mat-icon-button color="warn" type="button"
+                                        (click)="eliminarLineaDetalles(i)">
+                                        <mat-icon>delete_outline</mat-icon>
+                                    </button>
+                                </div>
+                            </td>
 
-                <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 tabla-compacta"
-                    formArrayName="detalles">
-                    <ng-container matColumnDef="id">
-                        <th mat-header-cell *matHeaderCellDef>Artículo</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <div class="celda-articulo-container">
-                                <articulo-autocomplet formControlName="search" [mostrarOpcionCrear]="true"
-                                    (articuloSeleccionado)="onArticuloChange($event, i)"
-                                    (crearNuevo)="ModalcrearCodigoBarra(i)">
-                                </articulo-autocomplet>
+                            <td mat-footer-cell *matFooterCellDef>TOTALES</td>
+                        </ng-container>
 
-                                <button mat-icon-button color="warn" type="button" (click)="eliminarLineaDetalles(i)">
-                                    <mat-icon>delete_outline</mat-icon>
-                                </button>
-                            </div>
-                        </td>
+                        <ng-container matColumnDef="Lote">
+                            <th mat-header-cell *matHeaderCellDef>Lote</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input matInput formControlName="idLote" placeholder="Nombre" />
+                                <mat-error *ngIf="row.get('idLote')?.hasError('required')">
+                                    La cantidad es obligatoria.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('idLote')?.hasError('min')">
+                                    La cantidad debe ser mayor a 0.
+                                </mat-error>
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+                        <ng-container matColumnDef="stock">
+                            <th mat-header-cell *matHeaderCellDef>Stock</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('stock')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="stock">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
 
-                        <td mat-footer-cell *matFooterCellDef>TOTALES</td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="Lote">
-                        <th mat-header-cell *matHeaderCellDef>Lote</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <input matInput formControlName="idLote" placeholder="Nombre" />
-                            <mat-error *ngIf="row.get('idLote')?.hasError('required')">
-                                La cantidad es obligatoria.
-                            </mat-error>
-                            <mat-error *ngIf="row.get('idLote')?.hasError('min')">
-                                La cantidad debe ser mayor a 0.
-                            </mat-error>
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef></td>
-                    </ng-container>
-                    <ng-container matColumnDef="stock">
-                        <th mat-header-cell *matHeaderCellDef>Stock</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <span>
-                                {{ row.get('stock')?.value }}
-                            </span>
-                            <input type="hidden" formControlName="stock">
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef></td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="costoant">
-                        <th mat-header-cell *matHeaderCellDef>Costo Ant.</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <span>
-                                {{ row.get('costanterior')?.value }}
-                            </span>
-                            <input type="hidden" formControlName="costanterior">
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef></td>
-                    </ng-container>
+                        <ng-container matColumnDef="costoant">
+                            <th mat-header-cell *matHeaderCellDef>Costo Ant.</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('costanterior')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="costanterior">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
 
 
-                    <ng-container matColumnDef="costo">
-                        <th mat-header-cell *matHeaderCellDef>Costo</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <input #inputCosto matInput formControlName="costoUnit" placeholder="Nombre" />
-                            <mat-error *ngIf="row.get('costoUnit')?.hasError('required')">
-                                La cantidad es obligatoria.
-                            </mat-error>
-                            <mat-error *ngIf="row.get('costoUnit')?.hasError('min')">
-                                La cantidad debe ser mayor a 0.
-                            </mat-error>
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef></td>
-                    </ng-container>
+                        <ng-container matColumnDef="costo">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Costo</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input #inputCosto matInput formControlName="costoUnit" placeholder="Nombre"
+                                    class="text-right" />
 
-                    <ng-container matColumnDef="cantidad">
-                        <th mat-header-cell *matHeaderCellDef>Cantidad</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <input matInput formControlName="cantidad" placeholder="Nombre" />
-                            <mat-error *ngIf="row.get('cantidad')?.hasError('required')">
-                                La cantidad es obligatoria.
-                            </mat-error>
-                            <mat-error *ngIf="row.get('cantidad')?.hasError('min')">
-                                La cantidad debe ser mayor a 0.
-                            </mat-error>
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef>
-                            {{ totalCantidad | number}}
-                        </td>
-                    </ng-container>
 
-                    <ng-container matColumnDef="neto">
-                        <th mat-header-cell *matHeaderCellDef>Neto</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <span>
-                                {{ row.get('costoTotal')?.value }}
-                            </span>
-                            <input type="hidden" formControlName="costoTotal">
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef>
-                            {{ totalNeto | currency }}
-                        </td>
-                    </ng-container>
+                                <mat-error *ngIf="row.get('costoUnit')?.hasError('required')">
+                                    La cantidad es obligatoria.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('costoUnit')?.hasError('min')">
+                                    La cantidad debe ser mayor a 0.
+                                </mat-error>
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
 
-                    <ng-container matColumnDef="impuesto1">
-                        <th mat-header-cell *matHeaderCellDef>Imp. (IVA)</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                        <ng-container matColumnDef="cantidad">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Cantidad</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
 
-                            <select formControlName="objimpuesto1" class="input-tabla-select"
-                                [compareWith]="compareImpuestos">
-                                @for (obj_impuesto of list_impuestos; track obj_impuesto) {
-                                <!--[ngValue] para que Angular trate el valor como un objeto y no como un string.-->
-                                <option [ngValue]="obj_impuesto">
-                                    {{ obj_impuesto.descripcion }}
-                                </option>
-                                }
-                            </select>
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef></td>
-                    </ng-container>
+                                <input matInput formControlName="cantidad" placeholder="Nombre" class="text-right" />
 
-                    <ng-container matColumnDef="imp1">
-                        <th mat-header-cell *matHeaderCellDef>Valor IVA</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <span>
-                                {{ row.get('valorImpuesto1')?.value }}
-                            </span>
-                            <input type="hidden" formControlName="valorImpuesto1">
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef>
-                            {{ totalImpuesto1 | currency }}
-                        </td>
-                    </ng-container>
 
-                    <ng-container matColumnDef="total">
-                        <th mat-header-cell *matHeaderCellDef>total</th>
-                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                            <span>
-                                {{ row.get('importeTotal')?.value }}
-                            </span>
-                            <input type="hidden" formControlName="importeTotal">
-                        </td>
-                        <td mat-footer-cell *matFooterCellDef>
-                            {{ totalFinal | currency }}
-                        </td>
-                    </ng-container>
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('required')">
+                                    La cantidad es obligatoria.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('min')">
+                                    La cantidad debe ser mayor a 0.
+                                </mat-error>
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalCantidad | number}}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="porc_dcto">
+                            <th mat-header-cell *matHeaderCellDef>(%) Dcto</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" style="width: 80px;">
+
+                                <input matInput type="number" placeholder="0" class="text-right" formControlName="porc_dcto" />
+
+                                <mat-error *ngIf="row.get('porc_dcto')?.hasError('min')" style="font-size: 10px;">
+                                    Mín 0%
+                                </mat-error>
+                                <mat-error *ngIf="row.get('porc_dcto')?.hasError('max')" style="font-size: 10px;">
+                                    Máx 100%
+                                </mat-error>
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="impuesto1">
+                            <th mat-header-cell *matHeaderCellDef>Imp. (IVA)</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+
+                                <select formControlName="objimpuesto1" class="input-tabla-select text-right"
+                                    [compareWith]="compareImpuestos">
+                                    @for (obj_impuesto of list_impuestos; track obj_impuesto) {
+                                    <!--[ngValue] para que Angular trate el valor como un objeto y no como un string.-->
+                                    <option [ngValue]="obj_impuesto">
+                                        {{ obj_impuesto.descripcion }}
+                                    </option>
+                                    }
+                                </select>
+
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
 
 
 
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                    <tr mat-footer-row *matFooterRowDef="displayedColumns" sticky="true" class="footer-resaltado"></tr>
-                </table>
+                        <ng-container matColumnDef="neto">
+                            <th mat-header-cell *matHeaderCellDef>Neto</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('costoTotal')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="costoTotal">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalNeto | currency }}
+                            </td>
+                        </ng-container>
 
+                        <ng-container matColumnDef="imp_dcto">
+                            <th mat-header-cell *matHeaderCellDef>Dcto</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('imp_dcto')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="imp_dcto">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalNeto | currency }}
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="imp1">
+                            <th mat-header-cell *matHeaderCellDef>Valor IVA</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('valorImpuesto1')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="valorImpuesto1">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalImpuesto1 | currency }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="total">
+                            <th mat-header-cell *matHeaderCellDef>total</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('importeTotal')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="importeTotal">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalFinal | currency }}
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns ; sticky: true"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                        <tr mat-footer-row *matFooterRowDef="displayedColumns ; sticky: true" class="footer-resaltado">
+                        </tr>
+                    </table>
+                </div>
             </mat-tab>
 
-            <mat-tab label="Recepcion Mercancia" style="background-color: brown;">
+            <mat-tab label="Recepcion y Totales" style="background-color: brown;">
                 <div class="main-container">
                     <mat-card class="section facturacion">
-                        <mat-card-header>
-                            <mat-card-title>Remito</mat-card-title>
-                        </mat-card-header>
-                        <mat-card-content class="grid-form">
+                        <mat-card-content>
+                            <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                                <div fxFlex="25">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>Bodega</mat-label>
+                                        <mat-select [formControl]="SelectBodegasControl" required>
 
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Bodega</mat-label>
-                                <mat-select [formControl]="SelectBodegasControl" required>
+                                            @for (obj_bodega of list_bodegas; track obj_bodega) {
+                                            <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
+                                            }
+                                        </mat-select>
+                                        @if (SelectBodegasControl.hasError('required')) {
+                                        <mat-error>Debe seleccionar una bodega</mat-error>
+                                        }
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="25">
+                                    <combo-estadostock [editMode]="isEditMode" [input_objeto]="objeto"
+                                        (estadoSeleccionado)="recibirEstado($event)"></combo-estadostock>
+                                </div>
 
-                                    @for (obj_bodega of list_bodegas; track obj_bodega) {
-                                    <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
-                                    }
-                                </mat-select>
-                                @if (SelectBodegasControl.hasError('required')) {
-                                <mat-error>Debe seleccionar una bodega</mat-error>
-                                }
-                            </mat-form-field>
+                                <div fxFlex="50">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>Observacion</mat-label>
+                                        <input matInput placeholder="Observaciones" formControlName="observaciones">
+                                    </mat-form-field>
+                                </div>
 
-                            <combo-estadostock [editMode]="isEditMode" [input_objeto]="objeto"
-                                (estadoSeleccionado)="recibirEstado($event)"></combo-estadostock>
-
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Remito</mat-label>
-                                <input matInput placeholder="Numero de Remito" formControlName="remito">
-                            </mat-form-field>
-
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Ingresa Mercancia</mat-label>
-                                <input matInput>
-                            </mat-form-field>
-
-                            <mat-form-field appearance="outline">
-                                <mat-label>Observacion</mat-label>
-                                <textarea matInput rows="3" formControlName="observaciones"></textarea>
-                            </mat-form-field>
+                            </div>
+                            <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                                <div fxFlex="25">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>Remito</mat-label>
+                                        <input matInput placeholder="Numero de Remito" formControlName="remito">
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="25">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>Gastos OC</mat-label>
+                                        <input matInput placeholder="Ingrese Gasto OC" formControlName="remito">
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="50"></div>
+                            </div>
                         </mat-card-content>
                     </mat-card>
 
@@ -275,20 +320,25 @@
 
                         <mat-card class="section totals-card">
                             <mat-card-header><mat-card-title>Totales</mat-card-title></mat-card-header>
-                            <mat-card-content class="totals-grid">
-                                <div class="total-row">
-                                    <span>Neto</span>
-                                    <input class="small-input" formControlName="impNeto" [readonly]="true"
-                                        [value]="totalNeto | currency">
+                            <mat-card-content>
+                                <div class="totals-grid">
+                                    <div class="total-row">
+                                        <span class="total-label">Neto:</span>
+                                        <span class="total-value">{{ totalNeto | currency }}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Impuesto IVA:</span>
+                                        <span class="total-value">{{ totalImpuesto1 | currency }}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Gastos:</span>
+                                        <span class="total-value">{{ totalImpuesto1 | currency }}</span>
+                                    </div>
+                                    <div class="grand-total">
+                                        <span class="total-value">{{ totalFinal | currency }}</span>
+                                    </div>
                                 </div>
-                                <div class="total-row"><span>Impuesto IVA</span>
-                                    <input class="small-input" formControlName="valorImpuesto1" [readonly]="true"
-                                        [value]="totalImpuesto1 | currency">
-                                </div>
-                                <div class="total-row"><span>Totales</span>
-                                    <input class="small-input" formControlName="impTotal" [readonly]="true"
-                                        [value]="totalFinal | currency">
-                                </div>
+
                             </mat-card-content>
                         </mat-card>
                     </div>
@@ -301,7 +351,7 @@
         <mat-card-actions class="mat-accion-botones">
             <button mat-raised-button color="primary" type="submit">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button">Salir</button>
+            <button mat-raised-button color="warn" type="button">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

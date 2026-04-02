@@ -15,7 +15,7 @@
 <mat-menu #menuModuloB="matMenu">
     <button mat-menu-item [matMenuTriggerFor]="subMenuCompras">Maestros</button>
     <button mat-menu-item [matMenuTriggerFor]="ComprasMenuTrans">Transacciones</button>
-    <button mat-menu-item [matMenuTriggerFor]="InvMenuReporte">Reportes</button>
+    <button mat-menu-item [matMenuTriggerFor]="CompraReporte">Reportes</button>
 </mat-menu>
 
 <mat-menu #subMenuAnidado="matMenu">
@@ -47,6 +47,12 @@
 <mat-menu #ComprasMenuTrans="matMenu">
     <button mat-menu-item routerLink="/compras/new">Compras Directa</button>
 </mat-menu>
+
+<mat-menu #CompraReporte="matMenu">
+    <button mat-menu-item routerLink="/monitorcompras">Monitor Compras</button>
+</mat-menu>
+
+
 
 
 <div class="content">

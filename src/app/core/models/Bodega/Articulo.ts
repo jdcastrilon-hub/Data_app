@@ -1,13 +1,14 @@
+import { NegocioCombo } from "../../interfaces/Core/NegocioCombo";
 import { Auditoria } from "../core/Auditoria";
+import { CodigosBarra } from "./CodigosBarra";
 
 export class Articulo {
     id_articulo?: number;
     codArticulo!: string;
     nomArticulo!: string;
-    TipoProducto! :string;
     idNegocio!: number;
     idsubCategoria!: number;
-    idCategoria!:number;
+    idCategoria!: number;
     activoStock!: string;
     stockMin!: number;
     stockMax!: number;
@@ -15,10 +16,13 @@ export class Articulo {
     idRef!: number;
     idunidad!: number;
     grupoContable!: string;
-    idCosteo!: number;
+    idTipoService!: number;
     cuentaInventario!: string;
     idImpuesto!: number;
     fechaMod!: Date;
     logs!: Auditoria[];
+    objnegocio!: NegocioCombo;
+    codigosBarra! : CodigosBarra[];
+
 
 }

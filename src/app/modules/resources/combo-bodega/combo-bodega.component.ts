@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, Input, input, output } from '@angular/core';
 import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
@@ -16,6 +16,7 @@ export class ComboBodegaComponent {
   //Parametros de entrada
   input_objeto = input<any>(null);
   editMode = input<boolean>(false);
+  @Input() mostrarOpcionTodas = false;
 
   //salidas
   bodegaSeleccionada = output<BodegaCombo>();

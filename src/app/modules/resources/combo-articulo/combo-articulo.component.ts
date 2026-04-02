@@ -1,6 +1,7 @@
 import { Component, input, OnInit, output, signal } from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
@@ -8,7 +9,7 @@ import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-se
 
 @Component({
   selector: 'combo-articulo',
-  imports: [MatInputModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule],
+  imports: [MatInputModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule,MatIconModule],
   templateUrl: './combo-articulo.component.html',
   styleUrl: './combo-articulo.component.scss'
 })
@@ -75,8 +76,20 @@ export class ComboArticuloComponent implements OnInit, ControlValueAccessor {
 
   onSelected(event: MatAutocompleteSelectedEvent) {
     const seleccion = event.option.value;
+    this.searchControl.setValue(seleccion); // Seteamos el objeto
+    this.searchControl.disable();
     this.onChange(seleccion); // Notifica al FormControl del padre
     this.articuloSeleccionado.emit(seleccion);
+  }
+
+
+  limpiarProveedor(event: Event) {
+    event.stopPropagation();
+    this.searchControl.enable();
+    this.searchControl.setValue(null); // Limpiamos el input
+    this.filteredOptions.set([]);      // Limpiamos las sugerencias
+    this.onChange(null);               // Notificamos al formulario padre
+    this.articuloSeleccionado.emit(null as any); // Avisamos al monitor
   }
 
 }

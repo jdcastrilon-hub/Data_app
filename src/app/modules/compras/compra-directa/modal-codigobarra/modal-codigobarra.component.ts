@@ -49,8 +49,8 @@ export class ModalCodigobarraComponent {
     //Se instancias las variables para el formulario
 
     this.formulario = this.fb.group({
-      id: [this.objeto.id],
-      id_articulo: [this.objeto.id_articulo, Validators.required],
+      idCodBarra: [this.objeto.idCodBarra],
+      idArticulo: [this.objeto.idArticulo, Validators.required],
       codBarra: [this.objeto.codBarra, Validators.required],
       nomBarra: [this.objeto.nomBarra, Validators.required],
       searchArticulo: [this.objeto_search]
@@ -61,7 +61,7 @@ export class ModalCodigobarraComponent {
   recibirArticulo(articulo: any) {
     console.log('El padre recibió la bodega:', articulo);
     this.formulario.patchValue({
-      id_articulo: articulo.idArticulo,
+      idArticulo: articulo.idArticulo,
       searchArticulo: articulo
     });
   }
@@ -78,7 +78,7 @@ export class ModalCodigobarraComponent {
       return; // Detiene la ejecución si el formulario no es válido
     }
 
-    const id_articulo = this.formulario.value.id_articulo;
+    const id_articulo = this.formulario.value.idArticulo;
     const codigo_barra = this.formulario.value.codBarra;
     console.log(id_articulo)
     console.log(codigo_barra)
@@ -94,7 +94,7 @@ export class ModalCodigobarraComponent {
           console.log("Código disponible.");
           //asignamos el valor de idBarra
           this.formulario.patchValue({
-            id: this.objecto_validacion.idCodBarra
+            idCodBarra: this.objecto_validacion.idCodBarra
           });
           console.log(this.formulario.getRawValue())
           this.dialogRef.close(this.formulario.getRawValue());

@@ -51,7 +51,7 @@ export class BodegaService {
   save(objecto: any): Observable<any> {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
-      
+
         if (response.status !== 'success') {
           // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
           throw new Error(response.message || 'Error desconocido al guardar la categoría.');
@@ -62,11 +62,11 @@ export class BodegaService {
   }
 
   //Editar Bodega
-  edit(objecto: any, id_bodega :number): Observable<any> {
+  edit(objecto: any, id_bodega: number): Observable<any> {
     const params = new HttpParams()
       .set('bodega_id', String(id_bodega))
 
-    return this.http.put<ApiResponse>(this.url + "edit",objecto, { params }).pipe(
+    return this.http.put<ApiResponse>(this.url + "edit", objecto, { params }).pipe(
       map((response: ApiResponse) => {
 
         if (response.status !== 'success') {
@@ -77,6 +77,17 @@ export class BodegaService {
       })
     );
   }
+
+
+  delete(id: number): Observable<void> {
+    // Configuramos el query parameter: /delete?bodega_id=ID
+    const params = new HttpParams().set('bodega_id', id.toString());
+
+    return this.http.delete<void>(this.url+"delete", { params });
+  }
+
+
+  //Elimninar Bodega
 
   //Obtener bodega por el ID
   getBodegaById(id: number): Observable<Bodega> {

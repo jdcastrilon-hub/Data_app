@@ -2,10 +2,10 @@
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
-                <a mat-icon-button color="primary" routerLink="/bodegas">
+                <a mat-icon-button color="primary" routerLink="/articulos">
                     <mat-icon>list</mat-icon>
                 </a>
-                <span>REGISTRO DE ARTICULOS</span>
+                <span>{{titulo_form}}</span>
             </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
@@ -21,7 +21,7 @@
                                 <mat-label>Negocio</mat-label>
                                 <mat-select [formControl]="SelectNegocioControl" required>
                                     @for (obj_negocio of list_negocios; track obj_negocio) {
-                                    <mat-option [value]="obj_negocio">{{obj_negocio.nombreNegocio}}</mat-option>
+                                    <mat-option [value]="obj_negocio">{{obj_negocio.NomNegocio}}</mat-option>
                                     }
                                 </mat-select>
                                 @if (SelectNegocioControl.hasError('required')) {
@@ -62,12 +62,13 @@
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Tipo Producto</mat-label>
                                 <mat-select [formControl]="SelecProductoControl" required>
-                                    @for (obj_tipo of list_productos; track obj_tipo) {
-                                    <mat-option [value]="obj_tipo">{{obj_tipo}}</mat-option>
+                                    @for (tiposProductos of list_productos; track tiposProductos) {
+                                    <mat-option
+                                        [value]="tiposProductos">{{tiposProductos.nomServicio}}</mat-option>
                                     }
                                 </mat-select>
                                 @if (SelecProductoControl.hasError('required')) {
-                                <mat-error>Debe seleccionar una opcion</mat-error>
+                                <mat-error>Debe seleccionar un Tipo</mat-error>
                                 }
                             </mat-form-field>
                         </div>
@@ -155,19 +156,6 @@
                         </div>
                         <div fxFlex="25">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Tipo Costeo</mat-label>
-                                <mat-select [formControl]="SelectTipoCosteoControl" required>
-                                    @for (obj_TipoCosteo of list_TipoCosteo; track obj_TipoCosteo) {
-                                    <mat-option [value]="obj_TipoCosteo">{{obj_TipoCosteo.nombreCosteo}}</mat-option>
-                                    }
-                                </mat-select>
-                                @if (SelectTipoCosteoControl.hasError('required')) {
-                                <mat-error>Debe seleccionar Tipo Costeo</mat-error>
-                                }
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="25">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Stock Minimo</mat-label>
                                 <input matInput formControlName="stockMin">
                             </mat-form-field>
@@ -178,6 +166,7 @@
                                 <input matInput formControlName="stockMax">
                             </mat-form-field>
                         </div>
+                         <div fxFlex="25"></div>
                     </div>
 
                 </div>

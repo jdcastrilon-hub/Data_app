@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { CategoriasComponent } from './modules/Bodega/categorias/categorias.component';
-import { ArticulosComponent } from './modules/Bodega/articulos/articulos.component';
 import { FormCategoriaComponent } from './modules/Bodega/categorias/form-categoria/form-categoria.component';
 import { AjusteStockComponent } from './modules/Bodega/ajuste-stock/ajuste-stock.component';
 import { FormAjusteComponent } from './modules/Bodega/ajuste-stock/form-ajuste/form-ajuste.component';
@@ -16,12 +15,16 @@ import { FormProveedorComponent } from './modules/compras/proveedores/form-prove
 import { CompraDirectaComponent } from './modules/compras/compra-directa/compra-directa.component';
 import { FormCompraDirectaComponent } from './modules/compras/compra-directa/form-compra-directa/form-compra-directa.component';
 import { FormArticuloComponent } from './modules/Bodega/articulos-stock/form-articulo/form-articulo.component';
+import { MonitorcomprasComponent } from './modules/compras/monitorcompras/monitorcompras.component';
+import { ArticulosStockComponent } from './modules/Bodega/articulos-stock/articulos-stock.component';
 
 export const routes: Routes = [
     { path: 'categorias', component: CategoriasComponent },
     { path: 'categoria/new', component: FormCategoriaComponent },
     { path: 'categoria/edit/:id', component: FormCategoriaComponent },
+    { path: 'articulos', component: ArticulosStockComponent },
     { path: 'articulos/new', component: FormArticuloComponent },
+    { path: 'articulos/edit/:id', component: FormArticuloComponent },
     { path: 'ajustestock', component: AjusteStockComponent },
     { path: 'ajustestock/new', component: FormAjusteComponent },
     { path: 'ajustestock/edit/:id', component: FormAjusteComponent },
@@ -37,6 +40,8 @@ export const routes: Routes = [
     { path: 'proveedores/new', component: FormProveedorComponent },
     { path: 'compras', component: CompraDirectaComponent },
     { path: 'compras/new', component: FormCompraDirectaComponent },
+    { path: 'compras/edit/:id', component: FormCompraDirectaComponent },
+    { path: 'monitorcompras', component: MonitorcomprasComponent },
 
 
 ];

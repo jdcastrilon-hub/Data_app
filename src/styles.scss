@@ -175,3 +175,22 @@ body {
   --mdc-snackbar-label-text-color: white;
 }
 
+/* Si lo estás poniendo en styles.scss o con ::ng-deep */
+.form-field-compacto button[matSuffix] {
+    background: transparent !important;
+    background-color: transparent !important;
+    
+    /* ESTO QUITA EL BORDE */
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+
+    /* Para asegurar que no haya estilos de sistema */
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+/* Y para el icono específicamente */
+.form-field-compacto button[matSuffix] .mat-icon {
+    color: #f44336 !important; /* Rojo */
+}

@@ -32,9 +32,39 @@ export class ComprasService {
     return this.http.get<PageResponse<CompraListView>>(this.url + "pagination", { params });
   }
 
+  //Obtener compra por el ID
+  getCompraById(id: number): Observable<Compra> {
+    const params = new HttpParams()
+      .set('transaccion', id);
+    return this.http.get<Compra>(this.url + "search", { params });
+  }
+
+  ActualizarStockCostos(cadena: string, id_bodega: number, id_estado: number): Observable<any> {
+    const params = new HttpParams()
+      .set('cadena', cadena.toString())
+      .set('id_bodega', id_bodega)
+      .set('id_estado', id_estado)
+
+    return this.http.get<any>(this.url + "stock-masivo", { params });
+  }
+
   //Guardar Compra
   save(objecto: any): Observable<any> {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
+      map((response: ApiResponse) => {
+
+        if (response.status !== 'success') {
+          // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
+          throw new Error(response.message || 'Error desconocido al guardar la categoría.');
+        }
+        return response.data;
+      })
+    );
+  }
+
+  //Editar Compra
+  edit(id_trans : number,objecto: any): Observable<any> {
+    return this.http.put<ApiResponse>(this.url + "edit/"+id_trans, objecto).pipe(
       map((response: ApiResponse) => {
 
         if (response.status !== 'success') {

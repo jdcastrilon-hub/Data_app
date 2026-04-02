@@ -1,10 +1,17 @@
 <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
     <mat-label>Articulo</mat-label>
     <input type="text" placeholder="Nombre o Codigo" matInput [formControl]="searchControl"
-        [matAutocomplete]="autoArticulo"> </mat-form-field>
+        [matAutocomplete]="autoArticulo">
 
-<mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida"
-    (optionSelected)="onSelected($event)">
+    @if (searchControl.value) {
+    <button mat-icon-button matSuffix (click)="limpiarProveedor($event)" type="button">
+        <mat-icon>close</mat-icon>
+    </button>
+    }
+
+</mat-form-field>
+
+<mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
 
     @for (item of filteredOptions(); track item.idArticulo) {
     <mat-option [value]="item">
@@ -13,4 +20,3 @@
     }
 
 </mat-autocomplete>
-

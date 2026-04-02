@@ -17,7 +17,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
   styleUrl: './form-bodega.component.scss'
 })
 export class FormBodegaComponent {
+
   formulario!: FormGroup;
+  titulo_form !: string;
 
   //parametros de entrada
   objeto!: Bodega;
@@ -62,12 +64,14 @@ export class FormBodegaComponent {
         // Si hay un ID, estamos en modo Edición
         console.log("Edicion")
         this.isEditMode = true;
+        this.titulo_form = "ACTUALIZACION BODEGA"
         this.ModoEdicion(Number(id)); // Llama al método de carga
 
       } else {
         // Si no hay ID (p. ej., si usas esta misma ruta para crear), estamos en modo Nuevo
         console.log("Nuevo")
         this.isEditMode = false;
+        this.titulo_form = "REGISTRO DE BODEGA"
         this.objeto = new Bodega();
         this.formulario.get('bodegaPrincipal')?.patchValue(false);
         this.formulario.get('manejaUbicaciones')?.patchValue(false);
@@ -93,13 +97,12 @@ export class FormBodegaComponent {
           );
 
           if (sucursalSeleccinada) {
-            // [CLAVE]: Asigna el OBJETO completo al FormControl
             this.SelectSucursalControl.setValue(sucursalSeleccinada);
           }
         } else {
-          // Condición: Si estamos en modo Nuevo (this.isEditMode es false)
-            const unicoregistro = this.list_sucursal[0];
-            this.SelectSucursalControl.setValue(unicoregistro);
+          // se carga la primer sucursal por defecto
+          const unicoregistro = this.list_sucursal[0];
+          this.SelectSucursalControl.setValue(unicoregistro);
         }
       },
       error: (err) => {
@@ -163,37 +166,26 @@ export class FormBodegaComponent {
 
     //Auditoria
     this.agregarLogAuditoria();
-    console.log("OBJECTO2");
-    console.log(this.formulario.getRawValue());
 
 
     if (this.isEditMode) {
       //Evento Edicion
-      console.log("api ediccion");
-      console.log(this.objeto.id)
-      
-      this.bodegaService.edit(this.formulario.getRawValue(),this.objeto.id!).subscribe({
+      this.bodegaService.edit(this.formulario.getRawValue(), this.objeto.id!).subscribe({
         next: (ObjectSave) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
-          console.log(ObjectSave);
-          // 4. Redirigir a la vista de lista principal.
+          //Redirigir a la vista de lista principal.
           this.router.navigate(['/bodegas']);
         },
         error: (err) => {
           console.error('Error al guardar:', err);
         }
       });
-      
+
     } else {
       //Evento nuevo
       const dataCompleta = this.formulario.getRawValue();
       const { id, ...bodyJson } = dataCompleta;
-      console.log('JSON Limpio:', bodyJson);
-      console.log("api nuevo");
       this.bodegaService.save(bodyJson).subscribe({
         next: (ObjectSave) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
-          console.log(ObjectSave);
           // 4. Redirigir a la vista de lista principal.
           this.router.navigate(['/bodegas/new']);
         },
@@ -202,7 +194,7 @@ export class FormBodegaComponent {
         }
       });
     }
-     
+
 
   }
 

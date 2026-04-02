@@ -1,1 +1,65 @@
-<p>articulos-stock works!</p>
+<main class="contenido">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>GESTION DE ARTICULOS</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-actions class="mat-accion">
+            <button mat-raised-button color="primary" routerLink="/articulos/new">Nuevo</button>
+        </mat-card-actions>
+        <mat-card-content class="mat-content">
+
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+
+                    <ng-container matColumnDef="codigo">
+                        <th mat-header-cell *matHeaderCellDef>Codigo</th>
+                        <td mat-cell *matCellDef="let element">{{ element.codArticulo}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="nombre">
+                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nomArticulo }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="negocio">
+                        <th mat-header-cell *matHeaderCellDef>Negocio</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nomNegocio }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="categoria">
+                        <th mat-header-cell *matHeaderCellDef>Categoria</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nomCategoria }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="subcategoria">
+                        <th mat-header-cell *matHeaderCellDef>SubCategoria</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nomSubCategoria }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="activo">
+                        <th mat-header-cell *matHeaderCellDef>Estado</th>
+                        <td mat-cell *matCellDef="let element">{{ element.activo }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="editarArticulo(element.id_articulo)">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button matSuffix (click)="eliminarArticulo(element.id_articulo)">
+                                <mat-icon>close</mat-icon>
+                            </button>
+
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="Columnas">
+                    </tr>
+                    <tr mat-row *matRowDef="let row; columns: Columnas;">
+                    </tr>
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+
+
+        </mat-card-content>
+    </mat-card>
+</main>

@@ -1,6 +1,7 @@
 export class CodigosBarra {
-    id?: number;
-    id_articulo?: number;
+    idCodBarra?: number;
+    idArticulo?: number;
     codBarra! : string;
     nomBarra! : string;
 }
+

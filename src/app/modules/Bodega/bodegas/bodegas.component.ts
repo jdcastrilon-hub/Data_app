@@ -6,6 +6,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { BodegaService } from '../../../core/services/Bodega/bodega.service';
 import { BodegaListView } from '../../../core/interfaces/Bodega/BodegaListView';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 
 
 @Component({
@@ -16,12 +17,10 @@ import { BodegaListView } from '../../../core/interfaces/Bodega/BodegaListView';
 })
 export class BodegasComponent {
 
-  //Objecto Transaccional
-  objecto_bodega!: Bodega;
-
   //Paginador
   lista_bodegas: BodegaListView[] = [];
   dataSource!: MatTableDataSource<BodegaListView>;
+  Columnas: string[] = ['codigo', 'nombre','bprincipal','activo','fecha', 'actions'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   //Datos generales de paginacion
   totalRegistros: number = 0;
@@ -31,10 +30,9 @@ export class BodegasComponent {
 
   constructor(
     private service: BodegaService,
+    private notificacion: NotificacionesService,
     private router: Router
-  ) {
-    this.objecto_bodega = new Bodega();
-  }
+  ) { }
 
   ngOnInit() {
     this.cargarBodegasPaginadas();
@@ -70,7 +68,18 @@ export class BodegasComponent {
     console.log("Entro a editar");
     console.log(id);
     this.router.navigate(['/bodegas/edit', id]);
-      
+
+  }
+
+  //Eliminar registro
+  eliminarBodega(id: number): void {
+    console.log("Entro a elininar");
+    console.log(id);
+    this.service.delete(id).subscribe(data => {
+      this.lista_bodegas = this.lista_bodegas.filter(bodega => bodega.id !== id);
+      this.dataSource = new MatTableDataSource<BodegaListView>(this.lista_bodegas);
+      this.notificacion.showSuccess('Bodega Eliminada con exito!');
+    });
   }
 
 

@@ -1,10 +1,16 @@
 <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
     <mat-label>Proveedor</mat-label>
-    <input type="text" placeholder="Documento o Nombre" matInput [formControl]="searchControl"
-        [matAutocomplete]="autoArticulo"> </mat-form-field>
+    <input matInput type="text" placeholder="Documento o Nombre" [formControl]="searchControl"
+        [matAutocomplete]="autoProveedor">
 
-<mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida"
-    (optionSelected)="onSelected($event)">
+    @if (searchControl.value) {
+    <button mat-icon-button matSuffix (click)="limpiarProveedor($event)" type="button" >
+        <mat-icon>close</mat-icon>
+    </button>
+    }
+</mat-form-field>
+
+<mat-autocomplete #autoProveedor="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
 
     @for (item of filteredOptions(); track item.idPersona) {
     <mat-option [value]="item">
@@ -13,4 +19,3 @@
     }
 
 </mat-autocomplete>
-

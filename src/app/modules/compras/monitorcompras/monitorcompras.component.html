@@ -1,1 +1,36 @@
-<p>monitorcompras works!</p>
+<main class="contenido">
+  <mat-card appearance="raised" class="monitor-card">
+
+    <mat-card-header class="mat-header">
+      <mat-card-title>MONITOR DE COMPRAS</mat-card-title>
+
+      <span class="spacer"></span> <mat-form-field appearance="outline" class="select-inline">
+        <mat-label>Tipo de Informe</mat-label>
+        <mat-select [(value)]="reporteSeleccionado">
+          <mat-option value="compras">📦 Compras Realizadas</mat-option>
+          <mat-option value="variacion">📉 Variación de Costos</mat-option>
+          <mat-option value="inventario">💰 Valoración de Inventario</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card-header>
+
+    <div class="divider"></div>
+    <mat-card-content class="mat-content">
+      <div class="kpi-grid">
+        <kpicompras *ngFor="let kpi of currentKpis" [titulo]="kpi.titulo" [valor]="kpi.valor" [icono]="kpi.icono"
+          [color]="kpi.color">
+        </kpicompras>
+      </div>
+
+      <filtroscompras [reporteActual]="reporteSeleccionado" (alConsultar)="ejecutarLogica($event)"></filtroscompras>
+
+      <div class="resultados-seccion" *ngIf="reporteSeleccionado === 'compras'">
+        <vistacomprasrealizadas [datos]="lista_comprasrealizadas" 
+          [totalRegistros]="totalRegistros"
+          [pageSize]="pageSize"
+          (paginacion)="manejarPaginacion($event)"></vistacomprasrealizadas>
+      </div>
+
+    </mat-card-content>
+  </mat-card>
+</main>

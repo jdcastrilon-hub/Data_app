@@ -1,0 +1,35 @@
+<div class="bloque">
+  <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+    <div fxFlex="20">
+      <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+        <mat-label>Rango de Fechas</mat-label>
+        <mat-date-range-input [rangePicker]="picker">
+          <input matStartDate placeholder="Desde" [(ngModel)]="filtro.fechaInicio">
+          <input matEndDate placeholder="Hasta" [(ngModel)]="filtro.fechaFin">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field>
+    </div>
+    <div fxFlex="20">
+      <combo-bodega (bodegaSeleccionada)="recibirBodega($event)"></combo-bodega>
+    </div>
+    <div fxFlex="25">
+      <combo-proveedor (proveedorSelecionado)="onProveedorChange($event)"></combo-proveedor>
+    </div>
+    <div fxFlex="25">
+         <combo-articulo  [editMode]="true" 
+                                (articuloSeleccionado)="recibirArticulo($event)"></combo-articulo >
+    </div>
+    <div fxFlex="10">
+      <button mat-flat-button color="primary" (click)="enviarConsulta()">
+        <mat-icon>search</mat-icon> Consultar
+      </button>
+
+    </div>
+
+
+
+  </div>
+
+</div>

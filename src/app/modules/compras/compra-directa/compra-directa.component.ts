@@ -6,10 +6,11 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { ComprasService } from 'src/app/core/services/Compras/compras.service';
 import { CompraListView } from 'src/app/core/interfaces/Compras/CompraListView';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 @Component({
   selector: 'app-compra-directa',
-  imports: [modules_depencias, RouterModule],
+  imports: [modules_depencias, RouterModule,FlexLayoutModule],
   templateUrl: './compra-directa.component.html',
   styleUrl: './compra-directa.component.scss'
 })
@@ -67,11 +68,11 @@ export class CompraDirectaComponent {
   }
 
   //Edicion del registro
-  editarBodega(id: number): void {
+  editarCompra(id: number): void {
     // Navega a '/categoria/edit/5' si el ID es 5
     console.log("Entro a editar");
     console.log(id);
-    //this.router.navigate(['/bodegas/edit', id]);
+    this.router.navigate(['/compras/edit', id]);
 
   }
 

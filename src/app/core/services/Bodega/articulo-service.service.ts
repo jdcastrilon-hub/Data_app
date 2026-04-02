@@ -6,6 +6,8 @@ import { ArticuloDTO } from '../../models/Bodega/ArticuloDTO';
 import { ArticuloSearch } from '../../models/Bodega/ArticuloSearch';
 import { environment } from 'src/environments/environment';
 import { registroarticuloCompra } from '../../interfaces/Compras/registroarticuloCompra';
+import { PageResponse } from '../../models/core/PageResponse';
+import { ArticuloListView } from '../../interfaces/Bodega/ArticuloListView';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -22,10 +24,27 @@ export class ArticuloServiceService {
 
   constructor(private http: HttpClient) { }
 
+  listPaginacion(page: number, size: number): Observable<PageResponse<ArticuloListView>> {
+    const params = new HttpParams()
+      .set('page', page.toString())//Pagina 
+      .set('size', size.toString())//Cantidad de registros a validar
+
+    return this.http.get<PageResponse<ArticuloListView>>(this.url + "pagination", { params });
+  }
+
+  //Obtener bodega por el ID
+  getArticuloById(id: number): Observable<Articulo> {
+    const params = new HttpParams()
+      .set('id_articulo', id);
+    return this.http.get<Articulo>(this.url + "search", { params });
+  }
+
+  /*
   list(): Observable<Articulo[]> {
     return this.http.get<Articulo[]>(this.url + "list");
   }
-
+    */
+  /*
   getEdition(objecto: Articulo): Observable<ArticuloDTO> {
     const params = new HttpParams()
       .set('id', String(objecto.id_articulo));
@@ -33,6 +52,7 @@ export class ArticuloServiceService {
     console.log(objecto.id_articulo);
     return this.http.get<ArticuloDTO>(this.url + "getedition", { params });
   }
+    */
 
   //Guardar Articulo
   save(objecto: any): Observable<any> {
@@ -69,11 +89,11 @@ export class ArticuloServiceService {
     return this.http.get<ArticuloSearch[]>(this.url + "searchCodigoStock", { params });
   }
   //buscar si existe el codigo de barra
-  SearchByCodigoBarra(id_articulo : number,codBarra: string): Observable<registroarticuloCompra> {
+  SearchByCodigoBarra(id_articulo: number, codBarra: string): Observable<registroarticuloCompra> {
     const params = new HttpParams()
       .set('id_articulo', id_articulo)
       .set('cod_barra', String(codBarra));
-      
+
     return this.http.get<registroarticuloCompra>(`${this.url}searchArticuloByCodigoBarra`, { params });
   }
 

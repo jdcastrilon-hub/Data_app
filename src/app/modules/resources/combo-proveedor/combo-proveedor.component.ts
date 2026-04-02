@@ -6,10 +6,11 @@ import { ProveedorSearch } from '../../../core/interfaces/Compras/ProveedorSearc
 import { debounceTime, distinctUntilChanged, finalize, Observable, of, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { ProveedorService } from '../../../core/services/Compras/proveedor.service';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'combo-proveedor',
-  imports: [MatInputModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule],
+  imports: [MatInputModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatIconModule],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -84,8 +85,18 @@ export class ComboProveedorComponent implements OnInit, ControlValueAccessor {
 
   onSelected(event: MatAutocompleteSelectedEvent) {
     const seleccion = event.option.value;
+    this.searchControl.setValue(seleccion); // Seteamos el objeto
+    this.searchControl.disable();
     this.onChange(seleccion); // Notifica al FormControl del padre
     this.proveedorSelecionado.emit(seleccion);
   }
 
+  limpiarProveedor(event: Event) {
+    event.stopPropagation();
+    this.searchControl.enable();
+    this.searchControl.setValue(null); // Limpiamos el input
+    this.filteredOptions.set([]);      // Limpiamos las sugerencias
+    this.onChange(null);               // Notificamos al formulario padre
+    this.proveedorSelecionado.emit(null as any); // Avisamos al monitor
+  }
 }
