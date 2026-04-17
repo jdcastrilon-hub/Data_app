@@ -1,0 +1,28 @@
+:host {
+  // 1. Fondo gris fuera de la tarjeta
+  display: block;
+  background-color: #e2e2e2;
+
+  // 2. Padding de 8px en todos los ángulos
+  padding: 8px;
+
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  
+  &.active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+  
+  &.inactive {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+  }
+}

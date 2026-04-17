@@ -36,6 +36,10 @@
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef>Acciones</th>
                         <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarBodega(element.id)" matTooltip="Visualizar"
+                                matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
                             <button mat-icon-button (click)="editarBodega(element.id)">
                                 <mat-icon>edit</mat-icon>
                             </button>
@@ -47,8 +51,7 @@
                     </ng-container>
                     <tr mat-header-row *matHeaderRowDef="Columnas">
                     </tr>
-                    <tr mat-row
-                        *matRowDef="let row; columns: Columnas;">
+                    <tr mat-row *matRowDef="let row; columns: Columnas;">
                     </tr>
                 </table>
             </div>

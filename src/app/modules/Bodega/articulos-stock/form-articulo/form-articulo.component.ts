@@ -20,10 +20,12 @@ import { NotificacionesService } from 'src/app/core/services/core/notificaciones
 import { NegocioServiceService } from 'src/app/core/services/General/negocio-service.service';
 import { TasaImpuestoServiceService } from 'src/app/core/services/impuestos/tasa-impuesto-service.service';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 @Component({
-  selector: 'form-bodega',
-  imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule, RouterModule, MatCheckboxModule],
+  selector: 'form-articulo',
+  standalone: true,
+  imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule, RouterModule, MatCheckboxModule, MatSlideToggleModule],
   templateUrl: './form-articulo.component.html',
   styleUrl: './form-articulo.component.scss'
 })
@@ -37,6 +39,7 @@ export class FormArticuloComponent {
 
   //Objecto de filtros
   objeto_filtro!: EmpresaByNegocioCategorias;
+  
   //Negocios
   list_negocios: NegocioCombo[] = [];
   SelectNegocioControl = new FormControl<NegocioCombo | null>(null, Validators.required);
@@ -59,12 +62,9 @@ export class FormArticuloComponent {
   list_TasaImpuesto: TasaImpuesto[] = [];
   SelectTasaImpuestoControl = new FormControl<TasaImpuesto | null>(null, Validators.required);
 
-  //
+  //DataSource
   dataSourceCodigoBarras = new MatTableDataSource<FormGroup>();
-
-  //Eventos de checkBox
-  valorActivoStockSN: string = 'N';
-  valorActivoComercialSN: string = 'N';
+  Columnas: string[] = ['codigo', 'nombre', 'estado', 'stock', 'actions'];
 
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
@@ -96,10 +96,9 @@ export class FormArticuloComponent {
       nomArticulo: [this.objeto.nomArticulo, Validators.required],
       idTipoService: [this.objeto.idTipoService, Validators.required],
       idNegocio: [this.objeto.idNegocio, Validators.required],
-      activoStock: new FormControl(false, Validators.required),
+      activoStock: [this.objeto.activoStock, Validators.required],
       stockMin: [this.objeto.stockMin],
       stockMax: [this.objeto.stockMax],
-      activoComercial: new FormControl(false, Validators.required),
       idRef: [this.objeto.idRef, Validators.required],
       idunidad: [this.objeto.idunidad, Validators.required],
       grupoContable: [this.objeto.grupoContable],
@@ -158,28 +157,15 @@ export class FormArticuloComponent {
         }
       });
 
-      //Eventos de checbox activo Stock y Venta Comercial
+      //Eventos de checbox activo Stock 
       if (this.isEditMode) {
         //Edicion
-        this.formulario.get('activoStock')?.setValue(this.objeto.activoStock === 'S' ? true : false);
-        this.formulario.get('activoComercial')?.setValue(this.objeto.activoComercial === 'S' ? true : false);
+        this.formulario.get('activoStock')?.setValue(this.objeto.activoStock);
       } else {
         //Nuevo
-        this.formulario.get('activoStock')?.setValue(false);
-        this.formulario.get('activoComercial')?.setValue(false);
+        this.formulario.get('activoStock')?.setValue(true);
       }
 
-
-      // Suscribirse a los cambios del checkbox para actualizar 'valorActivoStockSN'
-      this.formulario.get('activoStock')?.valueChanges.subscribe(isChecked => {
-        // Si el checkbox está marcado (true), asigna 'S', de lo contrario, 'N'
-        this.valorActivoStockSN = isChecked ? 'S' : 'N';
-      });
-
-      this.formulario.get('activoComercial')?.valueChanges.subscribe(isChecked => {
-        // Si el checkbox está marcado (true), asigna 'S', de lo contrario, 'N'
-        this.valorActivoComercialSN = isChecked ? 'S' : 'N';
-      });
 
 
     });
@@ -209,7 +195,6 @@ export class FormArticuloComponent {
         this.formulario.get('idTipoService')?.patchValue(data.idTipoService);
         this.formulario.get('idImpuesto')?.patchValue(data.idImpuesto);
         this.formulario.get('activoStock')?.patchValue(data.activoStock);
-        this.formulario.get('activoComercial')?.patchValue(data.activoComercial);
         this.formulario.get('grupoContable')?.patchValue(data.grupoContable);
         this.formulario.get('cuentaInventario')?.patchValue(data.cuentaInventario);
 
@@ -220,18 +205,35 @@ export class FormArticuloComponent {
 
         //Carga de codigos de barra
         console.log("codigos de barra")
+        //arreglo temporal para cargar los codigos de barra
+        const idsTemporales: string[] = [];
         data.codigosBarra.forEach((det: any) => {
           console.log(det)
           let codigobarra: CodigosBarra = {
-            idCodBarra: det.id,
+            idCodBarra: det.idcodbarra,
             idArticulo: det.idArticulo,
             codBarra: det.codBarra,
-            nomBarra: det.nomBarra
+            nomBarra: det.nomBarra,
+            estado: true,
+            stock: 0,
+            movimientos: 0,
+            registro_nuevo: false //ya esta cargado en la base de datos
+          }
+          if (det.id) {
+            //Añadir id al arreglo
+            idsTemporales.push(det.id.toString());
           }
           this.agregarCodigoBarra(codigobarra);
         })
-        //Carga linea vacia
-        this.agregarCodigoBarra();
+
+        //Validamos si el arreglo esta vacio , de ser asi agregamos una linea vacia , si esta lleno consultamos el stock de los codigos de barra
+        if (this.getCodigosBarra.length === 0) {
+          console.log("El arreglo está vacío");
+          this.agregarCodigoBarra();
+        } else {
+          const cadenaFinal = idsTemporales.join('-');
+          this.actualizarStocksMasivo(this.objeto.id_articulo!, cadenaFinal);
+        }
 
       },
       error => {
@@ -243,7 +245,6 @@ export class FormArticuloComponent {
 
   }
 
-
   private actualizarPrimeraLinea(campo: string, columna: string, valor: any) {
     const primeraLinea = this.getCodigosBarra.at(0);
     if (primeraLinea) {
@@ -252,6 +253,32 @@ export class FormArticuloComponent {
     }
   }
 
+  //Actualizar srtock y costo 
+  actualizarStocksMasivo(id_articulo: number, cadena: string): void {
+    console.log("actualizarStocksMasivo");
+
+    this.articuloService.ActualizarStock(id_articulo, cadena).subscribe({
+      next: (data: any[]) => {
+        console.log(data);
+        data.forEach(info => {
+          // Buscar la fila correspondiente en el FormArray
+          const fila = this.getCodigosBarra.controls.find(f =>
+            f.get('idCodBarra')?.value === info.idcodbarra
+          );
+
+          //Si encuentra fila actualiza el registro
+          if (fila) {
+            console.log("encontro fila")
+            fila.patchValue({
+              stock: info.stock,
+              movimientos: info.movimientos
+            }, { emitEvent: false });
+          }
+        });
+      }
+    });
+
+  }
 
   //Metodo para cargar lista de negocios y sus categorias.
   cargarNegocios(): void {
@@ -372,11 +399,15 @@ export class FormArticuloComponent {
     console.log("agregarCodigoBarra");
     console.log(data)
     const subCat = this.fb.group({
-      id: [data?.idCodBarra || null],
+      idCodBarra: [data?.idCodBarra || null],
       idArticulo: [data?.idArticulo || null],
       //codEmp: [data?.codEmp || ''],
       codBarra: [data?.codBarra || '', Validators.required],
-      nomBarra: [data?.nomBarra || '', Validators.required]
+      nomBarra: [data?.nomBarra || '', Validators.required],
+      estado: [data?.estado ?? true, Validators.required],
+      stock: [data?.stock || 0, Validators.required],
+      movimientos: [data?.movimientos || 0, Validators.required],
+      registro_nuevo: [data?.registro_nuevo ?? true, Validators.required],
     });
     this.getCodigosBarra.push(subCat);
     this.dataSourceCodigoBarras.data = this.getCodigosBarra.controls as FormGroup[];
@@ -384,14 +415,25 @@ export class FormArticuloComponent {
 
   //eliminar codigo de barra
   eliminarCodigoBarra(index: number): void {
+    //Capturamos el objecto de la fila
+    const fila = this.getCodigosBarra.at(index) as FormGroup;
+
+    // 2. Extraemos el objeto movimientos
+    const objecto = fila.get('movimientos')?.value;
+
+    //Si el codigo de barra a tenido algun movimiento de stock no se puede eliminar.
+    if (objecto > 0) {
+      this.notificacion.showError('No se puede eliminar el codigo de barra porque tiene movimintos en el stock');
+      return;
+    }
+
     this.getCodigosBarra.removeAt(index);
     this.dataSourceCodigoBarras.data = this.getCodigosBarra.controls as FormGroup[];
 
     if (this.getCodigosBarra.length == 0) {
       this.agregarCodigoBarra();
+      this.formulario.get('activoStock')?.setValue(true);
     }
-
-
   }
 
   // Método para agregar el log al FormArray
@@ -422,9 +464,7 @@ export class FormArticuloComponent {
       idImpuesto: this.SelectTasaImpuestoControl.value?.id,
       idTipoService: this.SelecProductoControl.value?.id,
       fechaMod: new Date().toISOString(),
-      idRef: 0,
-      activoStock: 'S',
-      activoComercial: this.valorActivoComercialSN
+      idRef: 0
     });
     console.log(this.formulario.getRawValue());
     if (this.formulario.invalid) {
@@ -441,30 +481,36 @@ export class FormArticuloComponent {
     if (this.isEditMode) {
       //Evento Edicion
       console.log("api ediccion");
+
+      this.articuloService.update(this.formulario.getRawValue()).subscribe({
+        next: (ObjectSave) => {
+          console.log(ObjectSave);
+          this.notificacion.showSuccess('¡Articulo actualizado con éxito!');
+        },
+        error: (err) => { }
+      });
+
     } else {
       //Evento nuevo
       this.articuloService.save(this.formulario.getRawValue()).subscribe({
         next: (ObjectSave) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
           console.log(ObjectSave);
           this.notificacion.showSuccess('¡Articulo guardado con éxito!');
-
-          // 2. Limpiar el formulario
-          this.objeto = new Articulo();
-          this.formDirective.resetForm();
-          const logsArray = this.formulario.get('logs') as FormArray;
-          logsArray.clear();
+          //Limpiar el formulario
+          this.resetCampos();
         },
-        error: (err) => {
-          console.error('Error al guardar:', err);
-        }
+        error: (err) => { }
       });
     }
-
-
-
   }
 
+  resetCampos() {
+    this.objeto = new Articulo();
+    this.formDirective.resetForm();
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.clear();
+    this.formulario.get('activoStock')?.setValue(true);
 
+  }
 
 }

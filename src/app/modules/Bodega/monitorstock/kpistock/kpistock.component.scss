@@ -1,0 +1,33 @@
+.kpi-card-container {
+      border-left: 5px solid;
+      height: 100%;
+      min-width: 200px;
+    }
+    .kpi-layout {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .kpi-icon-circle {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .kpi-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .kpi-label {
+      font-size: 0.85rem;
+      color: #666;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .kpi-value {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }

@@ -7,6 +7,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { CategoriaService } from '../../../core/services/Bodega/categoria-service.service';
 import { Subscription } from 'rxjs';
 import { CategoriaListView } from '../../../core/models/Bodega/CategoriaListView';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 
 @Component({
   selector: 'categorias',
@@ -16,13 +17,13 @@ import { CategoriaListView } from '../../../core/models/Bodega/CategoriaListView
 })
 export class CategoriasComponent {
 
-  //Objecto Transaccional
-  objecto_categoria!: Categoria;
 
   //Paginador
   lista_Categorias: CategoriaListView[] = [];
   dataSource!: MatTableDataSource<CategoriaListView>;
+  Columnas: string[] = ['codigo', 'nombre', 'estado', 'actions'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   //Datos generales de paginacion
   totalRegistros: number = 0;
   paginaActual: number = 0;
@@ -31,10 +32,9 @@ export class CategoriasComponent {
 
   constructor(
     private service: CategoriaService,
+    private notificacion: NotificacionesService,
     private router: Router
-  ) {
-    this.objecto_categoria = new Categoria();
-  }
+  ) { }
 
   ngOnInit() {
     this.cargarCategoriasPaginadas();
@@ -70,4 +70,17 @@ export class CategoriasComponent {
     console.log(id);
     this.router.navigate(['/categoria/edit', id]);
   }
+
+  //Eliminar registro
+  eliminarCaegoria(id: number): void {
+    console.log("Entro a elininar");
+    console.log(id);
+    this.service.delete(id).subscribe(data => {
+      this.lista_Categorias = this.lista_Categorias.filter(categoria => categoria.id !== id);
+      this.dataSource = new MatTableDataSource<CategoriaListView>(this.lista_Categorias);
+      this.notificacion.showSuccess('Categoria Eliminada con exito!');
+    });
+
+  }
+
 }

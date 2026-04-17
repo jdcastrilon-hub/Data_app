@@ -2,10 +2,10 @@
     <mat-card appearance="raised">
          <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
-                <a mat-icon-button color="primary" routerLink="/categorias">
+                <a mat-icon-button color="primary" routerLink="/ajustestock">
                     <mat-icon>list</mat-icon>
                 </a>
-                <span>AJUSTE DE STOCK</span>
+                <span>{{titulo_form}}</span>
             </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
@@ -15,7 +15,7 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
                         <div fxFlex="20" fxFlex.lt-md="100%">
-                            <combo-bodega [editMode]="isEditMode" [input_objeto]="objeto"
+                            <combo-bodega [editMode]="isEditMode" [input_objeto]="objeto" [opcionview]="isReadOnly"
                                 (bodegaSeleccionada)="recibirBodega($event)"></combo-bodega>
                         </div>
                         <div fxFlex="20" fxFlex.lt-md="100%">
@@ -32,7 +32,7 @@
                             </mat-form-field>
                         </div>
                         <div fxFlex="20" fxFlex.lt-md="100%">
-                            <combo-estadostock [editMode]="isEditMode" [input_objeto]="objeto"
+                            <combo-estadostock [editMode]="isEditMode" [input_objeto]="objeto" [opcionview]="isReadOnly"
                                 (estadoSeleccionado)="recibirEstado($event)"></combo-estadostock>
                         </div>
                         <div fxFlex="20" fxFlex.lt-md="100%">
@@ -65,16 +65,30 @@
                         </div>
                     </div>
 
-                  
+
                     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 tabla-compacta"
                         formArrayName="detalles">
-                        <ng-container matColumnDef="id">
-                            <mat-header-cell *matHeaderCellDef> Artículo </mat-header-cell>
-                            <mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                                <articulo-autocomplet formControlName="search"
-                                    (articuloSeleccionado)="onArticuloChange($event, i)"></articulo-autocomplet>
+                        <ng-container matColumnDef="position">
+                            <th mat-header-cell *matHeaderCellDef>#</th>
+                            <td mat-cell *matCellDef="let element; let i = index">
+                                {{ i + 1 }}
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+                        <ng-container matColumnDef="articulo">
+                            <th mat-header-cell *matHeaderCellDef>Articulo</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <div class="celda-articulo-container">
+                                    <articulo-autocomplet formControlName="search" [mostrarOpcionCrear]="false"
+                                        (articuloSeleccionado)="onArticuloChange($event, i)">
+                                    </articulo-autocomplet>
 
-                            </mat-cell>
+                                    <button mat-icon-button color="warn" type="button" *ngIf="!isReadOnly"
+                                        (click)="eliminarLineaDetalles(i)">
+                                        <mat-icon>delete_outline</mat-icon>
+                                    </button>
+                                </div>
+                            </td>
                         </ng-container>
                         <ng-container matColumnDef="ubicacion">
                             <th mat-header-cell *matHeaderCellDef>Ubicacion</th>
@@ -106,7 +120,7 @@
                         <ng-container matColumnDef="cantidad">
                             <th mat-header-cell *matHeaderCellDef>Cantidad</th>
                             <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                                <input matInput formControlName="cantidad" placeholder="Nombre" />
+                                <input matInput formControlName="cantidad" placeholder="Nombre"  [readonly]="isReadOnly"/>
                                 <mat-error *ngIf="row.get('cantidad')?.hasError('required')">
                                     La cantidad es obligatoria.
                                 </mat-error>
@@ -115,20 +129,10 @@
                                 </mat-error>
                             </td>
                         </ng-container>
-                        <ng-container matColumnDef="actions">
-                            <th mat-header-cell *matHeaderCellDef> Acciones </th>
-                            <td mat-cell *matCellDef="let row; let i = index">
-                                <button mat-icon-button color="primary" type="button"
-                                    (click)="eliminarLineaDetalles(i)">
-                                    <mat-icon>remove</mat-icon>
-                                </button>
-
-                            </td>
-                        </ng-container>
                         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                     </table>
-                  
+
                 </div>
 
             </mat-tab>
@@ -137,9 +141,9 @@
         <br>
 
         <mat-card-actions class="mat-accion-botones">
-            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" routerLink="/categoria/nuevo">Salir</button>
+            <button mat-raised-button color="warn" routerLink="/categoria/nuevo" *ngIf="!isReadOnly">Salir</button>
         </mat-card-actions>
 
     </mat-card>

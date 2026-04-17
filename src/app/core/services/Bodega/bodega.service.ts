@@ -39,11 +39,12 @@ export class BodegaService {
     return this.http.get<BodegaCombo[]>(this.url + "listCombo");
   }
 
-  stockDisponible(idArticulo: number, idBodega: number, idEstado: number): Observable<StockDisponible[]> {
+  stockDisponible(idArticulo: number,idCodBarra: number, idBodega: number, idEstado: number): Observable<StockDisponible[]> {
     const params = new HttpParams()
-      .set('idArticulo', String(idArticulo))
-      .set('idBodega', String(idBodega))
-      .set('idEstado', String(idEstado));
+      .set('idArticulo', idArticulo)
+      .set('idCodbarra', idCodBarra)
+      .set('idBodega', idBodega)
+      .set('idEstado', idEstado);
     return this.http.get<StockDisponible[]>(this.url + "stockDisponiblexBodega", { params });
   }
 

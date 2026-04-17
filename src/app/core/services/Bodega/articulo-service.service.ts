@@ -1,8 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Articulo } from '../../models/Bodega/Articulo';
-import { map, Observable } from 'rxjs';
-import { ArticuloDTO } from '../../models/Bodega/ArticuloDTO';
+import { Observable } from 'rxjs';
 import { ArticuloSearch } from '../../models/Bodega/ArticuloSearch';
 import { environment } from 'src/environments/environment';
 import { registroarticuloCompra } from '../../interfaces/Compras/registroarticuloCompra';
@@ -39,40 +38,27 @@ export class ArticuloServiceService {
     return this.http.get<Articulo>(this.url + "search", { params });
   }
 
-  /*
-  list(): Observable<Articulo[]> {
-    return this.http.get<Articulo[]>(this.url + "list");
-  }
-    */
-  /*
-  getEdition(objecto: Articulo): Observable<ArticuloDTO> {
+  //Actualizar stock de codigos de barra
+  ActualizarStock(id_articulo: number, cadena: string): Observable<any> {
     const params = new HttpParams()
-      .set('id', String(objecto.id_articulo));
-    console.log("getEdition");
-    console.log(objecto.id_articulo);
-    return this.http.get<ArticuloDTO>(this.url + "getedition", { params });
+      .set('cadena', cadena.toString())
+      .set('id_articulo', id_articulo)
+
+    return this.http.get<any>(this.url + "stock-masivo", { params });
   }
-    */
 
   //Guardar Articulo
   save(objecto: any): Observable<any> {
-    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
-      map((response: ApiResponse) => {
-
-        if (response.status !== 'success') {
-          // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
-          throw new Error(response.message || 'Error desconocido al guardar el articulo.');
-        }
-        return response.data;
-      })
-    );
+    return this.http.post<ApiResponse>(this.url + "save", objecto);
   }
 
 
-  update(objecto: Articulo): Observable<Articulo> {
-    const params = new HttpParams()
-      .set('id', String(objecto.id_articulo));
-    return this.http.put<Articulo>(this.url + "update", objecto, { params });
+  update(objecto: Articulo): Observable<ApiResponse> {
+    return this.http.put<ApiResponse>(this.url + "edit/" + objecto.id_articulo, objecto);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(this.url + "delete/" + id);
   }
 
   //Servicios adicionales

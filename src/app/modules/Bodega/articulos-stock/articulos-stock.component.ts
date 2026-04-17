@@ -45,7 +45,7 @@ export class ArticulosStockComponent {
 
     // Llama al servicio con los parámetros actuales
     this.service.listPaginacion(this.paginaActual, this.pageSize).subscribe(data => {
-
+      console.log(data)
       // Mapea la respuesta Page
       this.list_articulos = data.content; //  Solo el contenido para la tabla
       this.totalRegistros = data.totalElements; //  El total de registros en el DB
@@ -76,12 +76,12 @@ export class ArticulosStockComponent {
   eliminarArticulo(id: number): void {
     console.log("Entro a elininar");
     console.log(id);
-    /*this.service.delete(id).subscribe(data => {
-      this.lista_bodegas = this.lista_bodegas.filter(bodega => bodega.id !== id);
-      this.dataSource = new MatTableDataSource<BodegaListView>(this.lista_bodegas);
-      this.notificacion.showSuccess('Bodega Eliminada con exito!');
+    this.service.delete(id).subscribe(data => {
+      this.list_articulos = this.list_articulos.filter(articulo => articulo.id_articulo !== id);
+      this.dataSource = new MatTableDataSource<ArticuloListView>(this.list_articulos);
+      this.notificacion.showSuccess('Articulo Eliminada con exito!');
     });
-    */
+
   }
 
 }

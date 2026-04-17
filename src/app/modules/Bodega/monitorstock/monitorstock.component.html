@@ -1,0 +1,36 @@
+<main class="contenido">
+  <mat-card appearance="raised" class="monitor-card">
+
+    <mat-card-header class="mat-header">
+      <mat-card-title>MONITOR DE STOCK</mat-card-title>
+
+      <span class="spacer"></span> <mat-form-field appearance="outline" class="select-inline">
+        <mat-label>Tipo de Informe</mat-label>
+        <mat-select [(value)]="reporteSeleccionado">
+          <mat-option value="inventario">📦 Inventario</mat-option>
+          <mat-option value="variacion">📉 Variación de Costos</mat-option>
+          <mat-option value="inventario">💰 Valoración de Inventario</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card-header>
+
+    <div class="divider"></div>
+    <mat-card-content class="mat-content">
+      <div class="kpi-grid">
+        <kpistock *ngFor="let kpi of currentKpis" [titulo]="kpi.titulo" [valor]="kpi.valor" [icono]="kpi.icono"
+          [color]="kpi.color">
+        </kpistock>
+      </div>
+
+      <filtrostock [reporteActual]="reporteSeleccionado" [obj_filtros]="obj_filtros" (alConsultar)="ejecutarLogica($event)"></filtrostock>
+
+      <div class="resultados-seccion" *ngIf="reporteSeleccionado === 'inventario'">
+        <vistainventario [datos]="lista_inventario" 
+          [totalRegistros]="totalRegistros"
+          [pageSize]="pageSize"
+          (paginacion)="manejarPaginacion($event)"></vistainventario>
+      </div>
+
+    </mat-card-content>
+  </mat-card>
+</main>

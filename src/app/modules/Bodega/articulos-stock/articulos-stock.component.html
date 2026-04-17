@@ -14,11 +14,11 @@
                 <table mat-table [dataSource]="dataSource">
 
                     <ng-container matColumnDef="codigo">
-                        <th mat-header-cell *matHeaderCellDef>Codigo</th>
+                        <th mat-header-cell *matHeaderCellDef>Codigo Stock</th>
                         <td mat-cell *matCellDef="let element">{{ element.codArticulo}}</td>
                     </ng-container>
                     <ng-container matColumnDef="nombre">
-                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <th mat-header-cell *matHeaderCellDef>Referencia</th>
                         <td mat-cell *matCellDef="let element">{{ element.nomArticulo }}</td>
                     </ng-container>
                     <ng-container matColumnDef="negocio">
@@ -36,7 +36,11 @@
                     </ng-container>
                     <ng-container matColumnDef="activo">
                         <th mat-header-cell *matHeaderCellDef>Estado</th>
-                        <td mat-cell *matCellDef="let element">{{ element.activo }}</td>
+                        <td mat-cell *matCellDef="let articulo">
+                            <span class="status-badge" [ngClass]="articulo.activoStock ? 'active' : 'inactive'">
+                                {{ articulo.activoStock ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </td>
                     </ng-container>
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef>Acciones</th>

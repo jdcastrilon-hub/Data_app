@@ -1,5 +1,6 @@
 export class SubCategorias {
-    id!: number; 
+    id!: number;
     codSubCategoria!: String;
     nomSubCategoria!: String;
+    tieneArticulos!: boolean;
 }

@@ -28,12 +28,7 @@ export class ProveedorService {
     return this.http.get<Ciudades[]>(this.url + "Ciudades");
   }
 
-  PersonaSearch(query: string): Observable<PersonaSearch[]> {
-    console.log("Service Search");
-    const params = new HttpParams()
-      .set('query', String(query));
-    return this.http.get<PersonaSearch[]>(this.url + "PersonaSearch", { params });
-  }
+
 
   ProveedorSearch(query: string): Observable<ProveedorSearch[]> {
     console.log("Service Search");

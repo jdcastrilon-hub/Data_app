@@ -173,7 +173,7 @@ export class FormTrasladoComponent {
     const idEstado = this.formulario.value.idEstadoOrigen;
 
     //Con el articulo seleccionado se consulta por API , el stock.
-    this.bodegaService.stockDisponible(articulo.idArticulo!, idBodega!, idEstado!).subscribe({
+    this.bodegaService.stockDisponible(articulo.idArticulo!,articulo.idCodBarra!, idBodega!, idEstado!).subscribe({
       next: (data) => {
         if (data && data.length > 0) {
           //El api solo debe responder con una sola linea.

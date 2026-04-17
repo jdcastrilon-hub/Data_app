@@ -1,0 +1,105 @@
+<mat-card appearance="raised">
+  <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+    <mat-tab label="Filtros" style="background-color: brown;">
+      <div class="bloque">
+        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="3px">
+          <div fxFlex="25">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+              <mat-label>Sucursal</mat-label>
+              <mat-select [formControl]="SelectSucursalControl" required>
+                @for (obj_sucursal of list_sucursal; track obj_sucursal) {
+                <mat-option [value]="obj_sucursal">{{obj_sucursal.nomSucursal}}</mat-option>
+                }
+              </mat-select>
+              @if (SelectSucursalControl.hasError('required')) {
+              <mat-error>Debe seleccionar una empresa</mat-error>
+              }
+            </mat-form-field>
+          </div>
+          <div fxFlex="25">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+              <mat-label>Negocio</mat-label>
+              <mat-select [formControl]="SelectNegocioControl" required>
+                <mat-option value="TODOS">TODOS</mat-option>
+                @for (obj_negocio of list_negocios; track obj_negocio) {
+                <mat-option [value]="obj_negocio">{{obj_negocio.NomNegocio}}</mat-option>
+                }
+              </mat-select>
+              @if (SelectNegocioControl.hasError('required')) {
+              <mat-error>Debe seleccionar un negocio</mat-error>
+              }
+            </mat-form-field>
+          </div>
+          <div fxFlex="25">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+              <mat-label>Categoria</mat-label>
+              <mat-select [formControl]="SelectCategoriaControl" required>
+                <mat-option value="TODOS">TODOS</mat-option>
+                @for (obj_categoria of lista_categorias; track obj_categoria) {
+                <mat-option
+                  [value]="obj_categoria">{{obj_categoria.codCategoria}}-{{obj_categoria.nomCategoria}}</mat-option>
+                }
+              </mat-select>
+              @if (SelectCategoriaControl.hasError('required')) {
+              <mat-error>Debe seleccionar una Categoria</mat-error>
+              }
+            </mat-form-field>
+          </div>
+          <div fxFlex="25">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+              <mat-label>Sub Categoria</mat-label>
+              <mat-select [formControl]="SelectSubCategoriaControl" required>
+                <mat-option value="TODOS">TODOS</mat-option>
+                @for (SubCategorias of lista_Subcategorias; track SubCategorias) {
+                <mat-option
+                  [value]="SubCategorias">{{SubCategorias.codSubCategoria}}-{{SubCategorias.nomSubCategoria}}</mat-option>
+                }
+              </mat-select>
+              @if (SelectSubCategoriaControl.hasError('required')) {
+              <mat-error>Debe seleccionar una SubCategoria</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+
+
+        </div>
+
+        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="3px">
+          <div fxFlex="25">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+              <mat-label>Bodegas</mat-label>
+              <mat-select [formControl]="SelectBodegasControl" required>
+                <mat-option value="TODOS">TODOS</mat-option>
+                @for (obj_bodega of list_bodegas; track obj_bodega) {
+                <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
+                }
+              </mat-select>
+              @if (SelectBodegasControl.hasError('required')) {
+              <mat-error>Debe seleccionar una empresa</mat-error>
+              }
+            </mat-form-field>
+
+
+          </div>
+          <div fxFlex="25">
+            <button mat-flat-button color="primary" (click)="enviarConsulta()">
+              <mat-icon>search</mat-icon>
+            </button>
+
+
+          </div>
+          <div fxFlex="50"></div>
+        </div>
+
+      </div>
+
+    </mat-tab>
+
+    <mat-tab label="Articulos" style="background-color: brown;">
+
+    </mat-tab>
+
+  </mat-tab-group>
+</mat-card>

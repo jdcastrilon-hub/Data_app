@@ -5,7 +5,7 @@
                 <a mat-icon-button color="primary" routerLink="/categorias">
                     <mat-icon>list</mat-icon>
                 </a>
-                <span>REGISTRO DE CATEGORIAS</span>
+                <span>{{this.titulo_form}}</span>
             </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
@@ -16,7 +16,7 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
-                        <div fxFlex="30" fxFlex.lt-md="100%">
+                        <div fxFlex="20" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 @if (!isEditMode){
                                 <mat-label>Empresa</mat-label>
@@ -31,7 +31,7 @@
                                 }
                             </mat-form-field>
                         </div>
-                        <div fxFlex="30" fxFlex.lt-md="100%">
+                        <div fxFlex="20" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Codigo Categoria</mat-label>
                                 <input matInput formControlName="codCategoria">
@@ -43,6 +43,11 @@
                                 <mat-label>Nombre Categoria</mat-label>
                                 <input matInput formControlName="nomCategoria">
                             </mat-form-field>
+                        </div>
+                        <div fxFlex="20">
+                            <mat-checkbox formControlName="estado" color="primary">
+                                Activo
+                            </mat-checkbox>
                         </div>
 
                     </div>

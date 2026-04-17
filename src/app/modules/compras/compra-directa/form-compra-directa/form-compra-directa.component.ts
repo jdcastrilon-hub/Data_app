@@ -56,7 +56,7 @@ export class FormCompraDirectaComponent {
   displayedColumns: string[] = [];
 
   //Informacion general de articulos
-  list_info_Articulos: AjusteStockInfoArticulos[] = [];
+  //list_info_Articulos: AjusteStockInfoArticulos[] = [];
 
   //Status Compra
   defaultStatus = 'Borrador'; //Valor por defecto
@@ -117,7 +117,7 @@ export class FormCompraDirectaComponent {
       idEmp: this.objeto.idEmp,
       idSucursal: this.objeto.idSucursal,
       idProveedor: this.objeto.idProveedor,
-      nroDocum: this.objeto.nroDocum,
+      nroDocum: [{ value: this.objeto.nroDocum, disabled: true }, Validators.required],
       fecDoc: [new Date(), Validators.required],
       remito: this.objeto.remito,
       status: this.objeto.status,
@@ -339,7 +339,11 @@ export class FormCompraDirectaComponent {
             idCodBarra: nuevoscodigos.idCodBarra,
             idArticulo: nuevoscodigos.idArticulo,
             codBarra: nuevoscodigos.codBarra,
-            nomBarra: nuevoscodigos.nomBarra
+            nomBarra: nuevoscodigos.nomBarra,
+            estado: true,
+            stock: 0,
+            movimientos: 0,
+            registro_nuevo: false
           }
 
           this.agregarCodigoBarraAlArray(nuevoscodigosbarra, nuevoscodigos.linea);
@@ -549,12 +553,12 @@ export class FormCompraDirectaComponent {
         const neto = (costo || 0) * (cantidad || 0);
         const tasaImpu1 = (objimpuesto1.id);
         const imp_dcto = neto * ((porc_dcto / 100));
-        const valorImpu1 = ((neto-imp_dcto) || 0) * ((objimpuesto1.porcentaje / 100) || 0);
+        const valorImpu1 = ((neto - imp_dcto) || 0) * ((objimpuesto1.porcentaje / 100) || 0);
         nuevoDetalle.get('costoTotal')?.setValue(neto, { emitEvent: false });
         nuevoDetalle.get('idTasaimp1')?.setValue(tasaImpu1, { emitEvent: false });
         nuevoDetalle.get('valorImpuesto1')?.setValue(valorImpu1, { emitEvent: false });
         nuevoDetalle.get('imp_dcto')?.setValue(imp_dcto, { emitEvent: false });
-        nuevoDetalle.get('importeTotal')?.setValue((neto-imp_dcto + valorImpu1), { emitEvent: false });
+        nuevoDetalle.get('importeTotal')?.setValue((neto - imp_dcto + valorImpu1), { emitEvent: false });
 
       });
     }
@@ -989,7 +993,7 @@ export class FormCompraDirectaComponent {
     //Evento nuevo
     if (this.isEditMode) {
       console.log("Editar")
-
+      
       this.compraService.edit(this.objeto.idTrans!, jsonParaAPI).subscribe({
         next: (compra) => {
           // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).

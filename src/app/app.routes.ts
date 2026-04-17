@@ -17,6 +17,7 @@ import { FormCompraDirectaComponent } from './modules/compras/compra-directa/for
 import { FormArticuloComponent } from './modules/Bodega/articulos-stock/form-articulo/form-articulo.component';
 import { MonitorcomprasComponent } from './modules/compras/monitorcompras/monitorcompras.component';
 import { ArticulosStockComponent } from './modules/Bodega/articulos-stock/articulos-stock.component';
+import { MonitorstockComponent } from './modules/Bodega/monitorstock/monitorstock.component';
 
 export const routes: Routes = [
     { path: 'categorias', component: CategoriasComponent },
@@ -27,12 +28,13 @@ export const routes: Routes = [
     { path: 'articulos/edit/:id', component: FormArticuloComponent },
     { path: 'ajustestock', component: AjusteStockComponent },
     { path: 'ajustestock/new', component: FormAjusteComponent },
-    { path: 'ajustestock/edit/:id', component: FormAjusteComponent },
+    { path: 'ajustestock/view/:id', component: FormAjusteComponent },
     { path: 'motivosajuste', component: MotivosAjusteComponent },
     { path: 'motivosajuste/new', component: FormMotivoComponent },
     { path: 'inventariostock', component: InventarioStockComponent },
     { path: 'bodegas', component: BodegasComponent },
     { path: 'bodegas/new', component: FormBodegaComponent },
+    { path: 'bodegas/view/:id', component: FormBodegaComponent },
     { path: 'bodegas/edit/:id', component: FormBodegaComponent },
     { path: 'trasladobodega', component: TrasladoBodegasComponent },
     { path: 'trasladobodega/new', component: FormTrasladoComponent },
@@ -42,6 +44,7 @@ export const routes: Routes = [
     { path: 'compras/new', component: FormCompraDirectaComponent },
     { path: 'compras/edit/:id', component: FormCompraDirectaComponent },
     { path: 'monitorcompras', component: MonitorcomprasComponent },
+    { path: 'monitorstock', component: MonitorstockComponent },
 
 
 ];

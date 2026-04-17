@@ -54,37 +54,21 @@ export class CategoriaService {
   }
 
   save(objecto: any): Observable<any> {
-    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
-      map((response: ApiResponse) => {
-        console.log("save");
-        console.log(response);
-        if (response.status !== 'success') {
-          // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
-          throw new Error(response.message || 'Error desconocido al guardar la categoría.');
-        }
-        return response;
-      })
-    );
+    return this.http.post<ApiResponse>(this.url + "save", objecto);
   }
 
-  update(objecto: Categoria): Observable<Categoria> {
-    const params = new HttpParams()
-      .set('id', String(objecto.id));
-    return this.http.put<Categoria>(this.url + "update", objecto, { params });
+  update(objecto: Categoria): Observable<any> {
+     return this.http.put<ApiResponse>(this.url + "edit/" + objecto.id, objecto);
   }
 
-  delete(idCategoria: number): Observable<void> {
-    const params = new HttpParams()
-      .set('id', idCategoria);
-
-    console.log(this.url + "delete");
-    return this.http.delete<void>(this.url + "delete", { params });
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(this.url + "delete/" + id);
   }
 
   getCategoriaById(id: number): Observable<Categoria> {
     const params = new HttpParams()
-      .set('id', id);
-    return this.http.get<Categoria>(this.url + "getCategoriaById", { params });
+      .set('categoria_id', id);
+    return this.http.get<Categoria>(this.url + "search", { params });
   }
 
   buscarArticuloLike(valor: string): Observable<Categoria[]> {

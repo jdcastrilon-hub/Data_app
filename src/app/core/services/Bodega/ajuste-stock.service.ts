@@ -5,6 +5,7 @@ import { map, Observable } from 'rxjs';
 import { AjusteStockListView } from '../../models/Bodega/AjusteStockListView';
 import { AjusteStockInfoArticulos } from '../../interfaces/Bodega/AjusteStockInfoArticulos';
 import { environment } from 'src/environments/environment';
+import { PageResponse } from '../../models/core/PageResponse';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -21,18 +22,20 @@ export class AjusteStockService {
 
   constructor(private http: HttpClient) { }
 
-  list(): Observable<AjusteStockListView[]> {
-    //const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqdWFuIiwiaWF0IjoxNzQ5OTI2NDQ3LCJleHAiOjE3NDk5MzAwNDd9.FO-f63ntqva-gAKTHnIFHHJQDgolbZUVABk1ed3XOx0'; // o donde tengas guardado el token
-    //const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  listPaginacion(page: number, size: number): Observable<PageResponse<AjusteStockListView>> {
+    const params = new HttpParams()
+      .set('page', page.toString())//Pagina 
+      .set('size', size.toString())//Cantidad de registros a validar
 
-    return this.http.get<AjusteStockListView[]>(this.url + "listPaginacion");
+    return this.http.get<PageResponse<AjusteStockListView>>(this.url + "pagination", { params });
   }
+
 
   save(objecto: any): Observable<any> {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
 
-       if (response.status !== 'success') {
+        if (response.status !== 'success') {
           // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
           throw new Error(response.message || 'Error desconocido al guardar la categoría.');
         }
@@ -44,8 +47,8 @@ export class AjusteStockService {
 
   getAjusteStokById(id: number): Observable<AjusteStock> {
     const params = new HttpParams()
-      .set('id', id);
-    return this.http.get<AjusteStock>(this.url + "getAjusteStockById", { params });
+      .set('id_trans', id);
+    return this.http.get<AjusteStock>(this.url + "search", { params });
   }
 
   //Consulta Articulos de un registros de ajuste de Stock

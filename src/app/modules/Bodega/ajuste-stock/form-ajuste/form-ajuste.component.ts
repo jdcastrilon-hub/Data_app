@@ -3,7 +3,7 @@ import { modules_depencias } from '../../../dependencias/modules_depencias.modul
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AjusteStockService } from '../../../../core/services/Bodega/ajuste-stock.service';
 import { AjusteStock } from '../../../../core/models/Bodega/AjusteStock';
 import { BodegaService } from '../../../../core/services/Bodega/bodega.service';
@@ -24,10 +24,10 @@ import { MotivosCombo } from 'src/app/core/interfaces/Bodega/MotivoCombo';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 
 @Component({
-  selector: 'app-form-ajuste',
+  selector: 'form-ajustestock',
   standalone: true,
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
-    MatDatepickerModule, ArticuloAutocompletComponent,
+    MatDatepickerModule, ArticuloAutocompletComponent, RouterModule,
     ComboBodegaComponent, ComboEstadostockComponent],
   templateUrl: './form-ajuste.component.html',
   styleUrl: './form-ajuste.component.scss'
@@ -37,7 +37,9 @@ export class FormAjusteComponent {
   //Variables Generales
   formulario!: FormGroup;
   objeto!: AjusteStock;
+  titulo_form !: string;
   isEditMode: boolean = false; //Se define si el modo es nuevo o edicion
+  isReadOnly: boolean = false;
 
   //Motivos de Stock
   lista_motivos: MotivosCombo[] = [];
@@ -46,7 +48,7 @@ export class FormAjusteComponent {
   //tabla de articulos
   //detalle: AjusteStockDetalle[] = [];
   dataSource = new MatTableDataSource<FormGroup>();
-  todasLasColumnas: string[] = ['id', 'ubicacion', 'Lote', 'stock', 'cantidad', 'actions'];
+  Columnas: string[] = ['position', 'articulo', 'ubicacion', 'Lote', 'stock', 'cantidad'];
   displayedColumns: string[] = [];
 
   //Informacion general de articulos
@@ -88,6 +90,13 @@ export class FormAjusteComponent {
     });
 
 
+    //Si viene de view , se deben inhabilitar las propiedades de los campos
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+    if (this.isReadOnly) {
+      this.formulario.disable(); // Esto bloquea todos los inputs, selects y checks
+      this.SelecMotivosControl.disable();
+      this.formulario.get('detalles')?.disable();
+    }
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
       const id = params.get('id'); // Obtener el valor del parámetro 'id'
@@ -96,6 +105,14 @@ export class FormAjusteComponent {
         // Si hay un ID, estamos en modo Edición
         console.log("Edicion")
         this.isEditMode = true;
+        if (this.isReadOnly) {
+          this.titulo_form = "DETALLE AJUSTE DE STOCK"
+        } else {
+          this.titulo_form = "ACTUALIZACION AJUSTE DE STOCK"
+        }
+
+        //agregar Linea vacia
+        this.ValidarColumnas();
         this.ModoEdicion(Number(id)); // Llama al método de carga
 
       } else {
@@ -103,6 +120,7 @@ export class FormAjusteComponent {
         console.log("Nuevo")
         this.isEditMode = false;
         this.objeto = new AjusteStock();
+        this.titulo_form = "REGISTROS AJUSTE DE STOCK"
         //Carga Motivos
         this.cargarMotivosStock();
         //Carga Numerador
@@ -130,6 +148,94 @@ export class FormAjusteComponent {
       idEstado: estado.id
     });
   }
+
+  /**
+  * Metodo para cargar el ajuste de stock de acuerdo al 'id' de la transaccion
+  * @returns No tiene return
+  */
+  ModoEdicion(id: number): void {
+    console.log("ModoEdicion");
+    //llama el API para recuperar el objecto categoria
+    this.ajusteService.getAjusteStokById(id).subscribe(
+      (data: AjusteStock) => {
+        console.log("Respuesta API");
+        console.log(data);
+        this.objeto = { ...data }; // Cargar la data de la categoría en el formulario
+        this.formulario.get('idBodega')?.patchValue(data.idBodega);
+        this.formulario.get('nroDocum')?.patchValue(data.nroDocum);
+        this.formulario.get('idCalculo')?.patchValue(data.idCalculo);
+        this.formulario.get('idEstado')?.patchValue(data.idEstado);
+        this.formulario.get('idMotivo')?.patchValue(data.idMotivo);
+        this.formulario.get('observacion')?.patchValue(data.observacion);
+        this.formulario.get('fechaMovimiento')?.patchValue(data.fechaMovimiento);
+        this.formulario.get('documento')?.patchValue(data.documento);
+        this.formulario.get('vista')?.patchValue(data.vista);
+
+
+        // Se carga el log acumulado en el objecto.
+        const logsFormArray = new FormArray<FormGroup>([]);
+        if (data.logs?.length) { // Usamos data.logs directamente
+          data.logs.forEach((log: Auditoria) => {
+            logsFormArray.push(this.fb.group({
+              operacion: [log.operacion],
+              usuario_mod: [log.usuario_mod],
+              fecha_mod: [log.fecha_mod]
+            }));
+          });
+        }
+        this.formulario.setControl('logs', logsFormArray);
+
+        //Carga Motivos
+        this.cargarMotivosStock();
+        //Carga Detalle de articulos parte 1.
+        //this.cargarInformacionArticulos(data);
+
+        const detallesArray = this.detalles;
+        detallesArray.clear();
+        data.detalles.forEach((det: any) => {
+
+          let stockData: StockDisponible = {
+            idArticulo: det.idarticulo,
+            idCodBarra: det.idCodBarra,
+            stock: det.cantDisp,
+            costo: 0
+          };
+          //Se carga un metodo vacio de ArticuloSearch
+          let articulo_filtro: ArticuloSearch = {
+            idArticulo: det.idarticulo,
+            idCodBarra: det.idCodBarra,
+            codArticulo: det.articulo == null ? '' : det.articulo.codArticulo,
+            nomArticulo: det.articulo == null ? '' : det.articulo.nomArticulo
+          }
+
+          // Calcular la siguiente línea
+          const nextLinea = this.detalles.length + 1;
+
+          const nuevoDetalle = this.crearDetalleForm(stockData, nextLinea, articulo_filtro);
+
+          // 4. Seteamos los valores específicos de la edición que no son 0
+          nuevoDetalle.patchValue({
+            cantidad: det.cantidad,
+          });
+
+          // IMPORTANTE: Bloquear el buscador si ya tiene artículo
+          nuevoDetalle.get('search')?.disable();
+
+          detallesArray.push(nuevoDetalle);
+
+        });
+
+        this.dataSource.data = detallesArray.controls as FormGroup[];
+
+      },
+      error => {
+        console.error('Error al cargar la categoría:', error);
+        // Opcional: Redirigir si el ID es inválido o no existe
+        this.router.navigate(['/categorias']);
+      }
+    );
+  }
+
 
   /******************** Inicio Cargas Iniciales ********************/
 
@@ -191,10 +297,12 @@ export class FormAjusteComponent {
     const ManejaUbicacion = this.formulario.value.manejaUbicaciones;
     if (ManejaUbicacion === 'S') {
       //Se cargan todas las columnas definidas
-      this.displayedColumns = this.todasLasColumnas;
+      this.displayedColumns = this.Columnas;
     } else {
       //Si no maneja ubicaciones se oculta la columna de ubicaciones
-      this.displayedColumns = this.todasLasColumnas.filter(columna => columna !== 'ubicacion');
+      this.displayedColumns = this.Columnas.filter(columna => columna !== 'ubicacion').filter(columna => columna !== 'Lote');
+      //this.displayedColumns = this.Columnas.filter(columna => columna !== 'Lote');
+
     }
   }
 
@@ -225,7 +333,7 @@ export class FormAjusteComponent {
     const idEstado = this.formulario.value.idEstado;
 
     //Con el articulo seleccionado se consulta por API , el stock.
-    this.bodegaService.stockDisponible(articulo.idArticulo!, idBodega!, idEstado!).subscribe({
+    this.bodegaService.stockDisponible(articulo.idArticulo!, articulo.idCodBarra!, idBodega!, idEstado!).subscribe({
       next: (data) => {
         if (data && data.length > 0) {
           //El api solo debe responder con una sola linea.
@@ -235,14 +343,12 @@ export class FormAjusteComponent {
           //Se asignan los valores a la fila de la tabla.
           fila.patchValue({
             idTrans: null,
-            idArticulo: stockData.idArticulo,
-            idCodBarra: stockData.idCodBarra,
+            idArticulo: articulo.idArticulo!,
+            idCodBarra: articulo.idCodBarra!,
             linea: index + 1,
             idUbicacion: 0,
             idLote: 0,
             cantDisp: stockData.stock,
-            //nombreArticulo: stockData.nomArticulo,
-            //codigoArticulo: stockData.codArticulo,
             cantidad: 0,
             search: articulo //articulo para bloquear la columna de search
           });
@@ -268,14 +374,14 @@ export class FormAjusteComponent {
     //Se carga un metodo vacio de StockDisponible
     let stockData: StockDisponible = {
       idArticulo: 0,
-      idCodBarra : 0,
+      idCodBarra: 0,
       stock: 0,
       costo: 0
     };
     //Se carga un metodo vacio de ArticuloSearch
     let articulo_filtro: ArticuloSearch = {
       idArticulo: 0,
-      idCodBarra:0,
+      idCodBarra: 0,
       codArticulo: '',
       nomArticulo: ''
     }
@@ -300,7 +406,7 @@ export class FormAjusteComponent {
       //llave compuesta
       idTrans: [null],
       idArticulo: [data.idArticulo, Validators.required],
-      idCodBarra:  [data.idCodBarra, Validators.required],
+      idCodBarra: [data.idCodBarra, Validators.required],
       linea: [nextLinea, Validators.required],
 
       // Campos informativos (se llenan al seleccionar el artículo)
@@ -328,55 +434,7 @@ export class FormAjusteComponent {
   }
   /******************** FIN Metodos de la tabla ********************/
 
-  /**
-  * Metodo para cargar el ajuste de stock de acuerdo al 'id' de la transaccion
-  * @returns No tiene return
-  */
-  ModoEdicion(id: number): void {
-    console.log("ModoEdicion");
-    //llama el API para recuperar el objecto categoria
-    this.ajusteService.getAjusteStokById(id).subscribe(
-      (data: AjusteStock) => {
-        console.log("Respuesta API");
-        console.log(data);
-        this.objeto = data; // Cargar la data de la categoría en el formulario
-        this.formulario.get('idBodega')?.patchValue(data.idBodega);
-        this.formulario.get('nroDocum')?.patchValue(data.nroDocum);
-        this.formulario.get('idCalculo')?.patchValue(data.idCalculo);
-        this.formulario.get('idEstado')?.patchValue(data.idEstado);
-        this.formulario.get('idMotivo')?.patchValue(data.idMotivo);
-        this.formulario.get('observacion')?.patchValue(data.observacion);
-        this.formulario.get('fechaMovimiento')?.patchValue(data.fechaMovimiento);
-        this.formulario.get('documento')?.patchValue(data.documento);
-        this.formulario.get('vista')?.patchValue(data.vista);
 
-
-        // Se carga el log acumulado en el objecto.
-        const logsFormArray = new FormArray<FormGroup>([]);
-        if (data.logs?.length) { // Usamos data.logs directamente
-          data.logs.forEach((log: Auditoria) => {
-            logsFormArray.push(this.fb.group({
-              operacion: [log.operacion],
-              usuario_mod: [log.usuario_mod],
-              fecha_mod: [log.fecha_mod]
-            }));
-          });
-        }
-        this.formulario.setControl('logs', logsFormArray);
-
-        //Carga Motivos
-        this.cargarMotivosStock();
-        //Carga Detalle de articulos parte 1.
-        this.cargarInformacionArticulos(data);
-
-      },
-      error => {
-        console.error('Error al cargar la categoría:', error);
-        // Opcional: Redirigir si el ID es inválido o no existe
-        this.router.navigate(['/categorias']);
-      }
-    );
-  }
 
   /**
   * Metodo para cargar el detalle de la transaccion

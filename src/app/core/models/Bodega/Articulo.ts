@@ -9,10 +9,9 @@ export class Articulo {
     idNegocio!: number;
     idsubCategoria!: number;
     idCategoria!: number;
-    activoStock!: string;
+    activoStock!: boolean;
     stockMin!: number;
     stockMax!: number;
-    activoComercial!: string;
     idRef!: number;
     idunidad!: number;
     grupoContable!: string;

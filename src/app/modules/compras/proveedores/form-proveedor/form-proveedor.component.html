@@ -15,25 +15,12 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
                         <div fxFlex="40">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Titular</mat-label>
-                                <input type="text" placeholder="Documento o Nombre" matInput
-                                    [formControl]="searchControl" [matAutocomplete]="autoArticulo"> </mat-form-field>
-
-                            <mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida"
-                                (optionSelected)="onPersonaSelected($event)">
-
-                                <mat-option *ngFor="let titular of (filteredArticulos | async)" [value]="titular">
-                                    {{ mascaraSalida(titular) }} </mat-option>
-
-                                <mat-option (click)="ModalcrearNuevaPersona()" class="create-option">
-                                    <mat-icon color="primary">add_circle_outline</mat-icon>
-                                    Crear nueva persona: "{{ searchControl.value }}"
-                                </mat-option>
-                            </mat-autocomplete>
+                         <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="mostrarOpcionCrear"
+                                (personaSelecionado)="onPersonaChange($event)"
+                                (crearNuevo)="ModalcrearNuevaPersona()"></combo-persona> 
                         </div>
                         <div fxFlex="60">
-                            <button mat-icon-button color="primary" (click)="desvincularPersona()">
+                            <button mat-icon-button color="primary" >
                                 <mat-icon>remove</mat-icon>
                             </button>
 

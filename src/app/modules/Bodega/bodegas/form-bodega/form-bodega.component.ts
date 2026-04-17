@@ -24,6 +24,7 @@ export class FormBodegaComponent {
   //parametros de entrada
   objeto!: Bodega;
   isEditMode: boolean = false;
+  isReadOnly: boolean = false;
 
   //Seleccion para sucursales.
   list_sucursal: Sucursal[] = [];
@@ -56,6 +57,11 @@ export class FormBodegaComponent {
       idSucursal: [this.objeto.idSucursal, Validators.required],
     });
 
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+    if (this.isReadOnly) {
+      this.formulario.disable(); // Esto bloquea todos los inputs, selects y checks
+      this.SelectSucursalControl.disable();
+    }
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
       const id = params.get('id'); // Obtener el valor del parámetro 'id'
@@ -64,7 +70,12 @@ export class FormBodegaComponent {
         // Si hay un ID, estamos en modo Edición
         console.log("Edicion")
         this.isEditMode = true;
-        this.titulo_form = "ACTUALIZACION BODEGA"
+        if (this.isReadOnly) {
+          this.titulo_form = "DETALLE BODEGA"
+        } else {
+          this.titulo_form = "ACTUALIZACION BODEGA"
+        }
+
         this.ModoEdicion(Number(id)); // Llama al método de carga
 
       } else {

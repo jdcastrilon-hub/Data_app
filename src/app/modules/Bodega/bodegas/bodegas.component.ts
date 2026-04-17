@@ -20,7 +20,7 @@ export class BodegasComponent {
   //Paginador
   lista_bodegas: BodegaListView[] = [];
   dataSource!: MatTableDataSource<BodegaListView>;
-  Columnas: string[] = ['codigo', 'nombre','bprincipal','activo','fecha', 'actions'];
+  Columnas: string[] = ['codigo', 'nombre', 'bprincipal', 'activo', 'fecha', 'actions'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   //Datos generales de paginacion
   totalRegistros: number = 0;
@@ -68,7 +68,13 @@ export class BodegasComponent {
     console.log("Entro a editar");
     console.log(id);
     this.router.navigate(['/bodegas/edit', id]);
+  }
 
+  visualizarBodega(id: number): void {
+    // Navega a '/categoria/edit/5' si el ID es 5
+    console.log("Entro a editar");
+    console.log(id);
+    this.router.navigate(['/bodegas/view', id]);
   }
 
   //Eliminar registro
