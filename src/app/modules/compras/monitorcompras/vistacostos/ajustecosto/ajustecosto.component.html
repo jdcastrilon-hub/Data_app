@@ -1,0 +1,60 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon>edit_note</mat-icon> {{ data.titulo }}
+</h2>
+
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+  <mat-dialog-content class="mat-typography">
+    <div class="form-container">
+      
+      <div fxLayout="row" fxLayoutGap="15px">
+        <mat-form-field fxFlex="20" appearance="outline">
+          <mat-label>Fecha Ajuste</mat-label>
+          <mat-icon matPrefix>calendar_today</mat-icon>
+          <input matInput [matDatepicker]="picker" formControlName="fecDoc">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field fxFlex="40" appearance="outline">
+          <mat-label>Bodega</mat-label>
+          <mat-icon matPrefix>store</mat-icon>
+          <input matInput formControlName="nomBodega" readonly>
+        </mat-form-field>
+
+        <mat-form-field fxFlex="40" appearance="outline">
+          <mat-label>Artículo</mat-label>
+          <mat-icon matPrefix>inventory_2</mat-icon>
+          <input matInput formControlName="nomArticulo" readonly>
+        </mat-form-field>
+      </div>
+
+      <div fxLayout="row" fxLayoutGap="15px">
+        <mat-form-field fxFlex="20" appearance="outline">
+          <mat-label>Costo Actual</mat-label>
+          <mat-icon matPrefix>attach_money</mat-icon>
+          <input matInput formControlName="impCostoActualFormateado" readonly>
+        </mat-form-field>
+
+        <mat-form-field fxFlex="20" appearance="outline" class="highlight-field">
+          <mat-label>Costo Nuevo</mat-label>
+          <mat-icon matPrefix>edit</mat-icon>
+          <input matInput formControlName="impCostoNuevo" type="number" #costoNuevoInput>
+        </mat-form-field>
+
+        <mat-form-field fxFlex="60" appearance="outline">
+          <mat-label>Observación</mat-label>
+          <mat-icon matPrefix>comment</mat-icon>
+          <input matInput formControlName="observaciones">
+        </mat-form-field>
+      </div>
+
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="!formulario.valid">
+      <mat-icon>check_circle</mat-icon> Confirmar
+    </button>
+  </mat-dialog-actions>
+</form>

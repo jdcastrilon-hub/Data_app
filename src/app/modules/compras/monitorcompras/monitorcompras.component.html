@@ -6,8 +6,9 @@
 
       <span class="spacer"></span> <mat-form-field appearance="outline" class="select-inline">
         <mat-label>Tipo de Informe</mat-label>
-        <mat-select [(value)]="reporteSeleccionado">
+        <mat-select [(value)]="reporteSeleccionado" (selectionChange)="reporteSeleccionado = $event.value">
           <mat-option value="compras">📦 Compras Realizadas</mat-option>
+          <mat-option value="costos">Costos</mat-option>
           <mat-option value="variacion">📉 Variación de Costos</mat-option>
           <mat-option value="inventario">💰 Valoración de Inventario</mat-option>
         </mat-select>
@@ -22,14 +23,18 @@
         </kpicompras>
       </div>
 
-      <filtroscompras [reporteActual]="reporteSeleccionado" (alConsultar)="ejecutarLogica($event)"></filtroscompras>
+      @if (reporteSeleccionado==='compras') {
+      <filtroscompras (reporteActual)="reporteSeleccionado" (alConsultar)="ReporteCompras($event)"></filtroscompras>
+      <vistacomprasrealizadas [datos]="lista_comprasrealizadas" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
+        (paginacion)="PaginacionReporteCompras($event)"></vistacomprasrealizadas>
+      }
+      @if (reporteSeleccionado==='costos') {
+      <filtros-costos [obj_filtros]="obj_filtros" (alConsultar)="ReporteCostos($event)"></filtros-costos>
+      <reportecostos [datos]="lista_costos" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
+        (paginacion)="PaginacionReporteCostos($event)"></reportecostos>
+      }
 
-      <div class="resultados-seccion" *ngIf="reporteSeleccionado === 'compras'">
-        <vistacomprasrealizadas [datos]="lista_comprasrealizadas" 
-          [totalRegistros]="totalRegistros"
-          [pageSize]="pageSize"
-          (paginacion)="manejarPaginacion($event)"></vistacomprasrealizadas>
-      </div>
+
 
     </mat-card-content>
   </mat-card>

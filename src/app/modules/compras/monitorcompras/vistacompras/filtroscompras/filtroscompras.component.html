@@ -1,0 +1,40 @@
+<div class="bloque" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+
+  @if (visible().fecha) {
+  <mat-form-field appearance="outline" style="flex: 1 1 200px;">
+    <mat-label>Rango de Fechas</mat-label>
+    <mat-date-range-input [rangePicker]="picker">
+      <input matStartDate [(ngModel)]="filtro().fechaInicio">
+      <input matEndDate [(ngModel)]="filtro().fechaFin">
+    </mat-date-range-input>
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-date-range-picker #picker></mat-date-range-picker>
+  </mat-form-field>
+  }
+
+  @if (visible().bodega) {
+  <div style="flex: 1 1 150px;">
+    <combo-bodega (bodegaSeleccionada)="recibirBodega($event)"></combo-bodega>
+  </div>
+  }
+
+  @if (visible().proveedor) {
+  <div style="flex: 1 1 200px;">
+    <combo-proveedor (proveedorSelecionado)="onProveedorChange($event)"></combo-proveedor>
+  </div>
+  }
+
+  @if (visible().articulo) {
+  <div style="flex: 1 1 200px;">
+    <combo-articulo [editMode]="true" (articuloSeleccionado)="recibirArticulo($event)"></combo-articulo>
+  </div>
+  }
+
+  @if (visible().soloAlzas) {
+  <mat-checkbox [(ngModel)]="filtro().soloAlzas">Solo Alzas</mat-checkbox>
+  }
+
+  <button mat-flat-button color="primary" (click)="enviarConsulta()">
+    <mat-icon>search</mat-icon> Consultar
+  </button>
+</div>
