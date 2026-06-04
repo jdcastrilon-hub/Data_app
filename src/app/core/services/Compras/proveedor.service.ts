@@ -6,6 +6,8 @@ import { PersonaSearch } from '../../interfaces/Compras/PersonaSearch';
 import { Proveedores } from '../../models/Compras/Proveedores';
 import { ProveedorSearch } from '../../interfaces/Compras/ProveedorSearch';
 import { environment } from 'src/environments/environment';
+import { PageResponse } from '../../models/core/PageResponse';
+import { ProveedorView } from '../../interfaces/Compras/ProveedorView';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -28,6 +30,14 @@ export class ProveedorService {
     return this.http.get<Ciudades[]>(this.url + "Ciudades");
   }
 
+  listPaginacion(page: number, size: number): Observable<PageResponse<ProveedorView>> {
+    const params = new HttpParams()
+      .set('page', page.toString())//Pagina 
+      .set('size', size.toString())//Cantidad de registros a validar
+      .set('idempresa', 1)//Cantidad de registros a validar
+
+    return this.http.get<PageResponse<ProveedorView>>(this.url + "pagination", { params });
+  }
 
 
   ProveedorSearch(query: string): Observable<ProveedorSearch[]> {

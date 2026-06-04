@@ -15,8 +15,6 @@ import { FlexLayoutModule } from '@angular/flex-layout';
   styleUrl: './compra-directa.component.scss'
 })
 export class CompraDirectaComponent {
-  //Objecto Transaccional
-  objecto_compra!: Compra;
 
   //Paginador
   lista_bodegas: CompraListView[] = [];
@@ -34,9 +32,7 @@ export class CompraDirectaComponent {
   constructor(
     private service: ComprasService,
     private router: Router
-  ) {
-    this.objecto_compra = new Compra();
-  }
+  ) {}
 
   ngOnInit() {
     this.cargarComprasPaginadas();

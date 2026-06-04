@@ -1,7 +1,7 @@
 <mat-toolbar color="primary">
     <button mat-button [matMenuTriggerFor]="menuModuloA">Inventario</button>
     <button mat-button [matMenuTriggerFor]="menuModuloB">Compras</button>
-    <button mat-button>Ventas</button>
+    <button mat-button [matMenuTriggerFor]="menuModuloC">Ventas</button>
     <button mat-button>Cartera</button>
     <button mat-button>Produccion</button>
 </mat-toolbar>
@@ -17,6 +17,12 @@
     <button mat-menu-item [matMenuTriggerFor]="subMenuCompras">Maestros</button>
     <button mat-menu-item [matMenuTriggerFor]="ComprasMenuTrans">Transacciones</button>
     <button mat-menu-item [matMenuTriggerFor]="CompraReporte">Reportes</button>
+</mat-menu>
+
+<mat-menu #menuModuloC="matMenu">
+    <button mat-menu-item [matMenuTriggerFor]="subMenuVentas">Maestros</button>
+    <button mat-menu-item [matMenuTriggerFor]="subMenuVentasTras">Transacciones</button>
+    <button mat-menu-item [matMenuTriggerFor]="CompraReporte">Monitor Ventas</button>
 </mat-menu>
 
 <mat-menu #subMenuAnidado="matMenu">
@@ -51,6 +57,15 @@
 
 <mat-menu #CompraReporte="matMenu">
     <button mat-menu-item routerLink="/monitorcompras">Monitor Compras</button>
+</mat-menu>
+
+<!--Ventas-->
+<mat-menu #subMenuVentas="matMenu">
+    <button mat-menu-item routerLink="/clientes/new">Clientes</button>
+</mat-menu>
+
+<mat-menu #subMenuVentasTras="matMenu">
+    <button mat-menu-item routerLink="/ventas/new">Venta Directa</button>
 </mat-menu>
 
 

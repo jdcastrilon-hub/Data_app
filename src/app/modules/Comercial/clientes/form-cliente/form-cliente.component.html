@@ -1,0 +1,86 @@
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <a mat-icon-button color="primary" routerLink="/proveedores">
+                    <mat-icon>list</mat-icon>
+                </a>
+                <span>REGISTRO CLIENTES</span>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales" style="background-color: brown;">
+                <div class="bloque">
+                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                        <div fxFlex="40">
+                         <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="mostrarOpcionCrear"
+                                (personaSelecionado)="onPersonaChange($event)"
+                                (crearNuevo)="ModalcrearNuevaPersona()"></combo-persona> 
+                        </div>
+                        <div fxFlex="60">
+                            <button mat-icon-button color="primary" >
+                                <mat-icon>remove</mat-icon>
+                            </button>
+
+                        </div>
+                    </div>
+
+                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                        <div fxFlex="25">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Documento</mat-label>
+                                <input matInput formControlName="codigoTitular">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="30">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Nombre Cliente</mat-label>
+                                <input matInput formControlName="nomCliente">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="30">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Direccion</mat-label>
+                                <input matInput formControlName="direccion">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="15">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="activo" color="primary">
+                                    Activo
+                                </mat-checkbox>
+                            </section>
+                        </div>
+                    </div>
+
+                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                        <div fxFlex="50">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Observaciones</mat-label>
+                                <input matInput formControlName="observacion">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="50"></div>
+                    </div>
+                </div>
+
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button">Salir</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

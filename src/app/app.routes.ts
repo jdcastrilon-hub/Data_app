@@ -18,6 +18,9 @@ import { FormArticuloComponent } from './modules/Bodega/articulos-stock/form-art
 import { MonitorcomprasComponent } from './modules/compras/monitorcompras/monitorcompras.component';
 import { ArticulosStockComponent } from './modules/Bodega/articulos-stock/articulos-stock.component';
 import { MonitorstockComponent } from './modules/Bodega/monitorstock/monitorstock.component';
+import { ClientesComponent } from './modules/Comercial/clientes/clientes.component';
+import { FormClienteComponent } from './modules/Comercial/clientes/form-cliente/form-cliente.component';
+import { FormVentaDirectaComponent } from './modules/Comercial/venta-directa/form-venta-directa/form-venta-directa.component';
 
 export const routes: Routes = [
     { path: 'categorias', component: CategoriasComponent },
@@ -45,6 +48,11 @@ export const routes: Routes = [
     { path: 'compras/edit/:id', component: FormCompraDirectaComponent },
     { path: 'monitorcompras', component: MonitorcomprasComponent },
     { path: 'monitorstock', component: MonitorstockComponent },
+    { path: 'clientes/new', component: FormClienteComponent },
+    { path: 'ventas/new', component: FormVentaDirectaComponent },
+    
+
+    
 
 
 ];
