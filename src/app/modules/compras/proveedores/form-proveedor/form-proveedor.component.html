@@ -15,59 +15,59 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
                         <div fxFlex="40">
-                         <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="mostrarOpcionCrear"
+                            <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="mostrarOpcionCrear"
                                 (personaSelecionado)="onPersonaChange($event)"
-                                (crearNuevo)="ModalcrearNuevaPersona()"></combo-persona> 
-                        </div>
-                        <div fxFlex="60">
-                            <button mat-icon-button color="primary" >
-                                <mat-icon>remove</mat-icon>
-                            </button>
-
+                                (crearNuevo)="ModalcrearNuevaPersona()"></combo-persona>
                         </div>
                     </div>
 
-                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
-                        <div fxFlex="25">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Documento</mat-label>
-                                <input matInput formControlName="codigoTitular">
-                                <mat-error>Codigo requerido</mat-error>
-                            </mat-form-field>
+                    <app-persona></app-persona>
+                    <br />
+                    <div class="bloque_interno">
+                        <h4>informacion personal</h4>
+                        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                            <div fxFlex="25">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Documento</mat-label>
+                                    <input matInput formControlName="codigoTitular">
+                                    <mat-error>Codigo requerido</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="30">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Razon Social</mat-label>
+                                    <input matInput formControlName="razonSocial">
+                                    <mat-error>Codigo requerido</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="30">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Regimen</mat-label>
+                                    <input matInput formControlName="regimen">
+                                    <mat-error>Codigo requerido</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="15">
+                                <section class="example-section">
+                                    <mat-checkbox formControlName="activo" color="primary">
+                                        Activo
+                                    </mat-checkbox>
+                                </section>
+                            </div>
                         </div>
-                        <div fxFlex="30">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Razon Social</mat-label>
-                                <input matInput formControlName="razonSocial">
-                                <mat-error>Codigo requerido</mat-error>
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="30">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Regimen</mat-label>
-                                <input matInput formControlName="regimen">
-                                <mat-error>Codigo requerido</mat-error>
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="15">
-                            <section class="example-section">
-                                <mat-checkbox formControlName="activo" color="primary">
-                                    Activo
-                                </mat-checkbox>
-                            </section>
-                        </div>
-                    </div>
 
-                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
-                        <div fxFlex="50">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Observaciones</mat-label>
-                                <input matInput formControlName="observacion">
-                                <mat-error>Codigo requerido</mat-error>
-                            </mat-form-field>
+                        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                            <div fxFlex="50">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Observaciones</mat-label>
+                                    <input matInput formControlName="observacion">
+                                    <mat-error>Codigo requerido</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50"></div>
                         </div>
-                        <div fxFlex="50"></div>
                     </div>
+                    <br />
                 </div>
 
             </mat-tab>

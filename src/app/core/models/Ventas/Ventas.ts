@@ -20,24 +20,29 @@ export class Ventas {
     serieRemito!: string;
     nroDocumRemito!: number;
     observaciones !: string;
+    formaPago!: String;
+    impIgreso !: number;
+    impVuelto !: number;
     idPago!: number;
     fecVenc !: Date;
     idBodega!: number;
     idEstado !: number;
+    caja!: string;
+    
     vista !: string;
     impNeto !: number;
     tipoDcto !: string;
     porcDescuento !: number;
     impDescuento !: number;
     impTotal !: number;
-    codCaja !: string;
+    idTurno !: string;
+    nomCaja !: string;
     impuesto1 !: string;
     valorImpuesto1 !: number;
     impuesto2 !: string;
     valorImpuesto2 !: number;
     impuesto3 !: string;
     valorImpuesto3 !: number;
-
     fechaMod!: Date;
     logs!: Auditoria[];
 

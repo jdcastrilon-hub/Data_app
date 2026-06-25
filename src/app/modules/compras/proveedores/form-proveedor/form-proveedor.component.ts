@@ -15,11 +15,13 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { ComboPersonaComponent } from 'src/app/modules/resources/combo-persona/combo-persona.component';
+import { PersonaComponent } from 'src/app/modules/Comercial/resources/persona/persona.component';
 
 @Component({
   selector: 'app-form-proveedor',
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
-    RouterModule, MatDialogModule, MatAutocompleteModule, MatDatepickerModule, MatCheckboxModule, ComboPersonaComponent],
+    RouterModule, MatDialogModule, MatAutocompleteModule, MatDatepickerModule, 
+    MatCheckboxModule, ComboPersonaComponent,PersonaComponent],
   templateUrl: './form-proveedor.component.html',
   styleUrl: './form-proveedor.component.scss'
 })
@@ -31,7 +33,7 @@ export class FormProveedorComponent {
   isEditMode: boolean = false;
 
   //isLoading = false;
-  mostrarOpcionCrear = true;
+  mostrarOpcionCrear = false;
 
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;

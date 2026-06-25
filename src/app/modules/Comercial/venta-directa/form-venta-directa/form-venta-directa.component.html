@@ -86,6 +86,13 @@
                             <combo-estadostock [editMode]="isEditMode" [input_objeto]="objeto"
                                 (estadoSeleccionado)="recibirEstado($event)"></combo-estadostock>
                         </div>
+                        <div fxFlex="15">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Caja</mat-label>
+                                <input matInput formControlName="codCaja">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
 
 
 
@@ -310,25 +317,89 @@
                                         <mat-datepicker #picker></mat-datepicker>
                                     </mat-form-field>
                                     }
-
                                 </div>
-
                                 <div fxFlex="15">
+                                    @if (!mostrarFecVenc) {
                                     <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                        <mat-label>Caja</mat-label>
-                                        <input matInput formControlName="codCaja">
-                                        <mat-error>Codigo requerido</mat-error>
+                                        <mat-label>Forma Pago</mat-label>
+                                        <mat-select [formControl]="SelecmediosControl" required>
+                                            @for (obj_docum of list_mediospago; track obj_docum) {
+                                            <mat-option [value]="obj_docum">{{obj_docum.tipo}}</mat-option>
+                                            }
+                                        </mat-select>
+                                        @if (SelecmediosControl.hasError('required')) {
+                                        <mat-error>Debe seleccionar un Documento</mat-error>
+                                        }
                                     </mat-form-field>
+                                    }
                                 </div>
-
-                                <div fxFlex="10">
+                                <div fxFlex="15">
+                                    @if (!mostrarFecVenc) {
                                     <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                        <mat-label>Medio Pago</mat-label>
-                                        <input matInput formControlName="porcDescuento">
+                                        <mat-label>Valor Ingreso</mat-label>
+                                        <input matInput formControlName="impIgreso">
                                         <mat-error>Codigo requerido</mat-error>
                                     </mat-form-field>
+                                    }
+
                                 </div>
                             </div>
+
+
+
+
+                        </mat-card-content>
+                    </mat-card>
+
+                    <div class="right-column">
+
+                        <mat-card class="section totals-card">
+                            <mat-card-header><mat-card-title>Totales</mat-card-title></mat-card-header>
+                            <mat-card-content>
+                                <div class="totals-grid">
+                                    <div class="total-row">
+                                        <span class="total-label">Neto:</span>
+                                        <span class="total-value">{{ totalNeto | currency }}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Impuesto IVA:</span>
+                                        <span class="total-value">{{ totalImpuesto1 | currency }}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Descuento:</span>
+                                        <span class="total-value">{{ totalDcto | currency }}</span>
+                                    </div>
+                                    <div class="grand-total">
+                                        <span class="total-label">TOTAL:</span>
+                                        <span class="total-value">{{ totalFinal | currency }}</span>
+                                    </div>
+                                    @if (!mostrarFecVenc) {
+                                    <div class="grand-vuelto">
+                                        <span class="total-label">VUELTO:</span>
+                                        <span class="total-value">{{ vuelto | currency }}</span>
+                                    </div>
+                                    }
+                                </div>
+
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+                </div>
+
+
+
+
+            </mat-tab>
+            <!--
+            <mat-tab label="Medio de Pago y Totales" style="background-color: brown;">
+
+
+                <div class="main-container">
+                    <mat-card class="section facturacion">
+                        <mat-card-content>
+                            <form-mediopago [totalFactura]="totalFinal" [mediospago]="list_mediospago">
+                            </form-mediopago>
+
                         </mat-card-content>
                     </mat-card>
 
@@ -359,15 +430,8 @@
                         </mat-card>
                     </div>
                 </div>
-
-
-
-
             </mat-tab>
-
-            <mat-tab label="Medio de Pago y Totales" style="background-color: brown;">
-
-            </mat-tab>
+            -->
 
         </mat-tab-group>
         <br>

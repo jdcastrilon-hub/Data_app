@@ -4,6 +4,7 @@ import { Sucursal } from '../../models/General/Sucursal';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { SucursalCombo } from '../../interfaces/Core/SucursalCombo';
+import { SucursalXCajas } from '../../interfaces/Comercial/SucursalXCajas';
 
 
 @Injectable({
@@ -27,6 +28,12 @@ export class SucursalServiceService {
     const params = new HttpParams()
       .set('id_empresa', String(1))
     return this.http.get<SucursalCombo[]>(this.url + "comboBybodegas", { params });
+  }
+
+   sucursalesxCaja(): Observable<SucursalXCajas[]> {
+    const params = new HttpParams()
+      .set('id_empresa', String(1))
+    return this.http.get<SucursalXCajas[]>(this.url + "comboBycajas", { params });
   }
 
 }

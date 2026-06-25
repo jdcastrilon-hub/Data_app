@@ -946,7 +946,7 @@ export class FormCompraDirectaComponent {
       valorImpuesto3: 0,
       impDescuento: 0,
       documento: 'compra',
-      vista: 'AjusteStock',
+      vista: 'CompraDirecta',
       fechaMod: fecha_envio.toISOString()
     });
     console.log("Json original");

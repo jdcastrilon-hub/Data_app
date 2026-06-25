@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
-import { NotificacionesService } from './notificaciones.service';
+import { NotificacionesService } from '../notificaciones.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   // Inyectamos el servicio de notificaciones de forma moderna

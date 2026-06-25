@@ -26,6 +26,7 @@ import { modules_depencias } from 'src/app/modules/dependencias/modules_depencia
 import { ArticuloAutocompletComponent } from 'src/app/modules/resources/articulo-autocomplet/articulo-autocomplet.component';
 import { ComboClienteComponent } from 'src/app/modules/resources/combo-cliente/combo-cliente.component';
 import { ComboEstadostockComponent } from 'src/app/modules/resources/combo-estadostock/combo-estadostock.component';
+import { MedioPago } from 'src/app/core/models/Ventas/medioPago';
 
 @Component({
   selector: 'app-form-venta-directa',
@@ -84,6 +85,10 @@ export class FormVentaDirectaComponent {
   columnasEditables = false; //para columnas de descuento
   mostrarFecVenc: boolean = false;
 
+  //lista de medios de pago
+
+  list_mediospago: MedioPago[] = [];
+  SelecmediosControl = new FormControl<MedioPago | null>(null, Validators.required);
 
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
@@ -126,13 +131,19 @@ export class FormVentaDirectaComponent {
       secuencia: this.objeto.secuencia,
       factura: this.objeto.factura,
 
-      codCaja: this.objeto.codCaja,
+      codCaja: this.objeto.idTurno,
       tipoDcto: this.objeto.tipoDcto,
       porcDescuento: [{ value: this.objeto?.porcDescuento ?? 0, disabled: true }],
       fecVenc: [new Date(), Validators.required],
       vista: this.objeto.vista,
       fechaMod: this.objeto.fechaMod,
-      detalles: this.fb.array([]),
+
+      //Medio de pago
+      formaPago: this.objeto.formaPago,
+      impIgreso: this.objeto.impIgreso,
+      impVuelto: this.objeto.impVuelto,
+      idPago: this.objeto.idPago,
+
       //Impuestos
       impuesto1: this.objeto.impuesto1,
       valorImpuesto1: this.objeto.valorImpuesto1,
@@ -142,7 +153,8 @@ export class FormVentaDirectaComponent {
       valorImpuesto3: this.objeto.valorImpuesto3,
       //nuevoCodigoBarra: this.fb.array([]),
       logs: this.fb.array([]),
-      searchCliente: cliente_filtro
+      searchCliente: cliente_filtro,
+      detalles: this.fb.array([])
     });
 
     //Validacion si es modo edicion o nuevo
@@ -199,9 +211,25 @@ export class FormVentaDirectaComponent {
               this.obtenerNumerador(primerDocum.secuencia);
             }
 
+            //Cargamos medio de pago
+            this.list_mediospago = objectoSucusal.mediopago!;
+            const primermedio = this.list_mediospago[0];
+            if (primermedio) {
+              this.SelecmediosControl.setValue(primermedio);
+
+              //Asignamos al path
+              this.formulario.patchValue({
+                formaPago: primermedio.tipo
+              });
+              //obtener numeracion
+              this.obtenerNumerador(primerDocum.secuencia);
+            }
+
+
           } else {
             this.list_bodegas = []; // Limpiar si no hay categoría seleccionada
             this.list_documentos = [];
+            this.list_mediospago = [];
           }
         });
 
@@ -495,9 +523,9 @@ Receptores
       porc_dcto: [0, [Validators.required, Validators.min(0)]],
       imp_dcto: 0,
       idLote: 0,
-      stock: 0,
+      stock: data.stock,
       //objimpuesto1: [data.objimpuesto1],
-      //impuesto1: [data.impuesto1],
+      impuesto1: "IVA",
       idTasaimp1: [data.tasaimpuesto1],
       porc_tasa1: 0,
       valorImpuesto1: [{ value: data.valor_impu1, disabled: true }],
@@ -623,6 +651,20 @@ Receptores
     }, 0);
   }
 
+  get vuelto(): number {
+    // 1. Obtenemos el valor que ingresó el cliente (por defecto 0 si está vacío)
+    const ingreso = Number(this.formulario.get('impIgreso')?.value) || 0;
+    const total = this.totalFinal;
+
+    // 2. Si no ha ingresado suficiente dinero, el vuelto es 0
+    if (ingreso < total) {
+      return 0;
+    }
+
+    // 3. Retornamos la diferencia
+    return ingreso - total;
+  }
+
   get totalCantidad(): number {
     const filas = this.detalles.getRawValue();
     return filas.reduce((acc, fila) => acc + (Number(fila.cantidad) || 0), 0);
@@ -648,8 +690,22 @@ Receptores
     }, 0);
   }
 
-  //
+  // Método para agregar el log al FormArray
+  agregarLogAuditoria() {
+    // 1. Obtienes el objeto de log ya completo y formateado del servicio
+    const logData = this.logAuditoria.generarLog(!this.isEditMode ? 'Nuevo' : 'Edicion');
 
+    // 2. Creas un nuevo FormGroup usando la data
+    const auditoriaGroup = this.fb.group({
+      operacion: [logData.operacion],
+      usuario_mod: [logData.usuario_mod],
+      fecha_mod: [logData.fecha_mod]
+    });
+
+    // 3. Lo añades al FormArray
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.push(auditoriaGroup);
+  }
 
   enviarFormulario() {
     //Asignacion de campos en cabezal
@@ -670,13 +726,46 @@ Receptores
       impuesto3: 'N/A',
       valorImpuesto3: 0,
       impDescuento: 0,
+      impVuelto: this.vuelto,
+      idPago :0,
       documento: 'venta',
       vista: 'VentaDirect',
       fechaMod: fecha_envio.toISOString()
     });
     console.log("Json original");
-    console.log(this.formulario.getRawValue());
+    this.agregarLogAuditoria();
 
+    console.log(this.formulario.getRawValue());
+    if (this.formulario.invalid) {
+      this.formulario.markAllAsTouched(); // Para mostrar errores visualmente
+      return; // Detiene la ejecución si el formulario no es válido
+    }
+    console.log("Paso Json");
+    
+    // 1. Obtenemos todo el valor del formulario
+    const dataCompleta = this.formulario.getRawValue();
+
+    // 2. Limpiamos solo el arreglo de detalles
+    // Usamos .map para recorrer cada línea y quitar 'search' y lo que no necesites
+    // Se valida que solo se envien las lineas que tiene datos 
+    const detallesLimpios = dataCompleta.detalles
+      .filter((det: any) => det.idArticulo !== 0 && det.idArticulo !== null)
+      .map((linea: any) => {
+        // Desestructuración para quitar lo que no va al API
+        const { search, btoCrearCodBarra, ...resto } = linea;
+        return resto;
+      });
+
+    // 3. Creamos el objeto final que se enviará a la API
+    const jsonParaAPI = {
+      ...dataCompleta,        // Copiamos todo lo del formulario (idTrans, idEmp, etc.)
+      detalles: detallesLimpios, // Reemplazamos los detalles originales por los limpios
+      searchCliente: undefined // Si también quieres quitar el buscador de proveedor
+    };
+
+    // 4. Ahora sí, enviamos jsonParaAPI al servicio
+    console.log('JSON Limpio:', jsonParaAPI);
+    // this.miServicio.post(jsonParaAPI).subscribe(...);
 
   }
 

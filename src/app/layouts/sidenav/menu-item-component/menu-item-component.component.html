@@ -1,0 +1,39 @@
+<!-- Nodo con hijos -->
+
+<mat-expansion-panel *ngIf="menu.children.length > 0; else hoja">
+
+    <mat-expansion-panel-header>
+
+        <mat-panel-title>
+
+            {{menu.nombre}}
+
+        </mat-panel-title>
+
+    </mat-expansion-panel-header>
+
+    <menu-item
+        *ngFor="let hijo of menu.children"
+        [menu]="hijo">
+    </menu-item>
+
+</mat-expansion-panel>
+
+
+<!-- Nodo hoja -->
+
+<ng-template #hoja>
+
+    <mat-action-list>
+
+        <a
+            mat-list-item
+            [routerLink]="menu.ruta">
+
+            {{menu.nombre}}
+
+        </a>
+
+    </mat-action-list>
+
+</ng-template>

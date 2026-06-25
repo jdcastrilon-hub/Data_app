@@ -1,0 +1,67 @@
+<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+
+    <!-- ========================= -->
+    <!-- NODO HOJA -->
+    <!-- ========================= -->
+
+    <mat-tree-node *matTreeNodeDef="let node" class="tree-node" (click)="seleccionar(node)">
+
+        <div class="node-content">
+
+            <span class="line"></span>
+
+            
+            <mat-icon *ngIf="node.icono" class="node-icon">
+
+                {{ node.icono }}
+
+            </mat-icon>
+
+            <span class="node-text">
+
+                {{ node.nombre }}
+
+            </span>
+
+        </div>
+
+    </mat-tree-node>
+
+
+    <!-- ========================= -->
+    <!-- NODO PADRE -->
+    <!-- ========================= -->
+
+    <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+
+        <div class="node-content parent" (click)="treeControl.toggle(node)">
+
+            <mat-icon class="toggle-icon">
+
+                {{
+                treeControl.isExpanded(node)
+                ? 'expand_more'
+                : 'chevron_right'
+                }}
+
+            </mat-icon>
+
+            <mat-icon *ngIf="node.icono" class="node-icon">
+                {{ node.icono }}
+            </mat-icon>
+
+            <span class="node-text">
+                {{ node.nombre }}
+            </span>
+
+        </div>
+
+        <div class="children" [class.oculto]="!treeControl.isExpanded(node)">
+
+            <ng-container matTreeNodeOutlet></ng-container>
+
+        </div>
+
+    </mat-nested-tree-node>
+
+</mat-tree>

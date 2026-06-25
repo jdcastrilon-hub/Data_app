@@ -18,41 +18,61 @@ import { FormArticuloComponent } from './modules/Bodega/articulos-stock/form-art
 import { MonitorcomprasComponent } from './modules/compras/monitorcompras/monitorcompras.component';
 import { ArticulosStockComponent } from './modules/Bodega/articulos-stock/articulos-stock.component';
 import { MonitorstockComponent } from './modules/Bodega/monitorstock/monitorstock.component';
-import { ClientesComponent } from './modules/Comercial/clientes/clientes.component';
 import { FormClienteComponent } from './modules/Comercial/clientes/form-cliente/form-cliente.component';
 import { FormVentaDirectaComponent } from './modules/Comercial/venta-directa/form-venta-directa/form-venta-directa.component';
+import { FormVentaposComponent } from './modules/Comercial/venta-pos/venta-pos/form-ventapos/form-ventapos.component';
+import { FormTurnosComponent } from './modules/Comercial/turnos/form-turnos/form-turnos.component';
+import { LoginComponent } from './core/login/login.component';
+import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 
 export const routes: Routes = [
-    { path: 'categorias', component: CategoriasComponent },
-    { path: 'categoria/new', component: FormCategoriaComponent },
-    { path: 'categoria/edit/:id', component: FormCategoriaComponent },
-    { path: 'articulos', component: ArticulosStockComponent },
-    { path: 'articulos/new', component: FormArticuloComponent },
-    { path: 'articulos/edit/:id', component: FormArticuloComponent },
-    { path: 'ajustestock', component: AjusteStockComponent },
-    { path: 'ajustestock/new', component: FormAjusteComponent },
-    { path: 'ajustestock/view/:id', component: FormAjusteComponent },
-    { path: 'motivosajuste', component: MotivosAjusteComponent },
-    { path: 'motivosajuste/new', component: FormMotivoComponent },
-    { path: 'inventariostock', component: InventarioStockComponent },
-    { path: 'bodegas', component: BodegasComponent },
-    { path: 'bodegas/new', component: FormBodegaComponent },
-    { path: 'bodegas/view/:id', component: FormBodegaComponent },
-    { path: 'bodegas/edit/:id', component: FormBodegaComponent },
-    { path: 'trasladobodega', component: TrasladoBodegasComponent },
-    { path: 'trasladobodega/new', component: FormTrasladoComponent },
-    { path: 'proveedores', component: ProveedoresComponent },
-    { path: 'proveedores/new', component: FormProveedorComponent },
-    { path: 'compras', component: CompraDirectaComponent },
-    { path: 'compras/new', component: FormCompraDirectaComponent },
-    { path: 'compras/edit/:id', component: FormCompraDirectaComponent },
-    { path: 'monitorcompras', component: MonitorcomprasComponent },
-    { path: 'monitorstock', component: MonitorstockComponent },
-    { path: 'clientes/new', component: FormClienteComponent },
-    { path: 'ventas/new', component: FormVentaDirectaComponent },
-    
+    // 1. Ruta pública e independiente a pantalla completa
+    {
+        path: 'login',
+        component: LoginComponent
+    },
+    // 2. Rutas protegidas bajo el diseño del menú (MatToolbar)
+    {
+        path: '',
+        component: MainLayoutComponent,
+        children: [
+            { path: 'categorias', component: CategoriasComponent },
+            { path: 'categoria/new', component: FormCategoriaComponent },
+            { path: 'categoria/edit/:id', component: FormCategoriaComponent },
+            { path: 'articulos', component: ArticulosStockComponent },
+            { path: 'articulos/new', component: FormArticuloComponent },
+            { path: 'articulos/edit/:id', component: FormArticuloComponent },
+            { path: 'ajustestock', component: AjusteStockComponent },
+            { path: 'ajustestock/new', component: FormAjusteComponent },
+            { path: 'ajustestock/view/:id', component: FormAjusteComponent },
+            { path: 'motivosajuste', component: MotivosAjusteComponent },
+            { path: 'motivosajuste/new', component: FormMotivoComponent },
+            { path: 'inventariostock', component: InventarioStockComponent },
+            { path: 'bodegas', component: BodegasComponent },
+            { path: 'bodegas/new', component: FormBodegaComponent },
+            { path: 'bodegas/view/:id', component: FormBodegaComponent },
+            { path: 'bodegas/edit/:id', component: FormBodegaComponent },
+            { path: 'trasladobodega', component: TrasladoBodegasComponent },
+            { path: 'trasladobodega/new', component: FormTrasladoComponent },
+            { path: 'proveedores', component: ProveedoresComponent },
+            { path: 'proveedores/new', component: FormProveedorComponent },
+            { path: 'compras', component: CompraDirectaComponent },
+            { path: 'compras/new', component: FormCompraDirectaComponent },
+            { path: 'compras/edit/:id', component: FormCompraDirectaComponent },
+            { path: 'monitorcompras', component: MonitorcomprasComponent },
+            { path: 'monitorstock', component: MonitorstockComponent },
+            { path: 'clientes/new', component: FormClienteComponent },
+            { path: 'ventas/new', component: FormVentaDirectaComponent },
+            { path: 'ventapos/new', component: FormVentaposComponent },
+            { path: 'turno/new', component: FormTurnosComponent },
+            { path: 'login', component: LoginComponent },
+        ]
+    },
 
-    
-
-
+    // Redirección comodín en caso de escribir cualquier otra ruta inexistente
+    {
+        path: '**',
+        redirectTo: 'login'
+    }
 ];
+

@@ -1,23 +1,76 @@
-<mat-toolbar color="primary" class="navbar">
-    <span>DATA</span>
-    <span class="spacer"></span>
-    <button mat-icon-button [matMenuTriggerFor]="menu">
-        <mat-icon>perm_identity</mat-icon>
-    </button>
+<mat-toolbar color="primary">
+    <button mat-button [matMenuTriggerFor]="menuModuloA">Inventario</button>
+    <button mat-button [matMenuTriggerFor]="menuModuloB">Compras</button>
+    <button mat-button [matMenuTriggerFor]="menuModuloC">Ventas</button>
+    <button mat-button>Cartera</button>
+    <button mat-button>Produccion</button>
+</mat-toolbar>
 
-    <mat-menu #menu="matMenu">
-        <button mat-menu-item>
-          <mat-icon>account_circle</mat-icon>
-          <span>Perfil</span>
-        </button>
-        <button mat-menu-item>
-          <mat-icon>settings</mat-icon>
-          <span>Configuración</span>
-        </button>
-        <button mat-menu-item>
-          <mat-icon>logout</mat-icon>
-          <span>Salir</span>
-        </button>
-      </mat-menu>
-   
-  </mat-toolbar>
+<mat-menu #menuModuloA="matMenu">
+    <button mat-menu-item [matMenuTriggerFor]="subMenuAnidado">Maestros</button>
+    <button mat-menu-item [matMenuTriggerFor]="InvMenuTrans">Transacciones</button>
+    <button mat-menu-item routerLink="/inventariostock">Reporte</button>
+    <button mat-menu-item routerLink="/monitorstock">Monitor Stock</button>
+</mat-menu>
+
+<mat-menu #menuModuloB="matMenu">
+    <button mat-menu-item [matMenuTriggerFor]="subMenuCompras">Maestros</button>
+    <button mat-menu-item [matMenuTriggerFor]="ComprasMenuTrans">Transacciones</button>
+    <button mat-menu-item [matMenuTriggerFor]="CompraReporte">Reportes</button>
+</mat-menu>
+
+<mat-menu #menuModuloC="matMenu">
+    <button mat-menu-item [matMenuTriggerFor]="subMenuVentas">Maestros</button>
+    <button mat-menu-item [matMenuTriggerFor]="subMenuVentasTras">Transacciones</button>
+    <button mat-menu-item [matMenuTriggerFor]="CompraReporte">Monitor Ventas</button>
+</mat-menu>
+
+<mat-menu #subMenuAnidado="matMenu">
+    <button mat-menu-item routerLink="/bodegas/new">Bodegas</button>
+    <button mat-menu-item routerLink="/articulos/new">Articulos</button>
+    <button mat-menu-item routerLink="/categoria/new">Categorias</button>
+    <button mat-menu-item routerLink="/modulo-a/sub/reporte-y">Unidades</button>
+    <button mat-menu-item routerLink="/motivosajuste">Motivos Ajuste</button>
+</mat-menu>
+
+<mat-menu #InvMenuTrans="matMenu">
+    <button mat-menu-item routerLink="/ajustestock/new">Ajuste Stock</button>
+    <button mat-menu-item routerLink="/trasladobodega/new">Traslado Bodegas</button>
+</mat-menu>
+
+<mat-menu #AjusteStockList="matMenu">
+    <button mat-menu-item routerLink="/ajustestock">Lista</button>
+</mat-menu>
+
+<mat-menu #InvMenuReporte="matMenu">
+    <button mat-menu-item routerLink="/inventariostock">Inventario</button>
+</mat-menu>
+
+
+<mat-menu #subMenuCompras="matMenu">
+    <button mat-menu-item routerLink="/proveedores/new">Proveedores</button>
+</mat-menu>
+
+<mat-menu #ComprasMenuTrans="matMenu">
+    <button mat-menu-item routerLink="/compras/new">Compras Directa</button>
+</mat-menu>
+
+<mat-menu #CompraReporte="matMenu">
+    <button mat-menu-item routerLink="/monitorcompras">Monitor Compras</button>
+</mat-menu>
+
+<!--Ventas-->
+<mat-menu #subMenuVentas="matMenu">
+    <button mat-menu-item routerLink="/clientes/new">Clientes</button>
+</mat-menu>
+
+<mat-menu #subMenuVentasTras="matMenu">
+    
+    <button mat-menu-item routerLink="/turno/new">Abrir Turno</button>
+    <button mat-menu-item routerLink="/ventas/new">Venta Directa</button>
+    <button mat-menu-item routerLink="/ventapos/new">Venta POS</button>
+</mat-menu>
+
+<div class="content">
+    <router-outlet></router-outlet>
+</div>

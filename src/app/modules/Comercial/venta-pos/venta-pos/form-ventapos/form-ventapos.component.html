@@ -1,0 +1,376 @@
+<form [formGroup]="formulario" #formDirective="ngForm" (keydown.enter)="$event.preventDefault()"
+    (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <a mat-icon-button color="primary" routerLink="/compras">
+                    <mat-icon>list</mat-icon>
+                </a>
+                <span>{{titulo_form}}</span>
+
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales" style="background-color: brown;">
+
+                <div class="bloque">
+
+                    <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="3px grid">
+
+                        <div fxFlex="15">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Caja</mat-label>
+                                <input matInput formControlName="nomCaja">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="40">
+                            <combo-cliente formControlName="searchCliente"
+                                (clienteSelecionado)="onClienteChange($event)"></combo-cliente>
+
+                        </div>
+                        <div fxFlex="15">
+                            <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+                                <mat-label>Fecha Venta</mat-label>
+                                <input matInput [matDatepicker]="picker" placeholder="dd/mm/yyyy"
+                                    formControlName="fecDoc">
+                                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+
+
+
+
+                    </div>
+
+                </div>
+
+                <div class="container-tabla mat-elevation-z2">
+                    <table mat-table [dataSource]="dataSource" formArrayName="detalles">
+                        <ng-container matColumnDef="position">
+                            <th mat-header-cell *matHeaderCellDef>#</th>
+                            <td mat-cell *matCellDef="let element; let i = index">
+                                {{ i + 1 }}
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+                        <ng-container matColumnDef="id">
+                            <th mat-header-cell *matHeaderCellDef>Artículo</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <div class="celda-articulo-container">
+                                    <articulo-autocomplet formControlName="search" [mostrarOpcionCrear]="false"
+                                        (articuloSeleccionado)="onArticuloChange($event, i)">
+                                    </articulo-autocomplet>
+
+                                    <button mat-icon-button color="warn" type="button"
+                                        (click)="eliminarLineaDetalles(i)">
+                                        <mat-icon>delete_outline</mat-icon>
+                                    </button>
+                                </div>
+                            </td>
+
+                            <td mat-footer-cell *matFooterCellDef>TOTALES</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="Lote">
+                            <th mat-header-cell *matHeaderCellDef>Lote</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input matInput formControlName="idLote" placeholder="Nombre" />
+                                <mat-error *ngIf="row.get('idLote')?.hasError('required')">
+                                    La cantidad es obligatoria.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('idLote')?.hasError('min')">
+                                    La cantidad debe ser mayor a 0.
+                                </mat-error>
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+                        <ng-container matColumnDef="stock">
+                            <th mat-header-cell *matHeaderCellDef>Stock</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('stock')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="stock">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="precio">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Precio</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input #inputCosto matInput formControlName="precio" placeholder="Nombre"
+                                    class="text-right" />
+
+
+                                <mat-error *ngIf="row.get('precio')?.hasError('required')">
+                                    La cantidad es obligatoria.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('precio')?.hasError('min')">
+                                    La cantidad debe ser mayor a 0.
+                                </mat-error>
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="cantidad">
+                            <th mat-header-cell *matHeaderCellDef class="text-right">Cantidad</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+
+                                <input matInput formControlName="cantidad" placeholder="Nombre" class="text-right" />
+
+
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('required')">
+                                    La cantidad es obligatoria.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('min')">
+                                    La cantidad debe ser mayor a 0.
+                                </mat-error>
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalCantidad | number}}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="porc_dcto">
+                            <th mat-header-cell *matHeaderCellDef>(%) Dcto</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" style="width: 80px;">
+                                @if (columnasEditables) {
+                                <!-- Modo Detalle: Se puede editar -->
+                                <input matInput formControlName="porc_dcto" placeholder="Nombre" class="text-right" />
+                                } @else {
+                                <!-- Modo General o No Aplica: Solo lectura -->
+                                {{ row.get('porc_dcto')?.value }}
+                                }
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="impuesto1">
+                            <th mat-header-cell *matHeaderCellDef>(%) IVA</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('porc_tasa1')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="porc_tasa1">
+
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef></td>
+                        </ng-container>
+
+
+
+                        <ng-container matColumnDef="neto">
+                            <th mat-header-cell *matHeaderCellDef>Neto</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('neto')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="neto">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalNeto | currency }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="imp_dcto">
+                            <th mat-header-cell *matHeaderCellDef>Imp. Dcto</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('imp_dcto')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="imp_dcto">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalDcto | currency }}
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="imp1">
+                            <th mat-header-cell *matHeaderCellDef>Valor IVA</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('valorImpuesto1')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="valorImpuesto1">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalImpuesto1 | currency }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="total">
+                            <th mat-header-cell *matHeaderCellDef>Total</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <span>
+                                    {{ row.get('importeTotal')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="importeTotal">
+                            </td>
+                            <td mat-footer-cell *matFooterCellDef>
+                                {{ totalFinal | currency }}
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns ; sticky: true"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                        <tr mat-footer-row *matFooterRowDef="displayedColumns ; sticky: true" class="footer-resaltado">
+                        </tr>
+                    </table>
+                </div>
+                <br />
+                <div class="main-container">
+                    <mat-card class="section facturacion">
+                        <mat-card-content>
+                            <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="3px grid">
+                                <div fxFlex="60">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>Observacion</mat-label>
+                                        <input matInput formControlName="observaciones">
+                                        <mat-error>Codigo requerido</mat-error>
+                                    </mat-form-field>
+
+                                </div>
+                                <div fxFlex="15">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>Descuento</mat-label>
+                                        <mat-select [formControl]="SelecdctoControl" required>
+                                            @for (obj_tipo of list_dcto; track obj_tipo) {
+                                            <mat-option [value]="obj_tipo">{{obj_tipo}}</mat-option>
+                                            }
+                                        </mat-select>
+                                        @if (SelecdctoControl.hasError('required')) {
+                                        <mat-error>Debe seleccionar una opcion</mat-error>
+                                        }
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="10">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>% Dcto</mat-label>
+                                        <input matInput formControlName="porcDescuento">
+                                        <mat-error>Codigo requerido</mat-error>
+                                    </mat-form-field>
+                                </div>
+
+                                <div fxFlex="20">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>Forma Pago</mat-label>
+                                        <mat-select [formControl]="SelecmediosControl" required>
+                                            @for (obj_docum of list_mediospago; track obj_docum) {
+                                            <mat-option [value]="obj_docum">{{obj_docum.tipo}}</mat-option>
+                                            }
+                                        </mat-select>
+                                        @if (SelecmediosControl.hasError('required')) {
+                                        <mat-error>Debe seleccionar un Documento</mat-error>
+                                        }
+                                    </mat-form-field>
+                                </div>
+                                <div fxFlex="20">
+                                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                        <mat-label>Valor Ingreso</mat-label>
+                                        <input matInput formControlName="impIgreso">
+                                        <mat-error>Codigo requerido</mat-error>
+                                    </mat-form-field>
+
+                                </div>
+                            </div>
+
+
+
+                        </mat-card-content>
+                    </mat-card>
+
+                    <div class="right-column">
+
+                        <mat-card class="section totals-card">
+                            <mat-card-header><mat-card-title>Totales</mat-card-title></mat-card-header>
+                            <mat-card-content>
+                                <div class="totals-grid">
+                                    <div class="total-row">
+                                        <span class="total-label">Neto:</span>
+                                        <span class="total-value">{{ totalNeto | currency }}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Impuesto IVA:</span>
+                                        <span class="total-value">{{ totalImpuesto1 | currency }}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Descuento:</span>
+                                        <span class="total-value">{{ totalDcto | currency }}</span>
+                                    </div>
+                                    <div class="grand-total">
+                                        <span class="total-label">TOTAL:</span>
+                                        <span class="total-value">{{ totalFinal | currency }}</span>
+                                    </div>
+                                    @if (!mostrarCampos) {
+                                    <div class="grand-vuelto">
+                                        <span class="total-label">VUELTO:</span>
+                                        <span class="total-value">{{ vuelto | currency }}</span>
+                                    </div>
+                                    }
+                                </div>
+
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+                </div>
+
+
+
+
+            </mat-tab>
+            <mat-tab label="Medio de Pago y Totales" style="background-color: brown;">
+
+
+                <div class="main-container">
+                    <mat-card class="section facturacion">
+                        <mat-card-content>
+                            <form-mediopago [totalFactura]="totalFinal" [mediospago]="list_mediospago">
+                            </form-mediopago>
+
+                        </mat-card-content>
+                    </mat-card>
+
+                    <div class="right-column">
+
+                        <mat-card class="section totals-card">
+                            <mat-card-header><mat-card-title>Totales</mat-card-title></mat-card-header>
+                            <mat-card-content>
+                                <div class="totals-grid">
+                                    <div class="total-row">
+                                        <span class="total-label">Neto:</span>
+                                        <span class="total-value">{{ totalNeto | currency }}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Impuesto IVA:</span>
+                                        <span class="total-value">{{ totalImpuesto1 | currency }}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span class="total-label">Descuento:</span>
+                                        <span class="total-value">{{ totalDcto | currency }}</span>
+                                    </div>
+                                    <div class="grand-total">
+                                        <span class="total-value">{{ totalFinal | currency }}</span>
+                                    </div>
+                                </div>
+
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button">Cancelar</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

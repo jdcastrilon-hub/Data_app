@@ -2,8 +2,9 @@ import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors} from '@angular/common/http'; // <-- Importa estos
 import { routes } from './app.routes';
-import { errorInterceptor } from './core/services/core/interceptor';
+import { errorInterceptor } from './core/services/core/Interceptor/errorInterceptor';
 import { provideNativeDateAdapter } from '@angular/material/core';
+import { authInterceptor } from './core/services/core/Interceptor/authInterceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,7 +15,7 @@ export const appConfig: ApplicationConfig = {
     // 2. 'withInterceptorsFromDi' permite que Angular busque los interceptores 
     //    definidos con la sintaxis de clases (como el ErrorInterceptor que creamos)
     provideHttpClient(
-      withInterceptors([errorInterceptor]) // <--- Así se registra en Angular 19
+      withInterceptors([authInterceptor,errorInterceptor]) // interceptores
     )
   ]
 }; 
