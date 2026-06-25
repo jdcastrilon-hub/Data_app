@@ -1,5 +1,7 @@
+import { MedioPago } from "../../models/Ventas/medioPago";
 import { BodegaCombo } from "../Bodega/BodegaCombo";
 import { Documentos_Combo } from "../Comercial/Documentos_Combo";
+
 
 
 export class SucursalCombo {
@@ -9,4 +11,5 @@ export class SucursalCombo {
     nomSucursal!: string;
     list_bodegas?: BodegaCombo[];
     documentos?: Documentos_Combo[];
+    mediopago?: MedioPago[];
 }

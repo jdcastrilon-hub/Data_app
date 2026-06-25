@@ -1,0 +1,104 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <a mat-icon-button color="primary" routerLink="/bodegas">
+                    <mat-icon>list</mat-icon>
+                </a>
+                <span>{{titulo_form}}</span>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales">
+
+                <div class="bloque">
+
+                    <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="3px grid">
+
+                        <div fxFlex="20">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Sucursal</mat-label>
+                                <mat-select [formControl]="SelectSucursalControl" required>
+                                    @for (obj_sucursal of list_sucursal; track obj_sucursal) {
+                                    <mat-option [value]="obj_sucursal">{{obj_sucursal.nomSucursal}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectSucursalControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una empresa</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="20">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Caja</mat-label>
+                                <mat-select [formControl]="SelectCajaControl" required>
+                                    @for (obj_caja of list_caja; track obj_caja) {
+                                    <mat-option [value]="obj_caja">{{obj_caja.nomCaja}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (SelectCajaControl.hasError('required')) {
+                                <mat-error>Debe seleccionar una empresa</mat-error>
+                                }
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="15">
+                            <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+                                <mat-label>Fecha Venta</mat-label>
+                                <input matInput [matDatepicker]="picker" placeholder="dd/mm/yyyy"
+                                    formControlName="Fecha">
+                                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                                <mat-datepicker #picker></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="45">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Observacion.</mat-label>
+                                <input matInput formControlName="id">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="15">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>No.</mat-label>
+                                <input matInput formControlName="id">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="15">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Base.</mat-label>
+                                <input matInput formControlName="id">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <div fxFlex="10">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="status" color="primary">
+                                    Estado
+                                </mat-checkbox>
+                            </section>
+                        </div>
+
+                    </div>
+
+                     <p>Ultima Caja</p>
+                    <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly">Cancelar</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

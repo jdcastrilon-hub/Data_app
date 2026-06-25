@@ -1,50 +1,55 @@
 import { Component } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormaMediopagoComponent } from '../../../venta-directa/form-venta-directa/forma-mediopago/forma-mediopago.component';
+import { ComboEstadostockComponent } from 'src/app/modules/resources/combo-estadostock/combo-estadostock.component';
+import { ArticuloAutocompletComponent } from 'src/app/modules/resources/articulo-autocomplet/articulo-autocomplet.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatTableDataSource } from '@angular/material/table';
+import { ComboClienteComponent } from 'src/app/modules/resources/combo-cliente/combo-cliente.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { combineLatest, startWith } from 'rxjs';
-import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
-import { ClienteSearch } from 'src/app/core/interfaces/Comercial/ClienteSearch';
-import { Documentos_Combo } from 'src/app/core/interfaces/Comercial/Documentos_Combo';
-import { VentaDisponible } from 'src/app/core/interfaces/Comercial/VentaDisponible';
-import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
-import { TasasCombo } from 'src/app/core/interfaces/Impuestos/TasasCombo';
-import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
-import { Numerador } from 'src/app/core/models/core/Numerador';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 import { Ventas } from 'src/app/core/models/Ventas/Ventas';
+import { MatTableDataSource } from '@angular/material/table';
+import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
+import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
+import { TasasCombo } from 'src/app/core/interfaces/Impuestos/TasasCombo';
+import { Documentos_Combo } from 'src/app/core/interfaces/Comercial/Documentos_Combo';
+import { MedioPago } from 'src/app/core/models/Ventas/medioPago';
 import { AuditoriaService } from 'src/app/core/services/core/auditoria.service';
-import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { VentaServiceService } from 'src/app/core/services/Ventas/venta-service.service';
 import { ServiciosiniService } from 'src/app/core/services/core/serviciosini.service';
 import { SucursalServiceService } from 'src/app/core/services/General/sucursal-service.service';
 import { TasaImpuestoServiceService } from 'src/app/core/services/impuestos/tasa-impuesto-service.service';
-import { VentaServiceService } from 'src/app/core/services/Ventas/venta-service.service';
-import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
-import { ArticuloAutocompletComponent } from 'src/app/modules/resources/articulo-autocomplet/articulo-autocomplet.component';
-import { ComboClienteComponent } from 'src/app/modules/resources/combo-cliente/combo-cliente.component';
-import { ComboEstadostockComponent } from 'src/app/modules/resources/combo-estadostock/combo-estadostock.component';
-import { FormaMediopagoComponent } from './forma-mediopago/forma-mediopago.component';
-import { MedioPago } from 'src/app/core/models/Ventas/medioPago';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { ClienteSearch } from 'src/app/core/interfaces/Comercial/ClienteSearch';
+import { Numerador } from 'src/app/core/models/core/Numerador';
+import { VentaDisponible } from 'src/app/core/interfaces/Comercial/VentaDisponible';
+import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
+import { combineLatest, startWith } from 'rxjs';
+import { AbrirturnoService } from 'src/app/core/services/Ventas/abrirturno.service';
+import { ValidacionAbrirTurno } from 'src/app/core/interfaces/Comercial/ValidacionAbrirTurno';
+import { ModalValturnoComponent } from 'src/app/modules/resources/modal-valturno/modal-valturno.component';
 
 @Component({
-  selector: 'app-form-venta-directa',
+  selector: 'form-ventapos',
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
     RouterModule, MatDialogModule, ComboClienteComponent, MatDatepickerModule,
-    MatCheckboxModule, ArticuloAutocompletComponent, ComboEstadostockComponent],
-  templateUrl: './form-venta-directa.component.html',
-  styleUrl: './form-venta-directa.component.scss'
+    MatCheckboxModule, ArticuloAutocompletComponent],
+  templateUrl: './form-ventapos.component.html',
+  styleUrl: './form-ventapos.component.scss'
 })
-export class FormVentaDirectaComponent {
-
+export class FormVentaposComponent {
 
   //Variables Generales
   formulario!: FormGroup;
   objeto!: Ventas;
-  titulo_form: string = 'REGISTRO DE VENTA DIRECTA';
+  idCajaActiva: number = 0;
+  objeto_caja!: ValidacionAbrirTurno;
+  titulo_form: string = 'VENTA POS';
   isEditMode: boolean = false; //Se define si el modo es nuevo o edicion
+  mostrarCampos: boolean = false;
 
   //tabla de articulos
   //detalle: CompraDetalle[] = [];
@@ -55,27 +60,6 @@ export class FormVentaDirectaComponent {
   //Informacion general de articulos
   //list_info_Articulos: AjusteStockInfoArticulos[] = [];
 
-  //Status Compra
-  defaultStatus = 'Borrador'; //Valor por defecto
-  list_status: String[] = ['Borrador', 'Finalizado'];
-  SelecStatusControl = new FormControl<String | null>(this.defaultStatus, Validators.required);
-
-  //Seleccion para sucursales.
-  list_sucursal: SucursalCombo[] = [];
-  SelectSucursalControl = new FormControl<SucursalCombo | null>(null, Validators.required);
-
-  //Bodegas
-  list_bodegas: BodegaCombo[] = [];
-  SelectBodegasControl = new FormControl<BodegaCombo | null>(null, Validators.required);
-
-  //Impuestos
-  list_impuestos: TasasCombo[] = [];
-  SelectImpuestosControl = new FormControl<TasasCombo | null>(null, Validators.required);
-
-  //Documentos
-  list_documentos: Documentos_Combo[] = [];
-  SelectdocumentoControl = new FormControl<Documentos_Combo | null>(null, Validators.required);
-
   //Tipos de dcto
   defaultdcto = 'No Aplica'; //Valor por defecto
   list_dcto: String[] = ['No Aplica', 'General', 'Detalle'];
@@ -84,21 +68,22 @@ export class FormVentaDirectaComponent {
   //Para habilitar o deshabilitar el autoCompletar del articulo
   isModalClosing = true;
   columnasEditables = false; //para columnas de descuento
-  mostrarFecVenc: boolean = false;
 
   //lista de medios de pago
-
   list_mediospago: MedioPago[] = [];
   SelecmediosControl = new FormControl<MedioPago | null>(null, Validators.required);
+
 
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
     private VentasService: VentaServiceService,
     private serviceIni: ServiciosiniService,
+    private turnoService: AbrirturnoService,
     private sucursalService: SucursalServiceService,
     private tasaService: TasaImpuestoServiceService,
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
+    private dialog: MatDialog,
     private router: Router) {
     this.objeto = new Ventas();
   }
@@ -125,14 +110,13 @@ export class FormVentaDirectaComponent {
       impDescuento: this.objeto.impDescuento,
       impTotal: this.objeto.impTotal,
       observaciones: this.objeto.observaciones,
-
       documento: this.objeto.documento,
       serie: this.objeto.serie,
       nroDocum: [{ value: this.objeto.nroDocum, disabled: true }, Validators.required],
       secuencia: this.objeto.secuencia,
       factura: this.objeto.factura,
-
-      codCaja: this.objeto.idTurno,
+      idTurno: this.objeto.idTurno,
+      nomCaja: [{ value: this.objeto.nomCaja, disabled: true }, Validators.required],
       tipoDcto: this.objeto.tipoDcto,
       porcDescuento: [{ value: this.objeto?.porcDescuento ?? 0, disabled: true }],
       fecVenc: [new Date(), Validators.required],
@@ -152,9 +136,15 @@ export class FormVentaDirectaComponent {
       valorImpuesto2: this.objeto.valorImpuesto2,
       impuesto3: this.objeto.impuesto3,
       valorImpuesto3: this.objeto.valorImpuesto3,
-      //nuevoCodigoBarra: this.fb.array([]),
-      logs: this.fb.array([]),
+
+      //Cliente de autoCompletar
       searchCliente: cliente_filtro,
+
+      //Caja
+
+
+      //Auditoria
+      logs: this.fb.array([]),
       detalles: this.fb.array([])
     });
 
@@ -175,78 +165,11 @@ export class FormVentaDirectaComponent {
         this.isEditMode = false;
         this.objeto = new Ventas();
 
-
-        this.cargarSucursales();
+        this.validarTurno();
+        //this.cargarSucursales();
         this.agregarLineaVacia();
         this.ValidarColumnas(this.defaultdcto);
 
-
-        //Subcribir los cambios al selecionar la sucursal
-        this.SelectSucursalControl.valueChanges.subscribe(objectoSucusal => {
-          if (objectoSucusal) {
-            //Cargamos bodega de acuerdo a la sucursal seleccionada
-            this.list_bodegas = objectoSucusal.list_bodegas!;
-            const unicaBodega = this.list_bodegas[0];
-            if (unicaBodega) {
-              this.SelectBodegasControl.setValue(unicaBodega);
-              //Asignamos al path
-              this.formulario.patchValue({
-                idBodega: unicaBodega.id,
-              });
-            }
-
-
-            //Cargamos documento de acuerdo a la sucursal
-            this.list_documentos = objectoSucusal.documentos!;
-            const primerDocum = this.list_documentos[0];
-            if (primerDocum) {
-              this.SelectdocumentoControl.setValue(primerDocum);
-
-              //Asignamos al path
-              this.formulario.patchValue({
-                documento: primerDocum.documento,
-                serie: primerDocum.serie,
-                secuencia: primerDocum.secuencia
-              });
-              //obtener numeracion
-              this.obtenerNumerador(primerDocum.secuencia);
-            }
-
-            //Cargamos medio de pago
-            this.list_mediospago = objectoSucusal.mediopago!;
-            const primermedio = this.list_mediospago[0];
-            if (primermedio) {
-              this.SelecmediosControl.setValue(primermedio);
-
-              //Asignamos al path
-              this.formulario.patchValue({
-                formaPago: primermedio.tipo
-              });
-              //obtener numeracion
-              this.obtenerNumerador(primerDocum.secuencia);
-            }
-
-
-          } else {
-            this.list_bodegas = []; // Limpiar si no hay categoría seleccionada
-            this.list_documentos = [];
-            this.list_mediospago = [];
-          }
-        });
-
-        //Subcribir los cambios al selecionar la sucursal
-        this.SelectdocumentoControl.valueChanges.subscribe(objDocumento => {
-          if (objDocumento) {
-            //Asignamos al path
-            this.formulario.patchValue({
-              documento: objDocumento.documento,
-              serie: objDocumento.serie,
-              secuencia: objDocumento.secuencia
-            });
-            //obtener numeracion
-            this.obtenerNumerador(objDocumento.secuencia);
-          }
-        });
 
         //Subcribir los cambios al selecionar el tipo de descuento
         this.SelecdctoControl.valueChanges.subscribe(objDcto => {
@@ -279,13 +202,13 @@ export class FormVentaDirectaComponent {
         });
 
         //Subcribir el tipo de documento
-        this.SelectdocumentoControl.valueChanges.subscribe(objDoc => {
+        this.SelecmediosControl.valueChanges.subscribe(objPago => {
 
-          if (objDoc) {
-            if (objDoc.documento === 'Credito') {
-              this.mostrarFecVenc = true;
+          if (objPago) {
+            if (objPago.tipo === 'Efectivo') {
+              this.mostrarCampos = false;
             } else {
-              this.mostrarFecVenc = false;
+              this.mostrarCampos = true;
             }
 
           }
@@ -347,36 +270,62 @@ Receptores
     });
   }
 
-  cargarSucursales(): void {
-    this.sucursalService.sucursalesxBodegas().subscribe({
-      next: (data) => {
-        this.list_sucursal = data;
-        console.log("cargarSucursales")
-        console.log(this.objeto.idSucursalEmp)
-        // Si es metodo edicion y tengo una empresa cargada.
-        //La busco en la lista que me retorno el API
-        if (this.isEditMode && this.objeto.idSucursalEmp) {
-          //busco la sucursal por ID
-          const sucursalSeleccinada = this.list_sucursal.find(
-            sucursal => sucursal.id === this.objeto.idSucursalEmp
-          );
+  validarTurno() {
+    const usuario = 'juan123'; // Esto vendría de tu servicio de auth
+    const fechaHoy = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-          if (sucursalSeleccinada) {
-            // [CLAVE]: Asigna el OBJETO completo al FormControl
-            this.SelectSucursalControl.setValue(sucursalSeleccinada);
+    this.turnoService.ValidacionTurno("jcastrilon").subscribe({
+      next: (data) => {
+        if (data.tieneturno) {
+          this.objeto_caja = data;
+          console.log("Respuesta")
+          console.log(data)
+          this.idCajaActiva = data.idTurno;          
+
+          //carga cliente por defecto de la caja
+          let cliente_filtro: ClienteSearch = {
+            idCliente: this.objeto_caja.cliente.idCliente,
+            idPersona: this.objeto_caja.cliente.idPersona,
+            codTit: this.objeto_caja.cliente.codTit,
+            nombreCompleto: this.objeto_caja.cliente.nombreCompleto,
           }
-        } else if (!this.isEditMode) {
-          // Condición: Si estamos en modo Nuevo (this.isEditMode es false)
-          // Y la lista de empresas tiene exactamente 1 elemento.
-          if (this.list_sucursal.length === 1) {
-            const unicaSucursal = this.list_sucursal[0];
-            this.SelectSucursalControl.setValue(unicaSucursal);
+          //Asignamos al path
+          this.formulario.patchValue({
+            idBodega: this.objeto_caja.idBodega,
+            idEstado: this.objeto_caja.idEstado,
+            documento: this.objeto_caja.documento,
+            nomCaja: this.objeto_caja.nomCaja,
+            idCliente: this.objeto_caja.cliente.idCliente,
+            searchCliente: cliente_filtro
+          });
+          //carga de tipos de pagos
+          this.list_mediospago = data.mediopago!;
+          const primermedio = this.list_mediospago[0];
+          if (primermedio) {
+            this.SelecmediosControl.setValue(primermedio);
+
+            //Asignamos al path
+            this.formulario.patchValue({
+              formaPago: primermedio.tipo
+            });
           }
+
+        } else {
+          console.log("Caja no abierta")
+          this.bloquearPantalla();
         }
+
       },
       error: (err) => {
         console.error('Error cargando empresas', err);
       }
+    });
+  }
+
+  bloquearPantalla() {
+    this.dialog.open(ModalValturnoComponent, {
+      width: '400px',
+      disableClose: true // Evita que lo cierren haciendo clic afuera
     });
   }
 
@@ -715,8 +664,6 @@ Receptores
 
     this.formulario.patchValue({
       idEmp: 1,
-      idSucursalEmp: this.SelectSucursalControl.value?.id,
-      idBodega: this.SelectBodegasControl.value?.id,
       tipoDcto: this.SelecdctoControl.value,
       impNeto: this.totalNeto,
       impTotal: this.totalFinal,
@@ -728,7 +675,7 @@ Receptores
       valorImpuesto3: 0,
       impDescuento: 0,
       impVuelto: this.vuelto,
-      idPago :0,
+      idPago: 0,
       documento: 'venta',
       vista: 'VentaDirect',
       fechaMod: fecha_envio.toISOString()
@@ -742,7 +689,7 @@ Receptores
       return; // Detiene la ejecución si el formulario no es válido
     }
     console.log("Paso Json");
-    
+
     // 1. Obtenemos todo el valor del formulario
     const dataCompleta = this.formulario.getRawValue();
 

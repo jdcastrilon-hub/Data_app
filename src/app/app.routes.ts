@@ -21,6 +21,8 @@ import { MonitorstockComponent } from './modules/Bodega/monitorstock/monitorstoc
 import { ClientesComponent } from './modules/Comercial/clientes/clientes.component';
 import { FormClienteComponent } from './modules/Comercial/clientes/form-cliente/form-cliente.component';
 import { FormVentaDirectaComponent } from './modules/Comercial/venta-directa/form-venta-directa/form-venta-directa.component';
+import { FormVentaposComponent } from './modules/Comercial/venta-pos/venta-pos/form-ventapos/form-ventapos.component';
+import { FormTurnosComponent } from './modules/Comercial/turnos/form-turnos/form-turnos.component';
 
 export const routes: Routes = [
     { path: 'categorias', component: CategoriasComponent },
@@ -50,6 +52,10 @@ export const routes: Routes = [
     { path: 'monitorstock', component: MonitorstockComponent },
     { path: 'clientes/new', component: FormClienteComponent },
     { path: 'ventas/new', component: FormVentaDirectaComponent },
+    { path: 'ventapos/new', component: FormVentaposComponent },
+    { path: 'turno/new', component: FormTurnosComponent },
+    
+    
     
 
     
