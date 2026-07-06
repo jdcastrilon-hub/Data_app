@@ -10,6 +10,8 @@ import { BodegasComponent } from './modules/Bodega/bodegas/bodegas.component';
 import { FormBodegaComponent } from './modules/Bodega/bodegas/form-bodega/form-bodega.component';
 import { TrasladoBodegasComponent } from './modules/Bodega/traslado-bodegas/traslado-bodegas.component';
 import { FormTrasladoComponent } from './modules/Bodega/traslado-bodegas/form-traslado/form-traslado.component';
+import { UnidadesStockComponent } from './modules/Bodega/unidadesStock/unidadesStock.component';
+import { FormUnidadComponent } from './modules/Bodega/unidadesStock/form-unidad/form-unidad.component';
 import { ProveedoresComponent } from './modules/compras/proveedores/proveedores.component';
 import { FormProveedorComponent } from './modules/compras/proveedores/form-proveedor/form-proveedor.component';
 import { CompraDirectaComponent } from './modules/compras/compra-directa/compra-directa.component';
@@ -54,6 +56,10 @@ export const routes: Routes = [
             { path: 'bodegas/edit/:id', component: FormBodegaComponent },
             { path: 'trasladobodega', component: TrasladoBodegasComponent },
             { path: 'trasladobodega/new', component: FormTrasladoComponent },
+            { path: 'unidades', component: UnidadesStockComponent },
+            { path: 'unidades/new', component: FormUnidadComponent },
+            { path: 'unidades/view/:id', component: FormUnidadComponent },
+            { path: 'unidades/edit/:id', component: FormUnidadComponent },
             { path: 'proveedores', component: ProveedoresComponent },
             { path: 'proveedores/new', component: FormProveedorComponent },
             { path: 'compras', component: CompraDirectaComponent },

@@ -19,10 +19,7 @@
     }
 
     @if (mostrarOpcionCrear && filteredOptions().length === 0) {
-    <!--<mat-option (click)="crearNuevo.emit(searchControl.value)">
-        Crear Articulo
-    </mat-option>-->
-    <mat-option (click)="crearNuevo.emit(searchControl.value)">
+    <mat-option [value]="OPCION_CREAR_NUEVA">
         Crear nueva persona
     </mat-option>
     }

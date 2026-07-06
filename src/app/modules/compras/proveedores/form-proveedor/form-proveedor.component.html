@@ -15,16 +15,18 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
                         <div fxFlex="40">
-                            <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="mostrarOpcionCrear"
+                            <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="true"
                                 (personaSelecionado)="onPersonaChange($event)"
-                                (crearNuevo)="ModalcrearNuevaPersona()"></combo-persona>
+                                (crearNuevo)="habilitarNuevaPersona($event)"></combo-persona>
                         </div>
                     </div>
 
-                    <app-persona></app-persona>
+                    <app-persona [group]="personaGroup" [disabled]="personaSubformDeshabilitado"
+                        (personaChange)="onPersonaSubformChange($event)"></app-persona>
                     <br />
+
                     <div class="bloque_interno">
-                        <h4>informacion personal</h4>
+                        <h4>Datos del proveedor</h4>
                         <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
                             <div fxFlex="25">
                                 <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">

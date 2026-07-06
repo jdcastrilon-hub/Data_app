@@ -22,6 +22,10 @@ import { PersonaService } from 'src/app/core/services/Compras/persona.service';
 })
 export class ComboPersonaComponent implements OnInit, ControlValueAccessor {
 
+  // Valor centinela de la opción "Crear nueva persona": al no ser una PersonaSearch real,
+  // permite distinguirla de una selección válida dentro de la misma lista de opciones.
+  readonly OPCION_CREAR_NUEVA = '__crear_nueva_persona__';
+
   //Parametros de entrada
   input_objeto = input<any>(null);
   editMode = input<boolean>(false);
@@ -35,6 +39,11 @@ export class ComboPersonaComponent implements OnInit, ControlValueAccessor {
 
   filteredOptions = signal<PersonaSearch[]>([]);
 
+  // Angular Material asigna el value crudo de la opción seleccionada al searchControl
+  // (incluso el centinela OPCION_CREAR_NUEVA), así que el texto tecleado por el usuario
+  // se guarda aparte para no perderlo cuando eso pase.
+  private ultimoTextoBuscado = '';
+
   onChange: any = () => { };
   onTouched: any = () => { };
 
@@ -46,6 +55,14 @@ export class ComboPersonaComponent implements OnInit, ControlValueAccessor {
   }
 
   ngOnInit() {
+    this.searchControl.valueChanges.subscribe(value => {
+      // El centinela OPCION_CREAR_NUEVA también llega como string cuando Material
+      // lo asigna al seleccionar esa opción; no cuenta como texto tecleado por el usuario.
+      if (typeof value === 'string' && value !== this.OPCION_CREAR_NUEVA) {
+        this.ultimoTextoBuscado = value;
+      }
+    });
+
     this.searchControl.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -84,8 +101,9 @@ export class ComboPersonaComponent implements OnInit, ControlValueAccessor {
 
 
   mascaraSalida(persona: PersonaSearch): string {
-    console.log('Lo que recibe el autocomplete:', persona);
-    if (persona && persona.codTit.length > 0) {
+    // displayWith también recibe el centinela OPCION_CREAR_NUEVA (un string) cuando
+    // se selecciona esa opción, por eso se valida la forma antes de leer sus campos.
+    if (persona && typeof persona === 'object' && persona.codTit?.length > 0) {
       // Devuelve el código y el nombre para una mejor referencia visual
       return `${persona.nombreCompleto} - ${persona.codTit}`;
     }
@@ -94,6 +112,14 @@ export class ComboPersonaComponent implements OnInit, ControlValueAccessor {
 
   onSelected(event: MatAutocompleteSelectedEvent) {
     const seleccion = event.option.value;
+
+    // La opción "Crear nueva persona" no es una selección real: no se toca el
+    // searchControl (para que el usuario pueda seguir usando la "x" para cancelar).
+    if (seleccion === this.OPCION_CREAR_NUEVA) {
+      this.crearNuevo.emit(this.ultimoTextoBuscado);
+      return;
+    }
+
     this.searchControl.setValue(seleccion); // Seteamos el objeto
     this.searchControl.disable();
     this.onChange(seleccion); // Notifica al FormControl del padre

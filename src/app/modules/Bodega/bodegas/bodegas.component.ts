@@ -4,9 +4,11 @@ import { Router, RouterModule } from '@angular/router';
 import { Bodega } from '../../../core/models/Bodega/Bodega';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
 import { BodegaService } from '../../../core/services/Bodega/bodega.service';
 import { BodegaListView } from '../../../core/interfaces/Bodega/BodegaListView';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { ConfirmDialogComponent } from 'src/app/modules/resources/confirm-dialog/confirm-dialog.component';
 
 
 @Component({
@@ -31,7 +33,8 @@ export class BodegasComponent {
   constructor(
     private service: BodegaService,
     private notificacion: NotificacionesService,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) { }
 
   ngOnInit() {
@@ -77,14 +80,25 @@ export class BodegasComponent {
     this.router.navigate(['/bodegas/view', id]);
   }
 
-  //Eliminar registro
+  //Eliminar registro (previa confirmación del usuario)
   eliminarBodega(id: number): void {
-    console.log("Entro a elininar");
-    console.log(id);
-    this.service.delete(id).subscribe(data => {
-      this.lista_bodegas = this.lista_bodegas.filter(bodega => bodega.id !== id);
-      this.dataSource = new MatTableDataSource<BodegaListView>(this.lista_bodegas);
-      this.notificacion.showSuccess('Bodega Eliminada con exito!');
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: {
+        titulo: 'Eliminar bodega',
+        mensaje: '¿Seguro que deseas eliminar esta bodega? Esta acción no se puede deshacer.'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmado => {
+      if (!confirmado) {
+        return;
+      }
+      this.service.delete(id).subscribe(data => {
+        this.lista_bodegas = this.lista_bodegas.filter(bodega => bodega.id !== id);
+        this.dataSource = new MatTableDataSource<BodegaListView>(this.lista_bodegas);
+        this.notificacion.showSuccess('Bodega Eliminada con exito!');
+      });
     });
   }
 
