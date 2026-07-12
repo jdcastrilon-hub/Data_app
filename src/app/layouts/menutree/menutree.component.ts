@@ -60,4 +60,16 @@ export class MenutreeComponent {
   hasChild = (_: number, node: Menu) =>
     !!node.children && node.children.length > 0;
 
+  abrirNuevaPestana(node: Menu, event: MouseEvent) {
+
+    event.stopPropagation();
+
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree([node.ruta])
+    );
+
+    window.open(url, '_blank');
+
+  }
+
 }

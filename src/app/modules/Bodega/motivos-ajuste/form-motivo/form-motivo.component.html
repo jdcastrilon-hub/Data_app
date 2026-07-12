@@ -1,7 +1,20 @@
-<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
-            <mat-card-title>REGISTRO DE MOTIVOS DE STOCK</mat-card-title>
+            <mat-card-title class="titulo-con-boton">
+                <div class="titulo-izquierda">
+                    <button mat-icon-button color="primary" type="button" (click)="volver()">
+                        <mat-icon>list</mat-icon>
+                    </button>
+                    <span>{{titulo_form}}</span>
+                </div>
+                @if (isEditMode) {
+                <button mat-icon-button color="primary" type="button" (click)="verHistorialAuditoria()"
+                    title="Ver historial de auditoría">
+                    <mat-icon>info</mat-icon>
+                </button>
+                }
+            </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
         <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
@@ -11,30 +24,45 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
-                        <div fxFlex="35" fxFlex.lt-md="100%">
+                        <div fxFlex="25" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Codigo Motivo</mat-label>
-                                <input matInput formControlName="codMotivo">
+                                <input matInput formControlName="codMotivo" [readonly]="isReadOnly">
                                 <mat-error>Codigo requerido</mat-error>
                             </mat-form-field>
                         </div>
                         <div fxFlex="35" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Nombre Motivo</mat-label>
-                                <input matInput formControlName="nomMotivo">
-                                <mat-error>Codigo requerido</mat-error>
+                                <input matInput formControlName="nomMotivo" [readonly]="isReadOnly">
+                                <mat-error>Nombre requerido</mat-error>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="30" fxFlex.lt-md="100%">
-                            <mat-radio-group aria-label="Select an option" color="primary"
-                            formControlName="signo">
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <mat-radio-group aria-label="Select an option" color="primary" formControlName="signo">
                                 <mat-radio-button value="1">Ingreso</mat-radio-button>
                                 <mat-radio-button value="-1">Salida</mat-radio-button>
                             </mat-radio-group>
                         </div>
-
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="activo" color="primary">
+                                    Activo
+                                </mat-checkbox>
+                            </section>
+                        </div>
                     </div>
 
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="30" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Cuenta Inventario</mat-label>
+                                <input matInput formControlName="ctaInventario" [readonly]="isReadOnly">
+                                <mat-error>Cuenta requerida</mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
                 </div>
             </mat-tab>
 
@@ -42,9 +70,9 @@
         <br>
 
         <mat-card-actions class="mat-accion-botones">
-            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button" (click)="salirSinGuardar()">Salir</button>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly" (click)="volver()">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

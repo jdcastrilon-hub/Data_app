@@ -62,8 +62,6 @@
             </mat-form-field>
           </div>
 
-
-
         </div>
 
         <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="3px">
@@ -80,15 +78,11 @@
               <mat-error>Debe seleccionar una empresa</mat-error>
               }
             </mat-form-field>
-
-
           </div>
           <div fxFlex="25">
             <button mat-flat-button color="primary" (click)="enviarConsulta()">
               <mat-icon>search</mat-icon>
             </button>
-
-
           </div>
           <div fxFlex="50"></div>
         </div>
@@ -98,7 +92,41 @@
     </mat-tab>
 
     <mat-tab label="Articulos" style="background-color: brown;">
+      <div class="bloque">
+        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="8px">
+          <div fxFlex="50">
+            <combo-articulo (articuloSeleccionado)="agregarArticulo($event)"></combo-articulo>
+          </div>
+        </div>
 
+        <table mat-table [dataSource]="articulosSeleccionados" class="mat-elevation-z1">
+          <ng-container matColumnDef="codArticulo">
+            <th mat-header-cell *matHeaderCellDef>Código</th>
+            <td mat-cell *matCellDef="let art">{{art.codArticulo}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="nomArticulo">
+            <th mat-header-cell *matHeaderCellDef>Artículo</th>
+            <td mat-cell *matCellDef="let art">{{art.nomArticulo}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let art">
+              <button mat-icon-button (click)="quitarArticulo(art)" type="button">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnasArticulos"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasArticulos;"></tr>
+        </table>
+
+        @if (articulosSeleccionados.length === 0) {
+        <p>No hay artículos seleccionados (se incluirán todos).</p>
+        }
+      </div>
     </mat-tab>
 
   </mat-tab-group>

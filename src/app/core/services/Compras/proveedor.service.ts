@@ -30,11 +30,15 @@ export class ProveedorService {
     return this.http.get<Ciudades[]>(this.url + "Ciudades");
   }
 
-  listPaginacion(page: number, size: number): Observable<PageResponse<ProveedorView>> {
-    const params = new HttpParams()
-      .set('page', page.toString())//Pagina 
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<ProveedorView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())//Pagina
       .set('size', size.toString())//Cantidad de registros a validar
       .set('idempresa', 1)//Cantidad de registros a validar
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
 
     return this.http.get<PageResponse<ProveedorView>>(this.url + "pagination", { params });
   }
@@ -47,6 +51,10 @@ export class ProveedorService {
     return this.http.get<ProveedorSearch[]>(this.url + "proveedorsearch", { params });
   }
 
+  getProveedorById(id: number): Observable<Proveedores> {
+    const params = new HttpParams().set('proveedor_id', id);
+    return this.http.get<Proveedores>(this.url + "search", { params });
+  }
 
   //Guardar Proveedor
   save(objecto: any): Observable<any> {
@@ -60,5 +68,24 @@ export class ProveedorService {
         return response.data;
       })
     );
+  }
+
+  //Editar Proveedor
+  edit(objecto: any, id_proveedor: number): Observable<any> {
+    const params = new HttpParams().set('proveedor_id', String(id_proveedor));
+
+    return this.http.put<ApiResponse>(this.url + "edit", objecto, { params }).pipe(
+      map((response: ApiResponse) => {
+        if (response.status !== 'success') {
+          throw new Error(response.message || 'Error desconocido al editar el proveedor.');
+        }
+        return response.data;
+      })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    const params = new HttpParams().set('proveedor_id', id.toString());
+    return this.http.delete<void>(this.url + "delete", { params });
   }
 }

@@ -1,0 +1,16 @@
+:host {
+    // 1. Fondo gris fuera de la tarjeta
+    display: block;
+    background-color: #e2e2e2;
+
+    // 2. Padding de 8px en todos los ángulos
+    padding: 1px;
+
+}
+
+
+.bloque {
+    border: 1px solid #c5c5c5; // gris claro
+    padding: 16px 16px 0px 16px;
+    background-color: #fcfcfc;
+}

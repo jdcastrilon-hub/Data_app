@@ -1,0 +1,83 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon>swap_vert</mat-icon> Movimientos de {{ data.codArticulo }} - {{ data.nomArticulo }}
+</h2>
+
+<mat-dialog-content class="mat-typography">
+
+  <div class="fila-fechas" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+    <mat-form-field class="form-field-compacto form-field-date" appearance="outline" style="flex: 1 1 180px;">
+      <mat-label>Fecha Inicial</mat-label>
+      <input matInput [matDatepicker]="pickerInicial" [(ngModel)]="fechaInicial">
+      <mat-datepicker-toggle matSuffix [for]="pickerInicial"></mat-datepicker-toggle>
+      <mat-datepicker #pickerInicial></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field class="form-field-compacto form-field-date" appearance="outline" style="flex: 1 1 180px;">
+      <mat-label>Fecha Final</mat-label>
+      <input matInput [matDatepicker]="pickerFinal" [(ngModel)]="fechaFinal">
+      <mat-datepicker-toggle matSuffix [for]="pickerFinal"></mat-datepicker-toggle>
+      <mat-datepicker #pickerFinal></mat-datepicker>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" (click)="consultar()">
+      <mat-icon>search</mat-icon> Consultar
+    </button>
+  </div>
+
+  <table mat-table [dataSource]="movimientos" class="mat-elevation-z1">
+    <ng-container matColumnDef="fec_doc">
+      <th mat-header-cell *matHeaderCellDef>Fecha</th>
+      <td mat-cell *matCellDef="let mov">{{ mov.fec_doc | date:'dd/MM/yyyy' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="documento">
+      <th mat-header-cell *matHeaderCellDef>Documento</th>
+      <td mat-cell *matCellDef="let mov">{{ mov.documento }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="nro_docum">
+      <th mat-header-cell *matHeaderCellDef>N° Documento</th>
+      <td mat-cell *matCellDef="let mov">{{ mov.nro_docum }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="bodega">
+      <th mat-header-cell *matHeaderCellDef>Bodega</th>
+      <td mat-cell *matCellDef="let mov">{{ mov.bodega }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="tipo_movimiento">
+      <th mat-header-cell *matHeaderCellDef>Tipo</th>
+      <td mat-cell *matCellDef="let mov">{{ mov.tipo_movimiento }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="cantidad">
+      <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+      <td mat-cell *matCellDef="let mov">{{ mov.cantidad }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="vista">
+      <th mat-header-cell *matHeaderCellDef>Origen</th>
+      <td mat-cell *matCellDef="let mov">{{ mov.vista }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnasMovimientos"></tr>
+    <tr mat-row *matRowDef="let row; columns: columnasMovimientos;"></tr>
+  </table>
+
+  @if (!cargando && movimientos.length === 0) {
+  <p>No hay movimientos en el rango de fechas seleccionado.</p>
+  }
+
+  @if (!cargando && movimientos.length > 0) {
+  <div class="resumen-totales" fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="20px">
+    <span>Entradas: <strong>{{ totalEntradas }}</strong></span>
+    <span>Salidas: <strong>{{ totalSalidas }}</strong></span>
+    <span>Saldo Neto: <strong>{{ totalNeto }}</strong></span>
+  </div>
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

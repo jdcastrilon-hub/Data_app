@@ -3,4 +3,5 @@ export class ArticuloSearch {
     idCodBarra?: number;
     codArticulo!: string;
     nomArticulo!: string;
+    manejaLote?: boolean;
 }

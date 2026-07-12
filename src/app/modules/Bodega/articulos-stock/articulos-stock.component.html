@@ -5,8 +5,16 @@
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
 
-        <mat-card-actions class="mat-accion">
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
             <button mat-raised-button color="primary" routerLink="/articulos/new">Nuevo</button>
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por codigo o nombre</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: aceite, 000123">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
         </mat-card-actions>
         <mat-card-content class="mat-content">
 
@@ -45,9 +53,19 @@
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef>Acciones</th>
                         <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarArticulo(element.id_articulo)" matTooltip="Visualizar"
+                                matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
                             <button mat-icon-button (click)="editarArticulo(element.id_articulo)">
                                 <mat-icon>edit</mat-icon>
                             </button>
+                            @if (element.manejaLote) {
+                            <button mat-icon-button (click)="abrirLotes(element)" matTooltip="Ver lotes"
+                                matTooltipPosition="above">
+                                <mat-icon>inventory_2</mat-icon>
+                            </button>
+                            }
                             <button mat-icon-button matSuffix (click)="eliminarArticulo(element.id_articulo)">
                                 <mat-icon>close</mat-icon>
                             </button>

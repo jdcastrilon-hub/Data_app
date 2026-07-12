@@ -9,6 +9,7 @@ import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-se
 import { AjustecostoService } from 'src/app/core/services/Compras/ajustecosto.service';
 import { AuditoriaService } from 'src/app/core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { LoginService } from 'src/app/core/services/core/login.service';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 
 export interface DialogData {
@@ -38,6 +39,7 @@ export class AjustecostoComponent {
     private logAuditoria: AuditoriaService,
     private ajusteservice: AjustecostoService,
     private notificacion: NotificacionesService,
+    private loginService: LoginService,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {
     this.objeto = new AjusteCostos();
@@ -108,9 +110,9 @@ export class AjustecostoComponent {
     const fecha_envio = new Date()
 
     this.formulario.patchValue({
-      idEmp: 1,
+      idEmp: this.loginService.getIdEmpresaActual(),
       documento: 'ajustecos',
-      vista: 'AjusteStock',
+      vista: 'AjusteCosto',
       fechaMod: fecha_envio.toISOString()
     });
 

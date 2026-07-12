@@ -23,11 +23,15 @@ export class ComprasService {
 
   constructor(private http: HttpClient) { }
 
-  listPaginacion(page: number, size: number): Observable<PageResponse<CompraListView>> {
-    const params = new HttpParams()
-      .set('page', page.toString())//Pagina 
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<CompraListView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())//Pagina
       .set('size', size.toString())//Cantidad de registros a validar
       .set('idempresa', 1)//Cantidad de registros a validar
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
 
     return this.http.get<PageResponse<CompraListView>>(this.url + "pagination", { params });
   }
@@ -74,5 +78,9 @@ export class ComprasService {
         return response.data;
       })
     );
+  }
+
+  delete(id_trans: number): Observable<void> {
+    return this.http.delete<void>(this.url + "delete/" + id_trans);
   }
 }

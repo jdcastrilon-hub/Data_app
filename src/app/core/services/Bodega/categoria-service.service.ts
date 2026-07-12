@@ -44,11 +44,15 @@ export class CategoriaService {
     return this.http.get<Categoria[]>(this.url + "listxEmpresa", { params });
   }
 
-  listPaginacion(page: number, size: number): Observable<PageResponse<CategoriaListView>> {
-    const params = new HttpParams()
-      .set('page', page.toString())//Pagina 
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<CategoriaListView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())//Pagina
       .set('size', size.toString())//Cantidad de registros a validar
     //.set('sort','fechaMod,desc');//Ordenamiento de la lista
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
 
     return this.http.get<PageResponse<CategoriaListView>>(this.url + "pagination", { params });
   }

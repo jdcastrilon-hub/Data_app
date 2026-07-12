@@ -3,9 +3,9 @@
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
                 <div class="titulo-izquierda">
-                    <a mat-icon-button color="primary" routerLink="/bodegas">
+                    <button mat-icon-button color="primary" type="button" (click)="volver()">
                         <mat-icon>list</mat-icon>
-                    </a>
+                    </button>
                     <span>{{titulo_form}}</span>
                 </div>
                 @if (isEditMode) {

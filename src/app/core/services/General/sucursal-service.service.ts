@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { SucursalCombo } from '../../interfaces/Core/SucursalCombo';
 import { SucursalXCajas } from '../../interfaces/Comercial/SucursalXCajas';
+import { LoginService } from '../core/login.service';
 
 
 @Injectable({
@@ -14,7 +15,7 @@ export class SucursalServiceService {
 
   private url: string = `${environment.baseUrl}/core/sucursal/`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private loginService: LoginService) { }
 
   list(): Observable<Sucursal[]> {
     return this.http.get<Sucursal[]>(this.url + "list");
@@ -26,13 +27,13 @@ export class SucursalServiceService {
 
   sucursalesxBodegas(): Observable<SucursalCombo[]> {
     const params = new HttpParams()
-      .set('id_empresa', String(1))
+      .set('id_empresa', String(this.loginService.getIdEmpresaActual()))
     return this.http.get<SucursalCombo[]>(this.url + "comboBybodegas", { params });
   }
 
    sucursalesxCaja(): Observable<SucursalXCajas[]> {
     const params = new HttpParams()
-      .set('id_empresa', String(1))
+      .set('id_empresa', String(this.loginService.getIdEmpresaActual()))
     return this.http.get<SucursalXCajas[]>(this.url + "comboBycajas", { params });
   }
 

@@ -20,7 +20,7 @@
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100 m-top m-bottom">
           <mat-label>Contraseña</mat-label>
           <input matInput [type]="ocultarClave() ? 'password' : 'text'" formControlName="clave" autocomplete="current-password" placeholder="Digite Clave">
-          <button mat-icon-button matSuffix (click)="conmutarVisibilidadClave($event)" [attr.aria-label]="'Ocultar clave'" [attr.aria-pressed]="ocultarClave()">
+          <button type="button" mat-icon-button matSuffix (click)="conmutarVisibilidadClave($event)" [attr.aria-label]="'Ocultar clave'" [attr.aria-pressed]="ocultarClave()">
             <mat-icon>{{ ocultarClave() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
         </mat-form-field>

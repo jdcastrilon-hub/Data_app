@@ -23,10 +23,14 @@ export class BodegaService {
 
   constructor(private http: HttpClient) { }
 
-  listPaginacion(page: number, size: number): Observable<PageResponse<BodegaListView>> {
-    const params = new HttpParams()
-      .set('page', page.toString())//Pagina 
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<BodegaListView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())//Pagina
       .set('size', size.toString())//Cantidad de registros a validar
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
 
     return this.http.get<PageResponse<BodegaListView>>(this.url + "pagination", { params });
   }
@@ -40,6 +44,10 @@ export class BodegaService {
   }
 
   stockDisponible(idArticulo: number,idCodBarra: number, idBodega: number, idEstado: number): Observable<StockDisponible[]> {
+    console.log(idArticulo)
+    console.log(idCodBarra)
+    console.log(idBodega)
+    console.log(idEstado)
     const params = new HttpParams()
       .set('idArticulo', idArticulo)
       .set('idCodbarra', idCodBarra)

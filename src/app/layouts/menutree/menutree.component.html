@@ -10,7 +10,7 @@
 
             <span class="line"></span>
 
-            
+
             <mat-icon *ngIf="node.icono" class="node-icon">
 
                 {{ node.icono }}
@@ -22,6 +22,13 @@
                 {{ node.nombre }}
 
             </span>
+
+            <span class="spacer"></span>
+
+            <mat-icon class="new-tab-icon" (click)="abrirNuevaPestana(node, $event)">
+                open_in_new
+            </mat-icon>
+
 
         </div>
 

@@ -8,28 +8,68 @@
         <mat-label>Tipo de Informe</mat-label>
         <mat-select [(value)]="reporteSeleccionado">
           <mat-option value="inventario">📦 Inventario</mat-option>
-          <mat-option value="variacion">📉 Variación de Costos</mat-option>
-          <mat-option value="inventario">💰 Valoración de Inventario</mat-option>
+          <mat-option value="valoracion">💰 Valoración de Inventario</mat-option>
+          <mat-option value="stockminimo">⚠️ Stock Mínimo</mat-option>
+          <mat-option value="vencimientos">⏳ Vencimientos Próximos</mat-option>
         </mat-select>
       </mat-form-field>
     </mat-card-header>
 
     <div class="divider"></div>
     <mat-card-content class="mat-content">
-      <div class="kpi-grid">
+      <div class="kpi-grid" *ngIf="currentKpis.length">
         <kpistock *ngFor="let kpi of currentKpis" [titulo]="kpi.titulo" [valor]="kpi.valor" [icono]="kpi.icono"
           [color]="kpi.color">
         </kpistock>
       </div>
 
+      @if (reporteSeleccionado === 'inventario') {
       <filtrostock [reporteActual]="reporteSeleccionado" [obj_filtros]="obj_filtros" (alConsultar)="ejecutarLogica($event)"></filtrostock>
 
-      <div class="resultados-seccion" *ngIf="reporteSeleccionado === 'inventario'">
-        <vistainventario [datos]="lista_inventario" 
+      <div class="resultados-seccion">
+        <vistainventario [datos]="lista_inventario"
           [totalRegistros]="totalRegistros"
           [pageSize]="pageSize"
+          [filtrosActuales]="filtrosActuales"
           (paginacion)="manejarPaginacion($event)"></vistainventario>
       </div>
+      }
+
+      @if (reporteSeleccionado === 'valoracion') {
+      <filtrosvaloracion [reporteActual]="reporteSeleccionado" [obj_filtros]="obj_filtros" (alConsultar)="ejecutarLogicaValoracion($event)"></filtrosvaloracion>
+
+      <div class="resultados-seccion">
+        <vistavaloracion [datos]="lista_valoracion"
+          [totalRegistros]="totalRegistros"
+          [pageSize]="pageSize"
+          [filtrosActuales]="filtrosActuales"
+          (paginacion)="manejarPaginacionValoracion($event)"></vistavaloracion>
+      </div>
+      }
+
+      @if (reporteSeleccionado === 'stockminimo') {
+      <filtrosstockminimo [reporteActual]="reporteSeleccionado" [obj_filtros]="obj_filtros" (alConsultar)="ejecutarLogicaStockMinimo($event)"></filtrosstockminimo>
+
+      <div class="resultados-seccion">
+        <vistastockminimo [datos]="lista_stockminimo"
+          [totalRegistros]="totalRegistros"
+          [pageSize]="pageSize"
+          [filtrosActuales]="filtrosActuales"
+          (paginacion)="manejarPaginacionStockMinimo($event)"></vistastockminimo>
+      </div>
+      }
+
+      @if (reporteSeleccionado === 'vencimientos') {
+      <filtrosvencimientos [reporteActual]="reporteSeleccionado" [obj_filtros]="obj_filtros" (alConsultar)="ejecutarLogicaVencimientos($event)"></filtrosvencimientos>
+
+      <div class="resultados-seccion">
+        <vistavencimientos [datos]="lista_vencimientos"
+          [totalRegistros]="totalRegistros"
+          [pageSize]="pageSize"
+          [filtrosActuales]="filtrosActuales"
+          (paginacion)="manejarPaginacionVencimientos($event)"></vistavencimientos>
+      </div>
+      }
 
     </mat-card-content>
   </mat-card>

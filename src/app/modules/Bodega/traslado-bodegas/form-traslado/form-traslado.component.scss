@@ -22,6 +22,17 @@
   height: 60px;
 }
 
+/* El contenedor interno de la celda de articulo */
+.celda-articulo-container {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  /* Centra verticalmente el input y el botón */
+  gap: 8px;
+  /* Espacio entre el buscador y el botón */
+  width: 100%;
+}
+
 
 .tabla-compacta {
   input {
@@ -55,9 +66,14 @@
 
 .titulo-con-boton {
   display: flex;
-  /* Activa el modo Flexbox */
   align-items: center;
-  /* Alinea verticalmente el icono y el texto al centro */
+  justify-content: space-between; // deja el icono de auditoria pegado al extremo derecho
+  width: 100%;
+}
+
+.titulo-izquierda {
+  display: flex;
+  align-items: center;
   gap: 8px;
   /* Espacio uniforme entre el botón y el texto */
 }

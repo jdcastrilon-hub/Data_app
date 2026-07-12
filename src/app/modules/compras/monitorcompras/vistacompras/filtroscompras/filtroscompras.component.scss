@@ -45,6 +45,13 @@
 }
 
 
+// Alinea el boton "Consultar" contra la caja visible de los mat-form-field vecinos
+// (el form-field reserva ~22px invisibles debajo para hint/error que aqui no se usan,
+// asi que centrar contra su alto total lo deja mas abajo de lo que se ve)
+.btn-consultar-wrapper {
+    margin-top: 4px;
+}
+
 .proveedor-container {
     display: flex !important;
     flex-direction: row;

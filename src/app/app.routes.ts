@@ -12,6 +12,8 @@ import { TrasladoBodegasComponent } from './modules/Bodega/traslado-bodegas/tras
 import { FormTrasladoComponent } from './modules/Bodega/traslado-bodegas/form-traslado/form-traslado.component';
 import { UnidadesStockComponent } from './modules/Bodega/unidadesStock/unidadesStock.component';
 import { FormUnidadComponent } from './modules/Bodega/unidadesStock/form-unidad/form-unidad.component';
+import { EstadosComponent } from './modules/Bodega/estados/estados.component';
+import { FormEstadoComponent } from './modules/Bodega/estados/form-estado/form-estado.component';
 import { ProveedoresComponent } from './modules/compras/proveedores/proveedores.component';
 import { FormProveedorComponent } from './modules/compras/proveedores/form-proveedor/form-proveedor.component';
 import { CompraDirectaComponent } from './modules/compras/compra-directa/compra-directa.component';
@@ -26,6 +28,7 @@ import { FormVentaposComponent } from './modules/Comercial/venta-pos/venta-pos/f
 import { FormTurnosComponent } from './modules/Comercial/turnos/form-turnos/form-turnos.component';
 import { LoginComponent } from './core/login/login.component';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
     // 1. Ruta pública e independiente a pantalla completa
@@ -37,18 +40,25 @@ export const routes: Routes = [
     {
         path: '',
         component: MainLayoutComponent,
+        canActivate: [authGuard],
         children: [
             { path: 'categorias', component: CategoriasComponent },
             { path: 'categoria/new', component: FormCategoriaComponent },
+            { path: 'categoria/view/:id', component: FormCategoriaComponent },
             { path: 'categoria/edit/:id', component: FormCategoriaComponent },
             { path: 'articulos', component: ArticulosStockComponent },
             { path: 'articulos/new', component: FormArticuloComponent },
+            { path: 'articulos/view/:id', component: FormArticuloComponent },
             { path: 'articulos/edit/:id', component: FormArticuloComponent },
             { path: 'ajustestock', component: AjusteStockComponent },
             { path: 'ajustestock/new', component: FormAjusteComponent },
+            { path: 'ajustestock/edit/:id', component: FormAjusteComponent },
             { path: 'ajustestock/view/:id', component: FormAjusteComponent },
+            { path: 'articulos/edit/:id', component: FormArticuloComponent },            
             { path: 'motivosajuste', component: MotivosAjusteComponent },
             { path: 'motivosajuste/new', component: FormMotivoComponent },
+            { path: 'motivosajuste/view/:id', component: FormMotivoComponent },
+            { path: 'motivosajuste/edit/:id', component: FormMotivoComponent },
             { path: 'inventariostock', component: InventarioStockComponent },
             { path: 'bodegas', component: BodegasComponent },
             { path: 'bodegas/new', component: FormBodegaComponent },
@@ -56,14 +66,23 @@ export const routes: Routes = [
             { path: 'bodegas/edit/:id', component: FormBodegaComponent },
             { path: 'trasladobodega', component: TrasladoBodegasComponent },
             { path: 'trasladobodega/new', component: FormTrasladoComponent },
+            { path: 'trasladobodega/edit/:id', component: FormTrasladoComponent },
+            { path: 'trasladobodega/view/:id', component: FormTrasladoComponent },
             { path: 'unidades', component: UnidadesStockComponent },
             { path: 'unidades/new', component: FormUnidadComponent },
             { path: 'unidades/view/:id', component: FormUnidadComponent },
             { path: 'unidades/edit/:id', component: FormUnidadComponent },
+            { path: 'estados', component: EstadosComponent },
+            { path: 'estados/new', component: FormEstadoComponent },
+            { path: 'estados/view/:id', component: FormEstadoComponent },
+            { path: 'estados/edit/:id', component: FormEstadoComponent },
             { path: 'proveedores', component: ProveedoresComponent },
             { path: 'proveedores/new', component: FormProveedorComponent },
+            { path: 'proveedores/view/:id', component: FormProveedorComponent },
+            { path: 'proveedores/edit/:id', component: FormProveedorComponent },
             { path: 'compras', component: CompraDirectaComponent },
             { path: 'compras/new', component: FormCompraDirectaComponent },
+            { path: 'compras/view/:id', component: FormCompraDirectaComponent },
             { path: 'compras/edit/:id', component: FormCompraDirectaComponent },
             { path: 'monitorcompras', component: MonitorcomprasComponent },
             { path: 'monitorstock', component: MonitorstockComponent },

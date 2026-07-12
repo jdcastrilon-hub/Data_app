@@ -56,7 +56,7 @@ export class LoginComponent {
           console.log(data);
           console.log('¡Login exitoso! Token guardado.');
           // Redirigimos a la ruta principal del ERP
-          this.router.navigate(['/categorias']);
+          this.router.navigate(['/']);
         }
       });
     } else {

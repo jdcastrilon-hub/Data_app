@@ -6,6 +6,8 @@ import { PageResponse } from '../../models/core/PageResponse';
 import { Observable } from 'rxjs';
 import { MonitorComprasFiltros } from '../../interfaces/Compras/MonitorComprasFiltros';
 import { MonitorCompraReporteCostos } from '../../interfaces/Compras/MonitorCompraReporteCostos';
+import { DetalleCompraLinea } from '../../interfaces/Compras/DetalleCompraLinea';
+import { LoginService } from '../core/login.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,18 +16,17 @@ export class MonitorcomprasService {
 
   private url: string = `${environment.baseUrl}/compras/monitor/`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private loginService: LoginService) { }
 
   filtrosgenerales(): Observable<MonitorComprasFiltros> {
     const params = new HttpParams()
-      .set('id_empresa', String(1))
+      .set('id_empresa', String(this.loginService.getIdEmpresaActual()))
     return this.http.get<MonitorComprasFiltros>(this.url + "filtros", { params });
   }
 
-  reportecostos(page: number, size: number, filtros: any): Observable<MonitorCompraReporteCostos> {
-    let params = new HttpParams();
-    console.log("API")
-    console.log(filtros);
+  private construirParamsCostos(filtros: any): HttpParams {
+    let params = new HttpParams()
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
 
     if (filtros.bodega) {
       const valorBodega = filtros.bodega === 'TODOS' ? 0 : filtros.bodega;
@@ -47,45 +48,74 @@ export class MonitorcomprasService {
       params = params.set('subcategoria', valorsubcategoria.toString());
     }
 
+    if (filtros.articulos && filtros.articulos.length) {
+      filtros.articulos.forEach((idArticulo: number) => {
+        params = params.append('articulos', idArticulo.toString());
+      });
+    }
 
+    return params;
+  }
+
+  reportecostos(page: number, size: number, filtros: any): Observable<MonitorCompraReporteCostos> {
+    let params = this.construirParamsCostos(filtros);
     params = params.set('page', page);
     params = params.set('size', size);
 
-    console.log("parametros")
-    console.log(params.get('fechainicial'));
     return this.http.get<MonitorCompraReporteCostos>(this.url + "costos", { params });
   }
 
-  monitorcomprasrealizadas(tipoReporte: string, page: number, size: number, filtros: any): Observable<monitorComprasvista1> {
-    let params = new HttpParams();
+  exportarCostos(filtros: any): Observable<Blob> {
+    const params = this.construirParamsCostos(filtros);
+    return this.http.get(this.url + "costos/export", { params, responseType: 'blob' });
+  }
 
-    // Agregamos los filtros dinámicamente si existen
+  private construirParamsComprasRealizadas(filtros: any): HttpParams {
+    let params = new HttpParams()
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+
     if (filtros.fechaInicio) {
       params = params.set('fechainicial', this.formatDate(filtros.fechaInicio));
     }
     if (filtros.fechaFin) {
       params = params.set('fechafinal', this.formatDate(filtros.fechaFin));
     }
-    if (filtros.id_bodega && filtros.id_bodega !== 0) {
-      //params = params.set('id_bodega', filtros.id_bodega.toString());
+    if (filtros.id_sucursal) {
+      params = params.set('id_sucursal', filtros.id_sucursal.toString());
+    }
+    if (filtros.id_bodega) {
       params = params.set('id_bodega', filtros.id_bodega.toString());
     }
-
-    if (filtros.proveedor) {
-      params = params.set('id_proveedor', filtros.proveedor);
+    if (filtros.articulos && filtros.articulos.length) {
+      filtros.articulos.forEach((idArticulo: number) => {
+        params = params.append('articulos', idArticulo.toString());
+      });
+    }
+    if (filtros.proveedores && filtros.proveedores.length) {
+      filtros.proveedores.forEach((idProveedor: number) => {
+        params = params.append('proveedores', idProveedor.toString());
+      });
     }
 
-    if (filtros.articulo) {
-      params = params.set('articulo', filtros.articulo);
-    }
+    return params;
+  }
 
-
+  monitorcomprasrealizadas(tipoReporte: string, page: number, size: number, filtros: any): Observable<monitorComprasvista1> {
+    let params = this.construirParamsComprasRealizadas(filtros);
     params = params.set('page', page);
     params = params.set('size', size);
 
-    console.log("parametros")
-    console.log(params.get('fechainicial'));
     return this.http.get<monitorComprasvista1>(this.url + "comprasrealizadas", { params });
+  }
+
+  exportarComprasRealizadas(filtros: any): Observable<Blob> {
+    const params = this.construirParamsComprasRealizadas(filtros);
+    return this.http.get(this.url + "comprasrealizadas/export", { params, responseType: 'blob' });
+  }
+
+  detalleCompra(nroTrans: number): Observable<DetalleCompraLinea[]> {
+    const params = new HttpParams().set('nro_trans', nroTrans.toString());
+    return this.http.get<DetalleCompraLinea[]>(this.url + "comprasrealizadas/detalle", { params });
   }
 
   private formatDate(date: any): string {

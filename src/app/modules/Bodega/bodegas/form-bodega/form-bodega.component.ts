@@ -52,6 +52,13 @@ export class FormBodegaComponent {
     this.objeto = new Bodega();
   }
 
+  // Vuelve al listado. El filtro/pagina en el que se quedo la lista se restaura
+  // desde BodegaListStateService (no desde el historial del navegador: se puede
+  // llegar a este formulario desde cualquier otra pantalla, no solo desde la lista).
+  volver(): void {
+    this.router.navigate(['/bodegas']);
+  }
+
   ngOnInit(): void {
     console.log("form Bodega")
     //Se instancias las variables para el formulario

@@ -4,14 +4,17 @@ import { Router, RouterModule } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { UnidadServiceService } from '../../../core/services/Bodega/unidad-service.service';
+import { UnidadListStateService } from '../../../core/services/Bodega/unidad-list-state.service';
 import { UnidadListView } from '../../../core/interfaces/Bodega/UnidadListView';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { ConfirmDialogComponent } from 'src/app/modules/resources/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'unidadesStock',
-  imports: [modules_depencias, RouterModule],
+  imports: [modules_depencias, RouterModule, ReactiveFormsModule],
   templateUrl: './unidadesStock.component.html',
   styleUrl: './unidadesStock.component.scss'
 })
@@ -22,6 +25,10 @@ export class UnidadesStockComponent {
   dataSource!: MatTableDataSource<UnidadListView>;
   Columnas: string[] = ['codigo', 'nombre', 'espaquete', 'conversion', 'fecha', 'actions'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  //Buscador (filtra por codigo o nombre en el backend)
+  buscadorControl = new FormControl('');
+
   //Datos generales de paginacion
   totalRegistros: number = 0;
   paginaActual: number = 0;
@@ -32,16 +39,38 @@ export class UnidadesStockComponent {
     private service: UnidadServiceService,
     private notificacion: NotificacionesService,
     private router: Router,
+    private listState: UnidadListStateService,
     private dialog: MatDialog
   ) { }
 
   ngOnInit() {
+    // Restaura el filtro/pagina donde haya quedado la ultima vez.
+    this.buscadorControl.setValue(this.listState.texto, { emitEvent: false });
+    this.paginaActual = this.listState.page;
+    this.pageSize = this.listState.size;
+
     this.cargarUnidadesPaginadas();
+
+    // Espera a que el usuario deje de escribir antes de consultar el backend.
+    this.buscadorControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.paginaActual = 0; // toda busqueda nueva vuelve a la primera pagina
+      this.cargarUnidadesPaginadas();
+    });
   }
 
   // 1. Método para cargar datos con paginación
   cargarUnidadesPaginadas() {
-    this.service.listPaginacion(this.paginaActual, this.pageSize).subscribe(data => {
+    const texto = this.buscadorControl.value?.trim() || undefined;
+
+    // Recuerda el estado actual para cuando se vuelva a esta lista mas adelante.
+    this.listState.texto = texto || '';
+    this.listState.page = this.paginaActual;
+    this.listState.size = this.pageSize;
+
+    this.service.listPaginacion(this.paginaActual, this.pageSize, texto).subscribe(data => {
       this.lista_unidades = data.content;
       this.totalRegistros = data.totalElements;
       this.dataSource = new MatTableDataSource<UnidadListView>(this.lista_unidades);

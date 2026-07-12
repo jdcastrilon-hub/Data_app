@@ -17,6 +17,9 @@ export class ComboBodegaComponent {
   input_objeto = input<any>(null);
   editMode = input<boolean>(false);
   opcionview = input<boolean>(false);
+  // Nombre de la propiedad de input_objeto que trae el id de la bodega seleccionada.
+  // Permite reutilizar el combo en formularios con mas de una bodega (ej. traslado: origen/destino).
+  campo = input<string>('idBodega');
 
   //Parametros de entrada Decorador
   @Input() mostrarOpcionTodas = false;
@@ -69,10 +72,11 @@ export class ComboBodegaComponent {
 
   private seleccionarBodegaLogica(): void {
     const obj = this.input_objeto();
+    const idBodegaObjeto = obj?.[this.campo()];
 
     // CASO: Edición o Vista (Esperamos a que el objeto tenga un ID real)
-    if ((this.editMode() || this.opcionview()) && obj?.idBodega) {
-      const encontrada = this.list_bodegas.find(b => b.id === obj.idBodega);
+    if ((this.editMode() || this.opcionview()) && idBodegaObjeto) {
+      const encontrada = this.list_bodegas.find(b => b.id === idBodegaObjeto);
       if (encontrada) {
         this.SelecBodegaControl.setValue(encontrada, { emitEvent: false });
       }

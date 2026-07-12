@@ -4,15 +4,26 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormsModule } from '@angular/forms';
 import { MonitorstockService } from 'src/app/core/services/Bodega/monitorstock.service';
 import { PageEvent } from '@angular/material/paginator';
-import { FiltrostockComponent } from './filtrostock/filtrostock.component';
-import { KpistockComponent } from './kpistock/kpistock.component';
+import { FiltrostockComponent } from './vistainventario/filtrostock/filtrostock.component';
+import { KpistockComponent } from './vistainventario/kpistock/kpistock.component';
 import { MonitorStockDisponibleVista1 } from 'src/app/core/interfaces/Bodega/MonitorStockDisponibleVista1';
-import { VistaInventarioComponent } from './vista-inventario/vista-inventario.component';
+import { VistaInventarioComponent } from './vistainventario/vista-inventario/vista-inventario.component';
 import { MonitorStockFiltroInventario } from 'src/app/core/interfaces/Bodega/MonitorStockFiltroInventario';
+import { FiltrosvaloracionComponent } from './vistavaloracion/filtrosvaloracion/filtrosvaloracion.component';
+import { VistaValoracionComponent } from './vistavaloracion/vista-valoracion/vista-valoracion.component';
+import { ValoracionDisponible } from 'src/app/core/interfaces/Bodega/ValoracionDisponible';
+import { FiltrosstockminimoComponent } from './vistastockminimo/filtrosstockminimo/filtrosstockminimo.component';
+import { VistaStockminimoComponent } from './vistastockminimo/vista-stockminimo/vista-stockminimo.component';
+import { StockMinimoDisponible } from 'src/app/core/interfaces/Bodega/StockMinimoDisponible';
+import { FiltrosvencimientosComponent } from './vistavencimientos/filtrosvencimientos/filtrosvencimientos.component';
+import { VistaVencimientosComponent } from './vistavencimientos/vista-vencimientos/vista-vencimientos.component';
+import { LoteVencimiento } from 'src/app/core/interfaces/Bodega/LoteVencimiento';
 
 @Component({
   selector: 'app-monitorstock',
-  imports: [modules_depencias, RouterModule, FormsModule, FiltrostockComponent, KpistockComponent, VistaInventarioComponent],
+  imports: [modules_depencias, RouterModule, FormsModule, FiltrostockComponent, KpistockComponent, VistaInventarioComponent,
+    FiltrosvaloracionComponent, VistaValoracionComponent, FiltrosstockminimoComponent, VistaStockminimoComponent,
+    FiltrosvencimientosComponent, VistaVencimientosComponent],
   templateUrl: './monitorstock.component.html',
   styleUrl: './monitorstock.component.scss'
 })
@@ -31,13 +42,17 @@ export class MonitorstockComponent {
 
   // Esto simularía los datos que vendrán de tu API en FastAPI
   kpisData: any = {
-    compras: [],
-    variacion: [],
-    inventario: []
+    inventario: [],
+    valoracion: [],
+    stockminimo: [],
+    vencimientos: []
   };
 
 
   lista_inventario: MonitorStockDisponibleVista1[] = [];
+  lista_valoracion: ValoracionDisponible[] = [];
+  lista_stockminimo: StockMinimoDisponible[] = [];
+  lista_vencimientos: LoteVencimiento[] = [];
 
   //constructor
   constructor(
@@ -108,6 +123,117 @@ export class MonitorstockComponent {
     // 2. Disparamos la consulta de nuevo
     // Pasamos los filtros actuales (que deberías tener guardados en una variable)
     this.ejecutarLogica(this.filtrosActuales);
+  }
+
+  // Este método se ejecuta cuando el hijo (filtrosvaloracion) emite el evento
+  ejecutarLogicaValoracion(filtrosRecibidos: any, event?: PageEvent) {
+    this.filtrosActuales = filtrosRecibidos;
+    if (event) {
+      this.paginaActual = event.pageIndex;
+      this.totalRegistros = event.pageSize;
+    }
+
+    this.lista_valoracion = [];
+
+    this.service.monitorvaloracion(this.paginaActual, this.pageSize, filtrosRecibidos)
+      .subscribe(res => {
+        this.kpisData['valoracion'] = [
+          {
+            titulo: 'Valor Total de Inventario',
+            valor: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 2 }).format(res.valorTotalInventario),
+            icono: 'payments',
+            color: '#2e7d32'
+          },
+          {
+            titulo: 'Total de Artículos',
+            valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
+            icono: 'inventory_2',
+            color: '#1976d2'
+          }
+        ];
+        this.lista_valoracion = res.detalles;
+        this.totalRegistros = res.totalElements;
+      });
+  }
+
+  manejarPaginacionValoracion(event: PageEvent) {
+    this.paginaActual = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.ejecutarLogicaValoracion(this.filtrosActuales);
+  }
+
+  // Este método se ejecuta cuando el hijo (filtrosstockminimo) emite el evento
+  ejecutarLogicaStockMinimo(filtrosRecibidos: any, event?: PageEvent) {
+    this.filtrosActuales = filtrosRecibidos;
+    if (event) {
+      this.paginaActual = event.pageIndex;
+      this.totalRegistros = event.pageSize;
+    }
+
+    this.lista_stockminimo = [];
+
+    this.service.monitorstockminimo(this.paginaActual, this.pageSize, filtrosRecibidos)
+      .subscribe(res => {
+        this.kpisData['stockminimo'] = [
+          {
+            titulo: 'Artículos en Alerta',
+            valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
+            icono: 'warning',
+            color: '#c62828'
+          },
+          {
+            titulo: 'Unidades Faltantes',
+            valor: new Intl.NumberFormat('es-CO').format(res.totalFaltante),
+            icono: 'trending_down',
+            color: '#ef6c00'
+          }
+        ];
+        this.lista_stockminimo = res.detalles;
+        this.totalRegistros = res.totalElements;
+      });
+  }
+
+  manejarPaginacionStockMinimo(event: PageEvent) {
+    this.paginaActual = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.ejecutarLogicaStockMinimo(this.filtrosActuales);
+  }
+
+  // Este método se ejecuta cuando el hijo (filtrosvencimientos) emite el evento
+  ejecutarLogicaVencimientos(filtrosRecibidos: any, event?: PageEvent) {
+    this.filtrosActuales = filtrosRecibidos;
+    if (event) {
+      this.paginaActual = event.pageIndex;
+      this.totalRegistros = event.pageSize;
+    }
+
+    this.lista_vencimientos = [];
+
+    this.service.monitorvencimientos(this.paginaActual, this.pageSize, filtrosRecibidos)
+      .subscribe(res => {
+        this.kpisData['vencimientos'] = [
+          {
+            titulo: 'Lotes por Vencer',
+            valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
+            icono: 'event_busy',
+            color: '#c62828'
+          },
+          {
+            titulo: 'Unidades en Riesgo',
+            valor: new Intl.NumberFormat('es-CO').format(res.totalUnidadesEnRiesgo),
+            icono: 'inventory_2',
+            color: '#ef6c00'
+          }
+        ];
+        this.lista_vencimientos = res.detalles;
+        this.totalRegistros = res.totalElements;
+      });
+  }
+
+  manejarPaginacionVencimientos(event: PageEvent) {
+    this.paginaActual = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.ejecutarLogicaVencimientos(this.filtrosActuales);
   }
 
 }

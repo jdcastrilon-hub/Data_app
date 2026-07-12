@@ -1,40 +1,129 @@
-<div class="bloque" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+<mat-card appearance="raised">
+  <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
 
-  @if (visible().fecha) {
-  <mat-form-field appearance="outline" style="flex: 1 1 200px;">
-    <mat-label>Rango de Fechas</mat-label>
-    <mat-date-range-input [rangePicker]="picker">
-      <input matStartDate [(ngModel)]="filtro().fechaInicio">
-      <input matEndDate [(ngModel)]="filtro().fechaFin">
-    </mat-date-range-input>
-    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-    <mat-date-range-picker #picker></mat-date-range-picker>
-  </mat-form-field>
-  }
+    <mat-tab label="Filtros">
+      <div class="bloque">
+        <div fxLayout="row" fxLayoutAlign="start stretch" fxLayoutGap="8px">
+          <div fxFlex="25">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+              <mat-label>Sucursal</mat-label>
+              <mat-select [formControl]="SelectSucursalControl">
+                <mat-option [value]="null">TODAS</mat-option>
+                @for (obj_sucursal of list_sucursal; track obj_sucursal) {
+                <mat-option [value]="obj_sucursal">{{obj_sucursal.nomSucursal}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
 
-  @if (visible().bodega) {
-  <div style="flex: 1 1 150px;">
-    <combo-bodega (bodegaSeleccionada)="recibirBodega($event)"></combo-bodega>
-  </div>
-  }
+          <div fxFlex="25">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+              <mat-label>Bodega</mat-label>
+              <mat-select [formControl]="SelectBodegasControl">
+                <mat-option value="TODOS">TODAS</mat-option>
+                @for (obj_bodega of list_bodegas; track obj_bodega) {
+                <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
 
-  @if (visible().proveedor) {
-  <div style="flex: 1 1 200px;">
-    <combo-proveedor (proveedorSelecionado)="onProveedorChange($event)"></combo-proveedor>
-  </div>
-  }
+          <div fxFlex="25">
+            <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+              <mat-label>Rango de Fechas</mat-label>
+              <mat-date-range-input [rangePicker]="picker">
+                <input matStartDate [(ngModel)]="filtro().fechaInicio">
+                <input matEndDate [(ngModel)]="filtro().fechaFin">
+              </mat-date-range-input>
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-date-range-picker #picker></mat-date-range-picker>
+            </mat-form-field>
+          </div>
 
-  @if (visible().articulo) {
-  <div style="flex: 1 1 200px;">
-    <combo-articulo [editMode]="true" (articuloSeleccionado)="recibirArticulo($event)"></combo-articulo>
-  </div>
-  }
+          <div class="btn-consultar-wrapper" fxFlex="0 0 auto" fxLayoutAlign="start start">
+            <button mat-flat-button color="primary" (click)="enviarConsulta()">
+              <mat-icon>search</mat-icon> Consultar
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
 
-  @if (visible().soloAlzas) {
-  <mat-checkbox [(ngModel)]="filtro().soloAlzas">Solo Alzas</mat-checkbox>
-  }
+    <mat-tab label="Articulos">
+      <div class="bloque">
+        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="8px">
+          <div fxFlex="50">
+            <combo-articulo (articuloSeleccionado)="agregarArticulo($event)"></combo-articulo>
+          </div>
+        </div>
 
-  <button mat-flat-button color="primary" (click)="enviarConsulta()">
-    <mat-icon>search</mat-icon> Consultar
-  </button>
-</div>
+        <table mat-table [dataSource]="articulosSeleccionados" class="mat-elevation-z1">
+          <ng-container matColumnDef="codArticulo">
+            <th mat-header-cell *matHeaderCellDef>Código</th>
+            <td mat-cell *matCellDef="let art">{{art.codArticulo}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="nomArticulo">
+            <th mat-header-cell *matHeaderCellDef>Artículo</th>
+            <td mat-cell *matCellDef="let art">{{art.nomArticulo}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let art">
+              <button mat-icon-button (click)="quitarArticulo(art)" type="button">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnasArticulos"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasArticulos;"></tr>
+        </table>
+
+        @if (articulosSeleccionados.length === 0) {
+        <p>No hay artículos seleccionados (se incluirán todos).</p>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Proveedores">
+      <div class="bloque">
+        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="8px">
+          <div fxFlex="50">
+            <combo-proveedor (proveedorSelecionado)="agregarProveedor($event)"></combo-proveedor>
+          </div>
+        </div>
+
+        <table mat-table [dataSource]="proveedoresSeleccionados" class="mat-elevation-z1">
+          <ng-container matColumnDef="codTit">
+            <th mat-header-cell *matHeaderCellDef>Código</th>
+            <td mat-cell *matCellDef="let prov">{{prov.codTit}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="nombreCompleto">
+            <th mat-header-cell *matHeaderCellDef>Proveedor</th>
+            <td mat-cell *matCellDef="let prov">{{prov.nombreCompleto}}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let prov">
+              <button mat-icon-button (click)="quitarProveedor(prov)" type="button">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnasProveedores"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasProveedores;"></tr>
+        </table>
+
+        @if (proveedoresSeleccionados.length === 0) {
+        <p>No hay proveedores seleccionados (se incluirán todos).</p>
+        }
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</mat-card>

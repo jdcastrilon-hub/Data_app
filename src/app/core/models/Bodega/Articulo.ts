@@ -10,6 +10,7 @@ export class Articulo {
     idsubCategoria!: number;
     idCategoria!: number;
     activoStock!: boolean;
+    manejaLote!: boolean;
     stockMin!: number;
     stockMax!: number;
     idRef!: number;

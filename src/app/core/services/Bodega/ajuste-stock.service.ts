@@ -22,10 +22,14 @@ export class AjusteStockService {
 
   constructor(private http: HttpClient) { }
 
-  listPaginacion(page: number, size: number): Observable<PageResponse<AjusteStockListView>> {
-    const params = new HttpParams()
-      .set('page', page.toString())//Pagina 
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<AjusteStockListView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())//Pagina
       .set('size', size.toString())//Cantidad de registros a validar
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
 
     return this.http.get<PageResponse<AjusteStockListView>>(this.url + "pagination", { params });
   }
@@ -49,6 +53,25 @@ export class AjusteStockService {
     const params = new HttpParams()
       .set('id_trans', id);
     return this.http.get<AjusteStock>(this.url + "search", { params });
+  }
+
+  //Editar Ajuste de Stock
+  edit(objecto: any, id_trans: number): Observable<any> {
+    const params = new HttpParams().set('id_trans', String(id_trans));
+
+    return this.http.put<ApiResponse>(this.url + "edit", objecto, { params }).pipe(
+      map((response: ApiResponse) => {
+        if (response.status !== 'success') {
+          throw new Error(response.message || 'Error desconocido al editar el ajuste.');
+        }
+        return response.data;
+      })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    const params = new HttpParams().set('id_trans', id.toString());
+    return this.http.delete<void>(this.url + "delete", { params });
   }
 
   //Consulta Articulos de un registros de ajuste de Stock

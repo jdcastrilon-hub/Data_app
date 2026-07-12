@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { UsuarioLogin } from '../../interfaces/Core/UsuarioLogin';
+import { DetalleUserEmpresa } from '../../interfaces/Core/DetalleUserEmpresa';
 import { Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -39,6 +40,21 @@ export class LoginService {
    */
   getToken(): string | null {
     return localStorage.getItem('token');
+  }
+
+  /**
+   * Obtiene la empresa activa del login (la que se muestra en el toolbar y que
+   * el usuario puede cambiar si tiene permisos). Fuente única de verdad para
+   * cualquier consulta que deba filtrarse por empresa — evitar volver a
+   * hardcodear el id de empresa en los servicios.
+   */
+  getEmpresaActual(): DetalleUserEmpresa | null {
+    const raw = localStorage.getItem('empresa');
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  getIdEmpresaActual(): number | null {
+    return this.getEmpresaActual()?.idEmp ?? null;
   }
 
   /**

@@ -1,0 +1,89 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon>receipt_long</mat-icon> Detalle de Compra — OC {{ data.numoc }} - Remito {{ data.remito }}
+</h2>
+
+<mat-dialog-content class="mat-typography">
+
+  @if (cargando) {
+  <div fxLayout="row" fxLayoutAlign="center center" class="cargando-container">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+  }
+
+  @if (!cargando) {
+  <table mat-table [dataSource]="lineas" class="mat-elevation-z1">
+    <ng-container matColumnDef="codBarra">
+      <th mat-header-cell *matHeaderCellDef>Código de Barra</th>
+      <td mat-cell *matCellDef="let l">{{ l.cod_barra }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="nomArticulo">
+      <th mat-header-cell *matHeaderCellDef>Artículo</th>
+      <td mat-cell *matCellDef="let l">{{ l.nom_articulo }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="lote">
+      <th mat-header-cell *matHeaderCellDef>Lote</th>
+      <td mat-cell *matCellDef="let l">{{ l.codigo_lote || '-' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="costo">
+      <th mat-header-cell *matHeaderCellDef>Costo</th>
+      <td mat-cell *matCellDef="let l">{{ l.costo | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="cantidad">
+      <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+      <td mat-cell *matCellDef="let l">{{ l.cantidad }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="neto">
+      <th mat-header-cell *matHeaderCellDef>Neto</th>
+      <td mat-cell *matCellDef="let l">{{ l.neto | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="porcDcto">
+      <th mat-header-cell *matHeaderCellDef>% Dcto</th>
+      <td mat-cell *matCellDef="let l">{{ l.porc_dcto | number:'1.0-2' }}%</td>
+    </ng-container>
+
+    <ng-container matColumnDef="importeDcto">
+      <th mat-header-cell *matHeaderCellDef>Importe Dcto</th>
+      <td mat-cell *matCellDef="let l">{{ l.importe_dcto | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="porcIva">
+      <th mat-header-cell *matHeaderCellDef>% IVA</th>
+      <td mat-cell *matCellDef="let l">{{ l.porc_iva }}%</td>
+    </ng-container>
+
+    <ng-container matColumnDef="importeIva">
+      <th mat-header-cell *matHeaderCellDef>Importe IVA</th>
+      <td mat-cell *matCellDef="let l">{{ l.importe_iva | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef>Total</th>
+      <td mat-cell *matCellDef="let l">{{ l.total | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnasDetalle"></tr>
+    <tr mat-row *matRowDef="let row; columns: columnasDetalle;"></tr>
+  </table>
+
+  @if (lineas.length === 0) {
+  <p>Esta compra no tiene líneas de detalle.</p>
+  }
+
+  @if (lineas.length > 0) {
+  <div class="resumen-totales" fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="20px">
+    <span>Total: <strong>{{ totalGeneral | currency:'COP':'symbol-narrow':'1.2-2' }}</strong></span>
+  </div>
+  }
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

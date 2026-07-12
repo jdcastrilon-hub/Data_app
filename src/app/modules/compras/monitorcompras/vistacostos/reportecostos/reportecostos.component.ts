@@ -1,17 +1,25 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTable, MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MonitorCompraReporteCostosDetalle } from 'src/app/core/interfaces/Compras/MonitorCompraReporteCostosDetalle';
 import { AjustecostoComponent } from '../ajustecosto/ajustecosto.component';
 import { MatIconModule } from '@angular/material/icon'
 import { MatDialog } from '@angular/material/dialog';
 import { AjusteCostos } from 'src/app/core/models/Compras/AjusteCostos';
+import { MonitorcomprasService } from 'src/app/core/services/Compras/monitorcompras.service';
+
+const STORAGE_KEY_COLUMNAS = 'monitorcompras_vistacostos_columnas';
 
 @Component({
   selector: 'reportecostos',
-  imports: [CommonModule, MatTableModule, FlexLayoutModule, MatPaginatorModule, MatIconModule],
+  imports: [CommonModule, MatTableModule, FlexLayoutModule, MatPaginatorModule, MatIconModule, MatTooltipModule, MatButtonModule, MatMenuModule, MatCheckboxModule, MatProgressSpinnerModule],
   templateUrl: './reportecostos.component.html',
   styleUrl: './reportecostos.component.scss'
 })
@@ -21,10 +29,23 @@ export class ReportecostosComponent {
   @Input() datos: any[] = [];
   @Input() totalRegistros: number = 0; // Total que viene del API (ej: 500 filas)
   @Input() pageSize: number = 5; // Total que viene del API (ej: 500 filas)
+  @Input() filtrosActuales: any;
   @Output() paginacion = new EventEmitter<PageEvent>();
 
-  // Definimos las columnas que queremos mostrar en Matrix
-  todasLasColumnas: string[] = ['position', 'negocio', 'bodega', 'categoria', 'subcategoria', 'articulo', 'nombre', 'costo', 'accion'];
+  exportando = false;
+
+  // Columnas que el usuario puede mostrar/ocultar (position y accion siempre se ven)
+  columnasConfigurables: { clave: string, label: string }[] = [
+    { clave: 'negocio', label: 'Negocio' },
+    { clave: 'bodega', label: 'Bodega' },
+    { clave: 'categoria', label: 'Categoria' },
+    { clave: 'subcategoria', label: 'Sub Categoria' },
+    { clave: 'articulo', label: 'Articulo' },
+    { clave: 'nombre', label: 'Descripcion' },
+    { clave: 'costo', label: 'Costo' },
+  ];
+  columnasVisibles: Set<string> = new Set(this.columnasConfigurables.map(c => c.clave));
+
   displayedColumns: string[] = [];
   pageSizeOptions: number[] = [50, 100, 200, 300];
   //datasource
@@ -34,19 +55,43 @@ export class ReportecostosComponent {
   objeto_resultado!: AjusteCostos;
 
 
-  constructor(private dialog: MatDialog) {
+  constructor(private dialog: MatDialog, private service: MonitorcomprasService) {
 
   }
 
   ngOnInit() {
+    this.cargarColumnasGuardadas();
     this.ValidarColumnas();
     // Solo inicializamos el objeto
     this.dataSource = new MatTableDataSource<MonitorCompraReporteCostosDetalle>([]);
   }
 
+  cargarColumnasGuardadas(): void {
+    const guardadas = localStorage.getItem(STORAGE_KEY_COLUMNAS);
+    if (guardadas) {
+      this.columnasVisibles = new Set(JSON.parse(guardadas));
+    }
+  }
+
+  esVisible(clave: string): boolean {
+    return this.columnasVisibles.has(clave);
+  }
+
+  toggleColumna(clave: string): void {
+    if (this.columnasVisibles.has(clave)) {
+      this.columnasVisibles.delete(clave);
+    } else {
+      this.columnasVisibles.add(clave);
+    }
+    localStorage.setItem(STORAGE_KEY_COLUMNAS, JSON.stringify([...this.columnasVisibles]));
+    this.ValidarColumnas();
+  }
+
   ValidarColumnas() {
-    //this.displayedColumns = this.todasLasColumnas;
-    this.displayedColumns = this.todasLasColumnas.filter(columna => columna !== 'id');
+    const configurablesVisibles = this.columnasConfigurables
+      .map(c => c.clave)
+      .filter(clave => this.columnasVisibles.has(clave));
+    this.displayedColumns = ['position', ...configurablesVisibles, 'accion'];
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -59,22 +104,38 @@ export class ReportecostosComponent {
       if (this.table) {
         this.table.renderRows();
       }
-
-      console.log("Datos actualizados en el dataSource:", this.dataSource.data.length);
     }
   }
 
   cambioPagina(event: PageEvent) {
-    console.log("cambioPagina")
     this.paginacion.emit(event);
+  }
+
+  exportarExcel(): void {
+    this.exportando = true;
+    this.service.exportarCostos(this.filtrosActuales || {}).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = 'costos.xlsx';
+        enlace.click();
+        window.URL.revokeObjectURL(url);
+        this.exportando = false;
+      },
+      error: (err) => {
+        console.error('Error exportando costos', err);
+        this.exportando = false;
+      }
+    });
   }
 
   ModalcrearCodigoBarra(index: number): void {
     // 1. Abre el diálogo, pasando el componente modal y los datos
-   
+
     this.objeto_resultado = new AjusteCostos();
     const fila = this.dataSource.data.at(index);
-   
+
     const dialogRef = this.dialog.open(AjustecostoComponent, {
       width: '70%', // Define el ancho del modal
       data: {
@@ -83,17 +144,9 @@ export class ReportecostosComponent {
         objecto_modal: fila
       }
     });
-    console.log("fin modal");
-    console.log(this.objeto_resultado);
-
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('El modal se cerró con el resultado:', result);
-
-      // 'result' contendrá 'Resultado Confirmado' o 'undefined' (si se cerró con 'Cancelar')
-      //this.resultadoModal = result || 'Cancelado por el usuario o cerrado por ESC';
       this.objeto_resultado = result;
-
 
       if (this.objeto_resultado) {
         const filaActualizada = this.dataSource.data[index];

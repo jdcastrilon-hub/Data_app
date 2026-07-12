@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
 import { MonitorComprasFiltros } from 'src/app/core/interfaces/Compras/MonitorComprasFiltros';
@@ -16,11 +17,13 @@ import { NegocioCombo } from 'src/app/core/interfaces/Core/NegocioCombo';
 import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
 import { Categoria } from 'src/app/core/models/Bodega/Categoria';
 import { SubCategorias } from 'src/app/core/models/Bodega/SubCategorias';
+import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
+import { ComboArticuloComponent } from 'src/app/modules/resources/combo-articulo/combo-articulo.component';
 
 @Component({
   selector: 'filtros-costos',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatDatepickerModule, MatTabsModule,
-    MatButtonModule, MatIconModule, MatCardModule, FlexLayoutModule],
+    MatButtonModule, MatIconModule, MatCardModule, FlexLayoutModule, MatTableModule, ComboArticuloComponent],
   templateUrl: './filtros.component.html',
   styleUrl: './filtros.component.scss'
 })
@@ -28,6 +31,12 @@ export class FiltrosCostosComponent {
   @Input() obj_filtros!: MonitorComprasFiltros;
 
   @Output() alConsultar = new EventEmitter<any>();
+
+  @ViewChild(ComboArticuloComponent) comboArticuloRef!: ComboArticuloComponent;
+
+  // Articulos seleccionados para filtrar el reporte (tab "Articulos")
+  articulosSeleccionados: ArticuloSearch[] = [];
+  columnasArticulos: string[] = ['codArticulo', 'nomArticulo', 'acciones'];
 
   //Negocios
   list_negocios: NegocioCombo[] = [];
@@ -53,12 +62,14 @@ export class FiltrosCostosComponent {
     categoria: string | number;
     subcategoria: string | number;
     soloAlzas: boolean;
+    articulos: number[];
   } = {
       negocio: 'TODOS',
       bodega: 'TODOS',
       categoria: 'TODOS',
       subcategoria: 'TODOS',
-      soloAlzas: false
+      soloAlzas: false,
+      articulos: []
     };
 
   ngOnInit(): void {
@@ -172,6 +183,22 @@ export class FiltrosCostosComponent {
     this.alConsultar.emit(this.filtro);
   }
 
+  agregarArticulo(articulo: ArticuloSearch) {
+    if (articulo) {
+      const yaExiste = this.articulosSeleccionados.some(a => a.idArticulo === articulo.idArticulo);
+      if (!yaExiste) {
+        this.articulosSeleccionados = [...this.articulosSeleccionados, articulo];
+        this.filtro.articulos = this.articulosSeleccionados.map(a => a.idArticulo!);
+      }
+    }
+    // Reiniciamos el buscador para poder agregar el siguiente articulo
+    this.comboArticuloRef?.resetCampo();
+  }
+
+  quitarArticulo(articulo: ArticuloSearch) {
+    this.articulosSeleccionados = this.articulosSeleccionados.filter(a => a.idArticulo !== articulo.idArticulo);
+    this.filtro.articulos = this.articulosSeleccionados.map(a => a.idArticulo!);
+  }
 
 }
 

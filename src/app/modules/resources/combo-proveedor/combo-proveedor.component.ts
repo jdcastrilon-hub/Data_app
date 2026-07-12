@@ -99,4 +99,11 @@ export class ComboProveedorComponent implements OnInit, ControlValueAccessor {
     this.onChange(null);               // Notificamos al formulario padre
     this.proveedorSelecionado.emit(null as any); // Avisamos al monitor
   }
+
+  // Permite al padre reiniciar el campo (ej: despues de agregar el proveedor a una lista/grilla)
+  resetCampo(): void {
+    this.searchControl.enable();
+    this.searchControl.setValue(null);
+    this.filteredOptions.set([]);
+  }
 }

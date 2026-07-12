@@ -9,7 +9,7 @@ export class Proveedores {
     codigoTitular!: string;
     razonSocial!: string;
     regimen!: string;
-    activo!: string;
+    activo!: boolean;
     observacion!: string;
     fechaMod!: Date;
     logs!: Auditoria[];

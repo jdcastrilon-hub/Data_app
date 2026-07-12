@@ -7,10 +7,10 @@ import { PageResponse } from '../../models/core/PageResponse';
 import { environment } from 'src/environments/environment';
 import { MotivosCombo } from '../../interfaces/Bodega/MotivoCombo';
 
-interface ApiResponse {
-  status: string; // Definición clara como string
+interface ApiResponse<T = void> {
+  status: 'success' | 'error';
   message: string;
-  data: MotivosAjuste;
+  data?: T;
 }
 
 @Injectable({
@@ -22,39 +22,55 @@ export class MotivosAjusteService {
 
   constructor(private http: HttpClient) { }
 
-  list(): Observable<MotivosAjuste[]> {
-    return this.http.get<MotivosAjuste[]>(this.url + "list");
-  }
-
   listSelection(): Observable<MotivosCombo[]> {
     return this.http.get<MotivosCombo[]>(this.url + "listCombo");
   }
 
-  listPaginacion(page: number, size: number): Observable<PageResponse<MotivoAjusteView>> {
-    const params = new HttpParams()
-      .set('page', page.toString())//Pagina 
-      .set('size', size.toString())//Cantidad de registros a validar
-    //.set('sort','fechaMod,desc');//Ordenamiento de la lista
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<MotivoAjusteView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
 
-    return this.http.get<PageResponse<MotivoAjusteView>>(this.url + "pagenation", { params });
+    if (texto) {
+      params = params.set('texto', texto);
+    }
+
+    return this.http.get<PageResponse<MotivoAjusteView>>(this.url + "pagination", { params });
   }
 
+  getMotivoById(id: number): Observable<MotivosAjuste> {
+    const params = new HttpParams().set('id_motivo', id);
+    return this.http.get<MotivosAjuste>(this.url + "search", { params });
+  }
+
+  //Guardar Motivo
   save(objecto: any): Observable<any> {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
-
-        if (response.status !== 'ok') {
-          // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
-          throw new Error(response.message || 'Error desconocido al guardar la categoría.');
+        if (response.status !== 'success') {
+          throw new Error(response.message || 'Error desconocido al guardar el motivo.');
         }
-        //Extraer data de la respuesta.
-        const objectoApi = response.data;
-
-        // Emitir el objeto extraído (el "json" que se creó)
-        //this.EventoCategoria.next(objectoApi);
-
-        return objectoApi;
+        return response.data;
       })
     );
+  }
+
+  //Editar Motivo
+  edit(objecto: any, id_motivo: number): Observable<any> {
+    const params = new HttpParams().set('id_motivo', String(id_motivo));
+
+    return this.http.put<ApiResponse>(this.url + "edit", objecto, { params }).pipe(
+      map((response: ApiResponse) => {
+        if (response.status !== 'success') {
+          throw new Error(response.message || 'Error desconocido al editar el motivo.');
+        }
+        return response.data;
+      })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    const params = new HttpParams().set('id_motivo', id.toString());
+    return this.http.delete<void>(this.url + "delete", { params });
   }
 }

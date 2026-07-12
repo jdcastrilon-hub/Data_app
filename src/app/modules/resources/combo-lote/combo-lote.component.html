@@ -1,0 +1,17 @@
+<input #inputInterno matInput type="text" placeholder="Código de lote" [formControl]="searchControl"
+    [matAutocomplete]="autoLote" class="input-tabla">
+
+<mat-autocomplete #autoLote="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
+
+    @for (item of opcionesFiltradas; track item.idLote) {
+    <mat-option [value]="item">
+        {{ item.codigoLote }} <small>({{ item.cantidad }} disp.)</small>
+    </mat-option>
+    }
+
+    @if (textoActual) {
+    <mat-option [value]="OPCION_CREAR">
+        + Crear lote "{{ textoActual }}"
+    </mat-option>
+    }
+</mat-autocomplete>

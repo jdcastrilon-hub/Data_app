@@ -3,9 +3,9 @@
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
                 <div class="titulo-izquierda">
-                    <a mat-icon-button color="primary" routerLink="/unidades">
+                    <button mat-icon-button color="primary" type="button" (click)="volver()">
                         <mat-icon>list</mat-icon>
-                    </a>
+                    </button>
                     <span>{{titulo_form}}</span>
                 </div>
                 @if (isEditMode) {
@@ -67,7 +67,7 @@
         <mat-card-actions class="mat-accion-botones">
             <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly" routerLink="/unidades">Cancelar</button>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly" (click)="volver()">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

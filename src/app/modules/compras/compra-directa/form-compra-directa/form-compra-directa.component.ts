@@ -1,7 +1,7 @@
 import { Component, ElementRef, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -12,7 +12,6 @@ import { Compra } from '../../../../core/models/Compras/Compra';
 import { CompraDetalle } from '../../../../core/models/Compras/CompraDetalle';
 import { ArticuloSearch } from '../../../../core/models/Bodega/ArticuloSearch';
 import { ArticuloAutocompletComponent } from '../../../resources/articulo-autocomplet/articulo-autocomplet.component';
-import { Numerador } from '../../../../core/models/core/Numerador';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ComboProveedorComponent } from '../../../resources/combo-proveedor/combo-proveedor.component';
 import { ComboEstadostockComponent } from '../../../resources/combo-estadostock/combo-estadostock.component';
@@ -30,13 +29,16 @@ import { NotificacionesService } from 'src/app/core/services/core/notificaciones
 import { CodigosBarra } from 'src/app/core/models/Bodega/CodigosBarra';
 import { ModalCodigobarraComponent } from '../modal-codigobarra/modal-codigobarra.component';
 import { Auditoria } from 'src/app/core/models/core/Auditoria';
+import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { ComboLoteComponent } from 'src/app/modules/resources/combo-lote/combo-lote.component';
+import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
 
 @Component({
   selector: 'form-compra-directa',
   standalone: true,
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
     RouterModule, MatDialogModule, ArticuloAutocompletComponent, MatDatepickerModule,
-    MatCheckboxModule, ComboProveedorComponent, ComboEstadostockComponent],
+    MatCheckboxModule, ComboProveedorComponent, ComboEstadostockComponent, ComboLoteComponent],
   templateUrl: './form-compra-directa.component.html',
   styleUrl: './form-compra-directa.component.scss'
 })
@@ -48,6 +50,16 @@ export class FormCompraDirectaComponent {
   objeto_resultado!: CodigosBarra;
   titulo_form: string = 'REGISTRO DE COMPRA DIRECTA';
   isEditMode: boolean = false; //Se define si el modo es nuevo o edicion
+  isReadOnly: boolean = false; //Se define si el modo es solo lectura (ver)
+
+  // Pestaña actualmente seleccionada del mat-tab-group (0 = Datos Generales, 1 = Recepcion y Totales)
+  selectedTabIndex = 0;
+  // Campos de cabecera agrupados por la pestaña donde viven, para poder saltar
+  // automaticamente a la primera pestaña con un campo obligatorio faltante al guardar.
+  private readonly camposPorPestana: string[][] = [
+    ['nroDocum', 'fecDoc', 'detalles'],   // Pestaña 0: Datos Generales
+    ['remito', 'observaciones'],          // Pestaña 1: Recepcion y Totales
+  ];
 
   //tabla de articulos
   detalle: CompraDetalle[] = [];
@@ -117,9 +129,11 @@ export class FormCompraDirectaComponent {
       idEmp: this.objeto.idEmp,
       idSucursal: this.objeto.idSucursal,
       idProveedor: this.objeto.idProveedor,
-      nroDocum: [{ value: this.objeto.nroDocum, disabled: true }, Validators.required],
+      // nroDocum ya no se maneja localmente: el backend lo asigna (numerador "COMPRA"
+      // en md_numeradores) en el proximo guardado.
+      nroDocum: [this.objeto.nroDocum],
       fecDoc: [new Date(), Validators.required],
-      remito: this.objeto.remito,
+      remito: [this.objeto.remito, Validators.required],
       status: this.objeto.status,
       ingresaBodega: [this.objeto.ingresaBodega, Validators.required],
       idBodega: this.objeto.idBodega,
@@ -127,7 +141,7 @@ export class FormCompraDirectaComponent {
       impNeto: this.objeto.impNeto,
       impDescuento: this.objeto.impDescuento,
       impTotal: this.objeto.impTotal,
-      observaciones: this.objeto.observaciones,
+      observaciones: [this.objeto.observaciones, Validators.required],
       impuesto1: this.objeto.impuesto1,
       valorImpuesto1: this.objeto.valorImpuesto1,
       impuesto2: this.objeto.impuesto2,
@@ -139,9 +153,18 @@ export class FormCompraDirectaComponent {
       fechaMod: this.objeto.fechaMod,
       detalles: this.fb.array([]),
       nuevoCodigoBarra: this.fb.array([]),
+      // Lotes pendientes (reservados, aun no existen en m_lotes) creados en esta
+      // edicion via combo-lote. Se materializan solo si se guarda la compra.
+      nuevosLotes: this.fb.array([]),
       logs: this.fb.array([]),
       searchProveedor: proveedor_filtro
     });
+
+    // No se usa [readonly] por input (a diferencia de otras CRUDs): esta grilla dinamica
+    // tiene varios componentes propios (combo-proveedor, articulo-autocomplet) que ya
+    // implementan ControlValueAccessor.setDisabledState, asi que formulario.disable()
+    // se propaga correctamente a todos ellos con un solo llamado.
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -160,8 +183,6 @@ export class FormCompraDirectaComponent {
         this.isEditMode = false;
         this.objeto = new Compra();
 
-        //Numerador de OC
-        this.obtenerNumerador("id_nrodocum_compra");
         this.formulario.get('ingresaBodega')?.patchValue(false);
         this.cargarImpuestos();
         this.agregarLineaVacia();
@@ -197,9 +218,8 @@ export class FormCompraDirectaComponent {
       (data: Compra) => {
         // Cargar la data de la categoría en el formulario
         this.objeto = data;
-        this.objeto.idSucursal = data.bodega.idSucursal; // Se carga aparte porque no viene en la raiz del json
 
-        this.titulo_form = 'ACTUALIZACION COMPRA '
+        this.titulo_form = this.isReadOnly ? 'DETALLE COMPRA' : 'ACTUALIZACION COMPRA';
         //1. Cargar auditoria del formulario
         //Obtener la referencia al FormArray que ya existe en tu FormGroup principal
         const logsFormArray = this.formulario.get('logs') as FormArray;
@@ -319,8 +339,11 @@ export class FormCompraDirectaComponent {
             cantidad: det.cantidad,
             costoTotal: det.costoTotal,
             importeTotal: det.importeTotal,
-            valorImpuesto1: det.valorImpuesto1
+            valorImpuesto1: det.valorImpuesto1,
+            idLote: det.idLote,
+            manejaLote: det.articulo?.manejaLote || false
           });
+          nuevoDetalle.get('idLote')?.updateValueAndValidity();
 
           // IMPORTANTE: Bloquear el buscador si ya tiene artículo
           nuevoDetalle.get('search')?.disable();
@@ -349,11 +372,21 @@ export class FormCompraDirectaComponent {
           this.agregarCodigoBarraAlArray(nuevoscodigosbarra, nuevoscodigos.linea);
         })
 
-        //5. Actualizar infomacion de stock y costos        
+        //5. Actualizar infomacion de stock y costos
         this.actualizarStocksMasivo();
-        //6. agregar linea vacia y validar columnas a mostrar
-        this.agregarLineaVacia();
+        //6. agregar linea vacia (solo si se puede seguir editando) y validar columnas a mostrar
+        if (!this.isReadOnly) {
+          this.agregarLineaVacia();
+        }
         this.ValidarColumnas();
+
+        if (this.isReadOnly) {
+          this.formulario.disable();
+          this.SelectSucursalControl.disable();
+          this.SelectBodegasControl.disable();
+          this.SelectImpuestosControl.disable();
+          this.SelecStatusControl.disable();
+        }
 
 
         //Subcribir los cambios al selecionar la empresa
@@ -385,9 +418,9 @@ export class FormCompraDirectaComponent {
         });
       },
       error => {
-        console.error('Error al cargar la categoría:', error);
+        console.error('Error al cargar la compra:', error);
         // Opcional: Redirigir si el ID es inválido o no existe
-        this.router.navigate(['/categorias']);
+        this.router.navigate(['/compras']);
       }
     );
   }
@@ -468,23 +501,6 @@ export class FormCompraDirectaComponent {
     });
   }
 
-
-  /**
-  * Metodo para obtener el numerador siguiente de (nroDocum)
-  *
-  * @param numerador Numerador de la base de datos.
-  * @returns No tiene return , carga directamente en el patchValue de 'nroDocum'
-  */
-  obtenerNumerador(numerador: string): void {
-    this.serviceIni.numeradorNext(numerador).subscribe({
-      next: (data: Numerador) => {
-        this.formulario.get('nroDocum')?.patchValue(data.next_value);
-      },
-      error: (err) => {
-        console.error('Error (obtenerNumerador)', err);
-      }
-    });
-  }
 
   /**
    * Metodo que tiene como finalidad agregar una linea vacia al final de la grilla. Se utiliza
@@ -586,7 +602,9 @@ export class FormCompraDirectaComponent {
       cantidad: [0, [Validators.required, Validators.min(0)]],
       porc_dcto: [0, [Validators.required, Validators.min(0)]],
       imp_dcto: 0,
-      idLote: 0,
+      idLote: [0, this.validarLoteRequerido],
+      // Solo indica si la celda "Lote" debe mostrar el combo (no se envia al backend, ver enviarFormulario)
+      manejaLote: false,
       stock: 0,
       objimpuesto1: [data.objimpuesto1],
       impuesto1: [data.impuesto1],
@@ -629,7 +647,49 @@ export class FormCompraDirectaComponent {
     return this.formulario.get('nuevoCodigoBarra') as FormArray;
   }
 
+  // Método para obtener el FormArray de lotes nuevos pendientes
+  get nuevosLotes(): FormArray {
+    return this.formulario.get('nuevosLotes') as FormArray;
+  }
 
+  /**
+   * Validador: si el articulo de la fila maneja lote, se debe haber seleccionado uno real (id > 0).
+   */
+  validarLoteRequerido = (control: AbstractControl): ValidationErrors | null => {
+    const fila = control.parent;
+    const manejaLote = fila?.get('manejaLote')?.value;
+    if (!manejaLote) {
+      return null;
+    }
+    return Number(control.value) > 0 ? null : { loteRequerido: true };
+  };
+
+  /**
+   * Metodo que se activa cuando el combo-lote de una fila emite un lote seleccionado o creado.
+   */
+  onLoteChange(lote: LoteDisponible, index: number): void {
+    const fila = this.detalles.at(index);
+    fila.patchValue({ idLote: lote.idLote });
+    fila.get('idLote')?.updateValueAndValidity();
+
+    // Si es un lote recien reservado (aun no existe en m_lotes), lo agregamos a la
+    // lista de nuevosLotes para que se cree junto con la compra al guardar.
+    if (lote.esNuevo) {
+      this.agregarLoteAlArray(lote, fila.get('idArticulo')?.value, index + 1);
+    }
+  }
+
+  agregarLoteAlArray(lote: LoteDisponible, idArticulo: number, linea: number): void {
+    const nuevoRegistro = this.fb.group({
+      idArticulo: [idArticulo],
+      idLote: [lote.idLote],
+      codigoLote: [lote.codigoLote],
+      fecVencimiento: [lote.fecVencimiento],
+      linea: [linea]
+    });
+
+    this.nuevosLotes.push(nuevoRegistro);
+  }
 
   compareImpuestos(o1: TasasCombo, o2: TasasCombo): boolean {
     return o1 && o2 ? o1.id === o2.id : o1 === o2;
@@ -668,8 +728,18 @@ export class FormCompraDirectaComponent {
               stock: stockData.stock,
               nombreArticulo: articulo.nomArticulo,
               codigoArticulo: articulo.codArticulo,
+              idLote: 0,
+              manejaLote: articulo.manejaLote || false,
               search: articulo //articulo para bloquear la columna de search
             });
+            fila.get('idLote')?.updateValueAndValidity();
+
+            // Precarga el impuesto por defecto del maestro de artículos (queda editable
+            // por línea: una compra puntual puede necesitar cambiarlo).
+            const impuestoArticulo = this.list_impuestos.find(t => t.id === stockData.impuesto);
+            if (impuestoArticulo) {
+              fila.get('objimpuesto1')?.setValue(impuestoArticulo);
+            }
             fila.get('search')?.disable(); //Se bloque la primera columna.
             fila.get('btoCrearCodBarra')?.setValue(true);
             this.agregarLineaVacia();
@@ -762,8 +832,7 @@ export class FormCompraDirectaComponent {
   }
 
   ValidarColumnas() {
-    //this.displayedColumns = this.todasLasColumnas;
-    this.displayedColumns = this.todasLasColumnas.filter(columna => columna !== 'Lote');
+    this.displayedColumns = this.todasLasColumnas;
   }
 
   eliminarUltimaFilaEventsave() {
@@ -906,6 +975,23 @@ export class FormCompraDirectaComponent {
 
   }
 
+  // Muestra en un dialogo el historial de auditoria del registro actual
+  verHistorialAuditoria(): void {
+    const dialogRef = this.dialog.open(AuditoriaDialogComponent, {
+      width: '500px',
+      data: {
+        titulo: `Historial de Auditoría - OC ${this.objeto.nroDocum}`,
+        logs: this.formulario.get('logs')?.value
+      }
+    });
+
+    // Material devuelve el foco al boton que abrio el dialogo al cerrarlo (accesibilidad),
+    // lo que deja el icono con el resaltado de "enfocado" pegado visualmente.
+    dialogRef.afterClosed().subscribe(() => {
+      (document.activeElement as HTMLElement)?.blur();
+    });
+  }
+
   // Método para agregar el log al FormArray
   agregarLogAuditoria() {
     // 1. Obtienes el objeto de log ya completo y formateado del servicio
@@ -921,6 +1007,17 @@ export class FormCompraDirectaComponent {
     // 3. Lo añades al FormArray
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.push(auditoriaGroup);
+  }
+
+  // Salta a la primera pestaña (en orden) que tenga un campo obligatorio invalido,
+  // para que el usuario no tenga que adivinar en cual quedo el error marcado en rojo.
+  irAPestanaConError(): void {
+    const pestanaConError = this.camposPorPestana.findIndex(campos =>
+      campos.some(campo => this.formulario.get(campo)?.invalid)
+    );
+    if (pestanaConError !== -1) {
+      this.selectedTabIndex = pestanaConError;
+    }
   }
 
   enviarFormulario() {
@@ -954,6 +1051,7 @@ export class FormCompraDirectaComponent {
 
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched(); // Para mostrar errores visualmente
+      this.irAPestanaConError();
       return; // Detiene la ejecución si el formulario no es válido
     }
 
@@ -996,14 +1094,13 @@ export class FormCompraDirectaComponent {
       
       this.compraService.edit(this.objeto.idTrans!, jsonParaAPI).subscribe({
         next: (compra) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
           console.log(compra);
           this.notificacion.showSuccess('compra actualizada con éxito!');
-          this.objeto.fechaMod = fecha_envio;
-          //this.resetCampos();
+          this.router.navigate(['/compras']);
         },
         error: (err) => {
           console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo editar la compra.');
         }
       });
 
@@ -1012,13 +1109,13 @@ export class FormCompraDirectaComponent {
 
       this.compraService.save(jsonParaAPI).subscribe({
         next: (compra) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
           console.log(compra);
           this.notificacion.showSuccess('compra guardada con éxito!');
           this.resetCampos();
         },
         error: (err) => {
           console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo guardar la compra.');
         }
       });
 
@@ -1032,7 +1129,6 @@ export class FormCompraDirectaComponent {
     //Recuperar valores que no cambian
     const idBodega = this.formulario.value.idBodega;
     const idEstado = this.formulario.value.idEstado;
-    const nrodocum: number = this.formulario.get('nroDocum')?.value;
 
     //Limpiar el formulario
     this.objeto = new Compra();
@@ -1043,15 +1139,14 @@ export class FormCompraDirectaComponent {
     //reset grilla de articulos
     const detalle = this.formulario.get('detalles') as FormArray;
     detalle.clear();
+    //reset lotes nuevos pendientes
+    this.nuevosLotes.clear();
     // agregas la fila inicial "limpia"
     this.agregarLineaVacia();
 
     //actualizo referencias
     this.formulario.get('idBodega')?.patchValue(idBodega);
     this.formulario.get('idEstado')?.patchValue(idEstado);
-    this.formulario.get('nroDocum')?.patchValue(nrodocum + 1);
-
-
   }
 
 

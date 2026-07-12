@@ -13,6 +13,7 @@ import { SubCategorias } from 'src/app/core/models/Bodega/SubCategorias';
 import { TipoServicios } from 'src/app/core/models/Bodega/TipoServicios';
 import { Unidad } from 'src/app/core/models/Bodega/Unidad';
 import { TasaImpuesto } from 'src/app/core/models/Impuestos/TasaImpuesto';
+import { Auditoria } from 'src/app/core/models/core/Auditoria';
 import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
 import { UnidadServiceService } from 'src/app/core/services/Bodega/unidad-service.service';
 import { AuditoriaService } from 'src/app/core/services/core/auditoria.service';
@@ -21,6 +22,8 @@ import { NegocioServiceService } from 'src/app/core/services/General/negocio-ser
 import { TasaImpuestoServiceService } from 'src/app/core/services/impuestos/tasa-impuesto-service.service';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDialog } from '@angular/material/dialog';
+import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
 
 @Component({
   selector: 'form-articulo',
@@ -36,6 +39,7 @@ export class FormArticuloComponent {
   objeto!: Articulo;
   titulo_form !: string;
   isEditMode: boolean = false;
+  isReadOnly: boolean = false;
 
   //Objecto de filtros
   objeto_filtro!: EmpresaByNegocioCategorias;
@@ -79,9 +83,17 @@ export class FormArticuloComponent {
     private notificacion: NotificacionesService,
     private logAuditoria: AuditoriaService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private dialog: MatDialog
   ) {
     this.objeto = new Articulo();
+  }
+
+  // Vuelve al listado. El filtro/pagina en el que se quedo la lista se restaura
+  // desde ArticuloListStateService (no desde el historial del navegador: se puede
+  // llegar a este formulario desde cualquier otra pantalla, no solo desde la lista).
+  volver(): void {
+    this.router.navigate(['/articulos']);
   }
 
   ngOnInit(): void {
@@ -92,11 +104,13 @@ export class FormArticuloComponent {
       id_articulo: [this.objeto.id_articulo],
       idsubCategoria: [this.objeto.idsubCategoria, Validators.required],
       idCategoria: [this.objeto.idCategoria, Validators.required],
-      codArticulo: [this.objeto.codArticulo, Validators.required],
+      // Ya no lo llena el usuario: lo asigna el backend (numerador por empresa) al crear
+      codArticulo: [this.objeto.codArticulo],
       nomArticulo: [this.objeto.nomArticulo, Validators.required],
       idTipoService: [this.objeto.idTipoService, Validators.required],
       idNegocio: [this.objeto.idNegocio, Validators.required],
       activoStock: [this.objeto.activoStock, Validators.required],
+      manejaLote: [this.objeto.manejaLote ?? false],
       stockMin: [this.objeto.stockMin],
       stockMax: [this.objeto.stockMax],
       idRef: [this.objeto.idRef, Validators.required],
@@ -109,6 +123,21 @@ export class FormArticuloComponent {
       logs: this.fb.array([]),
     });
 
+    // No se usa formulario.disable(): los inputs de texto usan [readonly] en la
+    // plantilla (se ven normales, no apagados/grises). Los selects y el checkbox
+    // son la excepción: HTML no tiene un "readonly" real para ellos, así que esos
+    // controles sí se deshabilitan individualmente.
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+    if (this.isReadOnly) {
+      this.formulario.get('activoStock')?.disable();
+      this.formulario.get('manejaLote')?.disable();
+      this.SelectNegocioControl.disable();
+      this.SelectCategoriaControl.disable();
+      this.SelectSubCategoriaControl.disable();
+      this.SelecProductoControl.disable();
+      this.SelectUnidadControl.disable();
+      this.SelectTasaImpuestoControl.disable();
+    }
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -119,7 +148,7 @@ export class FormArticuloComponent {
         console.log("Edicion")
         console.log(id)
         this.isEditMode = true;
-        this.titulo_form = "ACTUALIZACION DE ARTICULO"
+        this.titulo_form = this.isReadOnly ? "DETALLE ARTICULO" : "ACTUALIZACION DE ARTICULO"
         this.ModoEdicion(Number(id));
 
       } else {
@@ -195,8 +224,10 @@ export class FormArticuloComponent {
         this.formulario.get('idTipoService')?.patchValue(data.idTipoService);
         this.formulario.get('idImpuesto')?.patchValue(data.idImpuesto);
         this.formulario.get('activoStock')?.patchValue(data.activoStock);
+        this.formulario.get('manejaLote')?.patchValue(data.manejaLote);
         this.formulario.get('grupoContable')?.patchValue(data.grupoContable);
         this.formulario.get('cuentaInventario')?.patchValue(data.cuentaInventario);
+        this.cargarLogsExistentes(data.logs);
 
         //Cargas
         this.cargarNegocios();
@@ -409,6 +440,10 @@ export class FormArticuloComponent {
       movimientos: [data?.movimientos || 0, Validators.required],
       registro_nuevo: [data?.registro_nuevo ?? true, Validators.required],
     });
+    if (this.isReadOnly) {
+      // El toggle de "estado" no tiene un readonly nativo, así que se deshabilita puntualmente
+      subCat.get('estado')?.disable();
+    }
     this.getCodigosBarra.push(subCat);
     this.dataSourceCodigoBarras.data = this.getCodigosBarra.controls as FormGroup[];
   }
@@ -434,6 +469,37 @@ export class FormArticuloComponent {
       this.agregarCodigoBarra();
       this.formulario.get('activoStock')?.setValue(true);
     }
+  }
+
+  // Carga el historial de auditoria ya existente en el FormArray, para que al editar
+  // se acumule (en vez de que agregarLogAuditoria() sobrescriba todo el historial).
+  cargarLogsExistentes(logs: Auditoria[]): void {
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.clear();
+    (logs ?? []).forEach(log => {
+      logsArray.push(this.fb.group({
+        operacion: [log.operacion],
+        usuario_mod: [log.usuario_mod],
+        fecha_mod: [log.fecha_mod]
+      }));
+    });
+  }
+
+  // Muestra en un dialogo el historial de auditoria del registro actual
+  verHistorialAuditoria(): void {
+    const dialogRef = this.dialog.open(AuditoriaDialogComponent, {
+      width: '500px',
+      data: {
+        titulo: `Historial de Auditoría - ${this.objeto.codArticulo}`,
+        logs: this.formulario.get('logs')?.value
+      }
+    });
+
+    // Material devuelve el foco al boton que abrio el dialogo al cerrarlo (accesibilidad),
+    // lo que deja el icono con el resaltado de "enfocado" pegado visualmente.
+    dialogRef.afterClosed().subscribe(() => {
+      (document.activeElement as HTMLElement)?.blur();
+    });
   }
 
   // Método para agregar el log al FormArray
@@ -487,7 +553,10 @@ export class FormArticuloComponent {
           console.log(ObjectSave);
           this.notificacion.showSuccess('¡Articulo actualizado con éxito!');
         },
-        error: (err) => { }
+        error: (err) => {
+          console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo editar el articulo.');
+        }
       });
 
     } else {
@@ -499,7 +568,10 @@ export class FormArticuloComponent {
           //Limpiar el formulario
           this.resetCampos();
         },
-        error: (err) => { }
+        error: (err) => {
+          console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo guardar el articulo.');
+        }
       });
     }
   }

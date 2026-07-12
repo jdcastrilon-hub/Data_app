@@ -6,6 +6,7 @@ export class CompraListView{
     Fecha ! : number;
     NumOC ! : number;
     Remito ! : string;
+    Status ! : string;
     Importe ! : number;
     proveedor ! : PersonaSearch;
     bodega !: BodegaCombo;

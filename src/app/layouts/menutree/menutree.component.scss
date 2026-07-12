@@ -115,3 +115,26 @@
     display:none;
 
 }
+
+.spacer{
+    flex: 1;
+}
+
+/* Icono para abrir en otra pestaña */
+.new-tab-icon{
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+
+    color: #5f6368;
+    cursor: pointer;
+
+    margin-right: 6px;
+
+    transition: color .15s;
+}
+
+.new-tab-icon:hover{
+    color: #1976d2;
+}

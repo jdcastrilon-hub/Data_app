@@ -92,4 +92,11 @@ export class ComboArticuloComponent implements OnInit, ControlValueAccessor {
     this.articuloSeleccionado.emit(null as any); // Avisamos al monitor
   }
 
+  // Permite al padre reiniciar el campo (ej: despues de agregar el articulo a una lista/grilla)
+  resetCampo(): void {
+    this.searchControl.enable();
+    this.searchControl.setValue(null);
+    this.filteredOptions.set([]);
+  }
+
 }

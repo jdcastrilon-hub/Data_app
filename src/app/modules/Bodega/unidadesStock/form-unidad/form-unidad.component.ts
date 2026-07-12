@@ -45,6 +45,13 @@ export class FormUnidadComponent {
     this.objeto = new Unidad();
   }
 
+  // Vuelve al listado. El filtro/pagina en el que se quedo la lista se restaura
+  // desde UnidadListStateService (no desde el historial del navegador: se puede
+  // llegar a este formulario desde cualquier otra pantalla, no solo desde la lista).
+  volver(): void {
+    this.router.navigate(['/unidades']);
+  }
+
   ngOnInit(): void {
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({

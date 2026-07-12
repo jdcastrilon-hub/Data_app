@@ -18,9 +18,14 @@
 
 .titulo-con-boton {
   display: flex;
-  /* Activa el modo Flexbox */
   align-items: center;
-  /* Alinea verticalmente el icono y el texto al centro */
+  justify-content: space-between; // deja el icono de auditoria pegado al extremo derecho
+  width: 100%;
+}
+
+.titulo-izquierda {
+  display: flex;
+  align-items: center;
   gap: 8px;
   /* Espacio uniforme entre el botón y el texto */
 }

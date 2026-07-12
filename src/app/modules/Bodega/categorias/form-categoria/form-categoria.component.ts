@@ -13,6 +13,8 @@ import { CategoriaService } from '../../../../core/services/Bodega/categoria-ser
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
+import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
 
 @Component({
   selector: 'form-categoria',
@@ -26,6 +28,7 @@ export class FormCategoriaComponent {
   //parametros de entrada
   objeto!: Categoria;
   isEditMode: boolean = false;
+  isReadOnly: boolean = false;
   titulo_form !: string;
 
 
@@ -44,9 +47,17 @@ export class FormCategoriaComponent {
     private categoriaService: CategoriaService,
     private router: Router,
     private route: ActivatedRoute,
-    private notificacion: NotificacionesService
+    private notificacion: NotificacionesService,
+    private dialog: MatDialog
   ) {
     this.objeto = new Categoria();
+  }
+
+  // Vuelve al listado. El filtro/pagina en el que se quedo la lista se restaura
+  // desde CategoriaListStateService (no desde el historial del navegador: se puede
+  // llegar a este formulario desde cualquier otra pantalla, no solo desde la lista).
+  volver(): void {
+    this.router.navigate(['/categorias']);
   }
 
   //Empresas
@@ -68,6 +79,15 @@ export class FormCategoriaComponent {
       id: [this.objeto.id]
     });
 
+    // No se usa formulario.disable(): los inputs de texto usan [readonly] en la
+    // plantilla (se ven normales, no apagados/grises). El select de empresa y el
+    // checkbox "estado" son la excepción: HTML no tiene un "readonly" real para
+    // ellos, así que esos controles sí se deshabilitan individualmente.
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+    if (this.isReadOnly) {
+      this.formulario.get('estado')?.disable();
+      this.SelectEmpresaControl.disable();
+    }
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -77,7 +97,7 @@ export class FormCategoriaComponent {
         // Si hay un ID, estamos en modo Edición
         console.log("Edicion")
         this.isEditMode = true;
-        this.titulo_form = "ACTUALIZACION DE CATEGORIAS";
+        this.titulo_form = this.isReadOnly ? "DETALLE CATEGORIA" : "ACTUALIZACION DE CATEGORIAS";
         this.ModoEdicion(Number(id)); // Llama al método de carga
         this.formulario.get('estado')?.setValue(this.objeto.estado);
       } else {
@@ -170,6 +190,23 @@ export class FormCategoriaComponent {
     }
     this.subCategorias.removeAt(index);
     this.dataSource.data = this.subCategorias.controls as FormGroup[]; // ⚠️ Actualiza la tabla
+  }
+
+  // Muestra en un dialogo el historial de auditoria del registro actual
+  verHistorialAuditoria(): void {
+    const dialogRef = this.dialog.open(AuditoriaDialogComponent, {
+      width: '500px',
+      data: {
+        titulo: `Historial de Auditoría - ${this.objeto.codCategoria}`,
+        logs: this.formulario.get('logs')?.value
+      }
+    });
+
+    // Material devuelve el foco al boton que abrio el dialogo al cerrarlo (accesibilidad),
+    // lo que deja el icono con el resaltado de "enfocado" pegado visualmente.
+    dialogRef.afterClosed().subscribe(() => {
+      (document.activeElement as HTMLElement)?.blur();
+    });
   }
 
   // Método para agregar el log al FormArray
@@ -269,6 +306,7 @@ export class FormCategoriaComponent {
         },
         error: (err) => {
           console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo editar la categoría.');
         }
       });
     } else {
@@ -289,6 +327,7 @@ export class FormCategoriaComponent {
         },
         error: (err) => {
           console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo guardar la categoría.');
         }
       });
     }

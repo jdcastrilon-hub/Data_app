@@ -3,6 +3,7 @@ import { TrasladoBodegasDetalle } from "./TrasladoBodegasDetalle";
 
 export class TrasladoBodegas {
     idTrans?: number;
+    idEmpresa!: number;
     idBodegaOrigen!: number;
     idBodegaDestino!: number;
     idEstadoOrigen !: number;

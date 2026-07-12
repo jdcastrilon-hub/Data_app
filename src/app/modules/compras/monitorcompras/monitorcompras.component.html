@@ -24,14 +24,14 @@
       </div>
 
       @if (reporteSeleccionado==='compras') {
-      <filtroscompras (reporteActual)="reporteSeleccionado" (alConsultar)="ReporteCompras($event)"></filtroscompras>
+      <filtroscompras [obj_filtros]="obj_filtros" (alConsultar)="ReporteCompras($event)"></filtroscompras>
       <vistacomprasrealizadas [datos]="lista_comprasrealizadas" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
-        (paginacion)="PaginacionReporteCompras($event)"></vistacomprasrealizadas>
+        [filtrosActuales]="filtrosActuales" (paginacion)="PaginacionReporteCompras($event)"></vistacomprasrealizadas>
       }
       @if (reporteSeleccionado==='costos') {
       <filtros-costos [obj_filtros]="obj_filtros" (alConsultar)="ReporteCostos($event)"></filtros-costos>
       <reportecostos [datos]="lista_costos" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
-        (paginacion)="PaginacionReporteCostos($event)"></reportecostos>
+        [filtrosActuales]="filtrosActuales" (paginacion)="PaginacionReporteCostos($event)"></reportecostos>
       }
 
 

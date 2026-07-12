@@ -7,6 +7,9 @@ import { environment } from 'src/environments/environment';
 import { registroarticuloCompra } from '../../interfaces/Compras/registroarticuloCompra';
 import { PageResponse } from '../../models/core/PageResponse';
 import { ArticuloListView } from '../../interfaces/Bodega/ArticuloListView';
+import { LoteDisponible } from '../../interfaces/Bodega/LoteDisponible';
+import { LoteReservado } from '../../interfaces/Bodega/LoteReservado';
+import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -21,12 +24,16 @@ export class ArticuloServiceService {
 
   private url: string = `${environment.baseUrl}/bodega/articulos/`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private loginService: LoginService) { }
 
-  listPaginacion(page: number, size: number): Observable<PageResponse<ArticuloListView>> {
-    const params = new HttpParams()
-      .set('page', page.toString())//Pagina 
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<ArticuloListView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())//Pagina
       .set('size', size.toString())//Cantidad de registros a validar
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
 
     return this.http.get<PageResponse<ArticuloListView>>(this.url + "pagination", { params });
   }
@@ -81,6 +88,24 @@ export class ArticuloServiceService {
       .set('cod_barra', String(codBarra));
 
     return this.http.get<registroarticuloCompra>(`${this.url}searchArticuloByCodigoBarra`, { params });
+  }
+
+  lotesArticulo(idArticulo: number): Observable<LoteDisponible[]> {
+    const params = new HttpParams()
+      .set('id_articulo', idArticulo.toString())
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+
+    return this.http.get<LoteDisponible[]>(this.url + "lotes", { params });
+  }
+
+  // Reserva un id real de lote (nextval) sin insertarlo en m_lotes; se materializa
+  // recien cuando se guarda la transaccion que lo usa (ver form-ajuste/nuevosLotes).
+  reservarLote(idArticulo: number, codigoLote: string): Observable<LoteReservado> {
+    const params = new HttpParams()
+      .set('id_articulo', idArticulo.toString())
+      .set('codigo_lote', codigoLote);
+
+    return this.http.get<LoteReservado>(this.url + "lotes/reservar", { params });
   }
 
 }

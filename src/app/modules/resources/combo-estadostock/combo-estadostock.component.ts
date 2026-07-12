@@ -18,6 +18,9 @@ export class ComboEstadostockComponent {
   input_objeto = input<any>(null);
   editMode = input<boolean>(false);
   opcionview = input<boolean>(false);
+  // Nombre de la propiedad de input_objeto que trae el id del estado seleccionado.
+  // Permite reutilizar el combo en formularios con mas de un estado (ej. traslado: origen/destino).
+  campo = input<string>('idEstado');
 
   //salidas
   estadoSeleccionado = output<EstadoCombo>();
@@ -68,10 +71,11 @@ cargaDatos(): void {
 
   private seleccionarEstadoLogica(): void {
   const obj = this.input_objeto();
+  const idEstadoObjeto = obj?.[this.campo()];
 
   // CASO: Edición o Vista (Esperamos a que el objeto tenga un ID real)
-  if((this.editMode() || this.opcionview()) && obj?.idBodega) {
-  const encontrada = this.list_estados.find(b => b.id === obj.idBodega);
+  if((this.editMode() || this.opcionview()) && idEstadoObjeto) {
+  const encontrada = this.list_estados.find(b => b.id === idEstadoObjeto);
   if (encontrada) {
     this.SelecEstadoControl.setValue(encontrada, { emitEvent: false });
   }

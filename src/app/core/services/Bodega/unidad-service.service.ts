@@ -24,10 +24,14 @@ export class UnidadServiceService {
     return this.http.get<Unidad[]>(this.url + "list");
   }
 
-  listPaginacion(page: number, size: number): Observable<PageResponse<UnidadListView>> {
-    const params = new HttpParams()
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<UnidadListView>> {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
 
     return this.http.get<PageResponse<UnidadListView>>(this.url + "pagination", { params });
   }

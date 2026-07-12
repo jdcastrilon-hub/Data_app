@@ -1,15 +1,21 @@
 import { Component, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterModule } from '@angular/router';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ArticuloListView } from 'src/app/core/interfaces/Bodega/ArticuloListView';
 import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
+import { ArticuloListStateService } from 'src/app/core/services/Bodega/articulo-list-state.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { modules_depencias } from '../../dependencias/modules_depencias.module';
+import { ConfirmDialogComponent } from 'src/app/modules/resources/confirm-dialog/confirm-dialog.component';
+import { ModalLotesComponent } from './modal-lotes/modal-lotes.component';
 
 @Component({
   selector: 'app-articulos-stock',
-  imports: [modules_depencias, RouterModule],
+  imports: [modules_depencias, RouterModule, ReactiveFormsModule],
   templateUrl: './articulos-stock.component.html',
   styleUrl: './articulos-stock.component.scss'
 })
@@ -19,6 +25,9 @@ export class ArticulosStockComponent {
   list_articulos: ArticuloListView[] = [];
   dataSource!: MatTableDataSource<ArticuloListView>;
   Columnas: string[] = ['codigo', 'nombre', 'negocio', 'categoria', 'subcategoria', 'activo', 'actions'];
+
+  //Buscador (filtra por codigo o nombre en el backend)
+  buscadorControl = new FormControl('');
 
   //Datos generales de paginacion
   totalRegistros: number = 0;
@@ -31,21 +40,41 @@ export class ArticulosStockComponent {
   constructor(
     private service: ArticuloServiceService,
     private notificacion: NotificacionesService,
-    private router: Router
+    private router: Router,
+    private listState: ArticuloListStateService,
+    private dialog: MatDialog
   ) { }
 
   ngOnInit() {
+    // Restaura el filtro/pagina donde haya quedado la ultima vez (sin importar si se
+    // llega aqui desde "volver" en ver/editar/nuevo, o desde el menu directamente).
+    this.buscadorControl.setValue(this.listState.texto, { emitEvent: false });
+    this.paginaActual = this.listState.page;
+    this.pageSize = this.listState.size;
+
     this.cargarArticulosPaginadas();
-    console.log(this.list_articulos);
+
+    // Espera a que el usuario deje de escribir antes de consultar el backend.
+    this.buscadorControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.paginaActual = 0; // toda busqueda nueva vuelve a la primera pagina
+      this.cargarArticulosPaginadas();
+    });
   }
 
   // 1. Método para cargar datos con paginación
   cargarArticulosPaginadas() {
-    console.log(`Cargando página: ${this.paginaActual}, tamaño: ${this.pageSize}`);
+    const texto = this.buscadorControl.value?.trim() || undefined;
+
+    // Recuerda el estado actual para cuando se vuelva a esta lista mas adelante.
+    this.listState.texto = texto || '';
+    this.listState.page = this.paginaActual;
+    this.listState.size = this.pageSize;
 
     // Llama al servicio con los parámetros actuales
-    this.service.listPaginacion(this.paginaActual, this.pageSize).subscribe(data => {
-      console.log(data)
+    this.service.listPaginacion(this.paginaActual, this.pageSize, texto).subscribe(data => {
       // Mapea la respuesta Page
       this.list_articulos = data.content; //  Solo el contenido para la tabla
       this.totalRegistros = data.totalElements; //  El total de registros en el DB
@@ -72,16 +101,41 @@ export class ArticulosStockComponent {
 
   }
 
-  //Eliminar registro
+  visualizarArticulo(id: number): void {
+    this.router.navigate(['/articulos/view', id]);
+  }
+
+  abrirLotes(articulo: ArticuloListView): void {
+    this.dialog.open(ModalLotesComponent, {
+      width: '60%',
+      data: {
+        idArticulo: articulo.id_articulo,
+        codArticulo: articulo.codArticulo,
+        nomArticulo: articulo.nomArticulo
+      }
+    });
+  }
+
+  //Eliminar registro (previa confirmación del usuario)
   eliminarArticulo(id: number): void {
-    console.log("Entro a elininar");
-    console.log(id);
-    this.service.delete(id).subscribe(data => {
-      this.list_articulos = this.list_articulos.filter(articulo => articulo.id_articulo !== id);
-      this.dataSource = new MatTableDataSource<ArticuloListView>(this.list_articulos);
-      this.notificacion.showSuccess('Articulo Eliminada con exito!');
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: {
+        titulo: 'Eliminar artículo',
+        mensaje: '¿Seguro que deseas eliminar este artículo? Esta acción no se puede deshacer.'
+      }
     });
 
+    dialogRef.afterClosed().subscribe(confirmado => {
+      if (!confirmado) {
+        return;
+      }
+      this.service.delete(id).subscribe(data => {
+        this.list_articulos = this.list_articulos.filter(articulo => articulo.id_articulo !== id);
+        this.dataSource = new MatTableDataSource<ArticuloListView>(this.list_articulos);
+        this.notificacion.showSuccess('Articulo Eliminada con exito!');
+      });
+    });
   }
 
 }
