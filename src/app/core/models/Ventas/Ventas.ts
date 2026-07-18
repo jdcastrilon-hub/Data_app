@@ -1,5 +1,14 @@
 import { Auditoria } from "../core/Auditoria";
+import { ClienteSearch } from "../../interfaces/Comercial/ClienteSearch";
 
+// Reemplaza a las viejas formaPago/idPago de cabecera - una venta puede
+// pagarse con mas de un medio de pago (ej. Efectivo + Transferencia).
+export class DetallePago {
+    id?: number;
+    idMediopago!: number;
+    importe!: number;
+    mediopago?: { tipo: string }; // Solo lectura, para mostrar el tipo al editar/ver.
+}
 
 export class Ventas {
     idTrans?: number;
@@ -20,10 +29,8 @@ export class Ventas {
     serieRemito!: string;
     nroDocumRemito!: number;
     observaciones !: string;
-    formaPago!: String;
     impIgreso !: number;
     impVuelto !: number;
-    idPago!: number;
     fecVenc !: Date;
     idBodega!: number;
     idEstado !: number;
@@ -35,7 +42,8 @@ export class Ventas {
     porcDescuento !: number;
     impDescuento !: number;
     impTotal !: number;
-    idTurno !: string;
+    idTurno?: number;
+    idCaja?: number;
     nomCaja !: string;
     impuesto1 !: string;
     valorImpuesto1 !: number;
@@ -45,5 +53,9 @@ export class Ventas {
     valorImpuesto3 !: number;
     fechaMod!: Date;
     logs!: Auditoria[];
+    detalles!: any[];
+    detallesPago!: DetallePago[];
+    cliente!: ClienteSearch;
+    bodega!: { nomBodega: string };
 
 }

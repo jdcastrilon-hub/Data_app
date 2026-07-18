@@ -1,0 +1,21 @@
+<mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+    <mat-label>Buscar usuario</mat-label>
+    <input matInput type="text" placeholder="Usuario o Nombre" [formControl]="searchControl"
+        [matAutocomplete]="autoUsuario">
+
+    @if (searchControl.value) {
+    <button mat-icon-button matSuffix (click)="limpiarBusqueda($event)" type="button">
+        <mat-icon>close</mat-icon>
+    </button>
+    }
+</mat-form-field>
+
+<mat-autocomplete #autoUsuario="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
+
+    @for (item of filteredOptions(); track item.idUsuario) {
+    <mat-option [value]="item">
+        {{ item.usuario }} - <small>{{ item.nombreCompleto }}</small>
+    </mat-option>
+    }
+
+</mat-autocomplete>

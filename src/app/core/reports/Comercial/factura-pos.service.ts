@@ -41,7 +41,7 @@ export class FacturaPosService {
                     { text: 'Total', bold: true, alignment: 'right' }
                   ],
                   ...(data.items || []).map((item: any) => [
-                    { text: item.refCompras || '' },
+                    { text: item.referencia || '' },
                     { text: (item.cantidad || 0).toString(), alignment: 'center' },
                     { text: `$${((item.cantidad || 0) * (item.precio || 0)).toLocaleString()}`, alignment: 'right' }
                   ])

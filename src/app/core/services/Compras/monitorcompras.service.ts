@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { MonitorComprasFiltros } from '../../interfaces/Compras/MonitorComprasFiltros';
 import { MonitorCompraReporteCostos } from '../../interfaces/Compras/MonitorCompraReporteCostos';
 import { DetalleCompraLinea } from '../../interfaces/Compras/DetalleCompraLinea';
+import { DevolucionCompraLinea } from '../../interfaces/Compras/DevolucionCompraLinea';
 import { LoginService } from '../core/login.service';
 
 @Injectable({
@@ -116,6 +117,11 @@ export class MonitorcomprasService {
   detalleCompra(nroTrans: number): Observable<DetalleCompraLinea[]> {
     const params = new HttpParams().set('nro_trans', nroTrans.toString());
     return this.http.get<DetalleCompraLinea[]>(this.url + "comprasrealizadas/detalle", { params });
+  }
+
+  devolucionesCompra(nroTrans: number): Observable<DevolucionCompraLinea[]> {
+    const params = new HttpParams().set('nro_trans', nroTrans.toString());
+    return this.http.get<DevolucionCompraLinea[]>(this.url + "comprasrealizadas/devoluciones", { params });
   }
 
   private formatDate(date: any): string {

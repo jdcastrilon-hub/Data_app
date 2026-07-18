@@ -13,6 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { monitorDetalleComprasRealizadas } from 'src/app/core/interfaces/Compras/monitorDetalleComprasRealizadas';
 import { MonitorcomprasService } from 'src/app/core/services/Compras/monitorcompras.service';
 import { ModalDetalleCompraComponent } from '../modal-detalle-compra/modal-detalle-compra.component';
+import { ModalDetalleDevolucionComponent } from '../modal-detalle-devolucion/modal-detalle-devolucion.component';
 
 const STORAGE_KEY_COLUMNAS = 'monitorcompras_vistacompras_columnas';
 
@@ -42,6 +43,7 @@ export class VistacomprasrealizadasComponent implements OnChanges {
     { clave: 'remito', label: 'Remito' },
     { clave: 'bodega', label: 'Bodega' },
     { clave: 'importe', label: 'Total' },
+    { clave: 'devoluciones', label: 'Devoluciones' },
   ];
   columnasVisibles: Set<string> = new Set(this.columnasConfigurables.map(c => c.clave));
 
@@ -127,6 +129,18 @@ export class VistacomprasrealizadasComponent implements OnChanges {
 
   abrirDetalle(compra: monitorDetalleComprasRealizadas): void {
     this.dialog.open(ModalDetalleCompraComponent, {
+      width: '90%',
+      maxWidth: '1100px',
+      data: {
+        idTrans: compra.id_trans,
+        numoc: compra.numoc,
+        remito: compra.remito
+      }
+    });
+  }
+
+  abrirDevoluciones(compra: monitorDetalleComprasRealizadas): void {
+    this.dialog.open(ModalDetalleDevolucionComponent, {
       width: '90%',
       maxWidth: '1100px',
       data: {

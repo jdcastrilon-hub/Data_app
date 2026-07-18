@@ -1,4 +1,4 @@
-import { Component, forwardRef, input, OnInit, output, signal } from '@angular/core';
+import { Component, effect, forwardRef, input, OnInit, output, signal } from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormControl, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +25,10 @@ export class ComboClienteComponent implements OnInit, ControlValueAccessor {
 //Parametros de entrada
   input_objeto = input<any>(null);
   editMode = input<boolean>(false);
+  // Cuando el padre lo pone en true (ej. tras un intento de guardar sin cliente),
+  // pinta el recuadro en rojo igual que cualquier otro campo requerido de Material -
+  // no genera texto de error propio, el padre es responsable de avisar al usuario.
+  mostrarError = input<boolean>(false);
 
   //salidas
   clienteSelecionado = output<ClienteSearch>();
@@ -38,6 +42,14 @@ export class ComboClienteComponent implements OnInit, ControlValueAccessor {
 
   constructor(private fb: FormBuilder,
     private clienteservice: ClientesService) {
+    effect(() => {
+      if (this.mostrarError()) {
+        this.searchControl.markAsTouched();
+        this.searchControl.setErrors({ requerido: true });
+      } else if (this.searchControl.hasError('requerido')) {
+        this.searchControl.setErrors(null);
+      }
+    });
   }
 
   ngOnInit() {

@@ -1,0 +1,69 @@
+<h2 mat-dialog-title>Seleccionar artículos a devolver</h2>
+
+<mat-dialog-content [formGroup]="formulario">
+    @if (cargando) {
+    <p>Cargando artículos de la compra...</p>
+    } @else if (lineas.length === 0) {
+    <p>Esta compra no tiene líneas para devolver.</p>
+    } @else {
+    <div class="table-scroll-container">
+        <table mat-table [dataSource]="lineas.controls" formArrayName="lineas">
+
+            <ng-container matColumnDef="check">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                    <mat-checkbox formControlName="seleccionado"
+                        (change)="onSeleccionadoChange(lineas.at(i))"></mat-checkbox>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="articulo">
+                <th mat-header-cell *matHeaderCellDef>Artículo</th>
+                <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                    {{ row.get('codArticulo')?.value }} - {{ row.get('nomArticulo')?.value }}
+                    @if (row.get('manejaLote')?.value) {
+                    <div class="lote-tag">Lote: {{ row.get('codLote')?.value || row.get('idLote')?.value }}</div>
+                    }
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="comprada">
+                <th mat-header-cell *matHeaderCellDef class="text-right">Comprada</th>
+                <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" class="text-right">
+                    {{ row.get('cantidadComprada')?.value }}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="disponible">
+                <th mat-header-cell *matHeaderCellDef class="text-right">Disponible</th>
+                <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" class="text-right">
+                    {{ row.get('stockDisponible')?.value }}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="cantidad">
+                <th mat-header-cell *matHeaderCellDef class="text-center">Cantidad a devolver</th>
+                <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" class="celda-cantidad">
+                    <input type="number" class="input-cantidad" formControlName="cantidad"
+                        [class.input-invalido]="row.get('cantidad')?.invalid && row.get('cantidad')?.touched"
+                        [readonly]="!row.get('seleccionado')?.value">
+                    @if (row.get('cantidad')?.hasError('excedeMaximo') && row.get('cantidad')?.touched) {
+                    <div class="error-cantidad">Supera el máximo devolvible</div>
+                    }
+                    @if (row.get('cantidad')?.hasError('requerido') && row.get('cantidad')?.touched) {
+                    <div class="error-cantidad">Debe ser mayor a 0</div>
+                    }
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['check','articulo','comprada','disponible','cantidad']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['check','articulo','comprada','disponible','cantidad'];"></tr>
+        </table>
+    </div>
+    }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button color="warn" type="button" (click)="cancelar()">Cancelar</button>
+    <button mat-raised-button color="primary" type="button" (click)="confirmar()">Agregar seleccionados</button>
+</mat-dialog-actions>

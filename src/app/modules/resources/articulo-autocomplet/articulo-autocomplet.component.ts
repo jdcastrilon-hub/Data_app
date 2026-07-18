@@ -88,9 +88,10 @@ export class ArticuloAutocompletComponent implements OnInit, ControlValueAccesso
   mascaraSalida(articulo: ArticuloSearch): string {
     console.log('Lo que recibe el autocomplete:', articulo);
     if (articulo && articulo.idArticulo != 0) {
-
-      // Devuelve el código y el nombre para una mejor referencia visual
-      return `${articulo.codArticulo} - ${articulo.nomArticulo}`;
+      // Devuelve el código y el nombre para una mejor referencia visual - si falta
+      // alguno de los dos (ej. ventas guardadas antes de persistir el nombre del
+      // articulo en el detalle), no se muestra un separador " - " suelto.
+      return [articulo.codArticulo, articulo.nomArticulo].filter(v => !!v).join(' - ');
     }
     return ''; // Devuelve cadena vacía si no hay objeto (ej: cuando el input está vacío)
   }

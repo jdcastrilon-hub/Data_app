@@ -17,15 +17,30 @@ import { FormEstadoComponent } from './modules/Bodega/estados/form-estado/form-e
 import { ProveedoresComponent } from './modules/compras/proveedores/proveedores.component';
 import { FormProveedorComponent } from './modules/compras/proveedores/form-proveedor/form-proveedor.component';
 import { CompraDirectaComponent } from './modules/compras/compra-directa/compra-directa.component';
+import { MotivosDevolucionComponent } from './modules/compras/motivos-devolucion/motivos-devolucion.component';
+import { FormMotivoDevolucionComponent } from './modules/compras/motivos-devolucion/form-motivo/form-motivo.component';
 import { FormCompraDirectaComponent } from './modules/compras/compra-directa/form-compra-directa/form-compra-directa.component';
+import { DevolucionComprasComponent } from './modules/compras/devolucion-compras/devolucion-compras.component';
+import { FormDevolucionComponent } from './modules/compras/devolucion-compras/form-devolucion/form-devolucion.component';
 import { FormArticuloComponent } from './modules/Bodega/articulos-stock/form-articulo/form-articulo.component';
 import { MonitorcomprasComponent } from './modules/compras/monitorcompras/monitorcompras.component';
 import { ArticulosStockComponent } from './modules/Bodega/articulos-stock/articulos-stock.component';
 import { MonitorstockComponent } from './modules/Bodega/monitorstock/monitorstock.component';
 import { FormClienteComponent } from './modules/Comercial/clientes/form-cliente/form-cliente.component';
 import { FormVentaDirectaComponent } from './modules/Comercial/venta-directa/form-venta-directa/form-venta-directa.component';
+import { VentaDirectaComponent } from './modules/Comercial/venta-directa/venta-directa.component';
 import { FormVentaposComponent } from './modules/Comercial/venta-pos/venta-pos/form-ventapos/form-ventapos.component';
+import { VentaPosComponent } from './modules/Comercial/venta-pos/venta-pos/venta-pos.component';
 import { FormTurnosComponent } from './modules/Comercial/turnos/form-turnos/form-turnos.component';
+import { TurnosComponent } from './modules/Comercial/turnos/turnos.component';
+import { FormCierreturnoComponent } from './modules/Comercial/cierreturno/form-cierreturno/form-cierreturno.component';
+import { CierreturnoComponent } from './modules/Comercial/cierreturno/cierreturno.component';
+import { CajasComponent } from './modules/Comercial/cajas/cajas.component';
+import { FormCajaComponent } from './modules/Comercial/cajas/form-caja/form-caja.component';
+import { MediospagoComponent } from './modules/Comercial/mediospago/mediospago.component';
+import { FormMediospagoComponent } from './modules/Comercial/mediospago/form-mediospago/form-mediospago.component';
+import { DocumentosVentaComponent } from './modules/Comercial/documentos-venta/documentos-venta.component';
+import { FormDocumentoVentaComponent } from './modules/Comercial/documentos-venta/form-documento-venta/form-documento-venta.component';
 import { LoginComponent } from './core/login/login.component';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { authGuard } from './core/guards/auth.guard';
@@ -80,16 +95,48 @@ export const routes: Routes = [
             { path: 'proveedores/new', component: FormProveedorComponent },
             { path: 'proveedores/view/:id', component: FormProveedorComponent },
             { path: 'proveedores/edit/:id', component: FormProveedorComponent },
+            { path: 'motivosdevolucion', component: MotivosDevolucionComponent },
+            { path: 'motivosdevolucion/new', component: FormMotivoDevolucionComponent },
+            { path: 'motivosdevolucion/view/:id', component: FormMotivoDevolucionComponent },
+            { path: 'motivosdevolucion/edit/:id', component: FormMotivoDevolucionComponent },
             { path: 'compras', component: CompraDirectaComponent },
             { path: 'compras/new', component: FormCompraDirectaComponent },
             { path: 'compras/view/:id', component: FormCompraDirectaComponent },
             { path: 'compras/edit/:id', component: FormCompraDirectaComponent },
+            { path: 'devolucioncompras', component: DevolucionComprasComponent },
+            { path: 'devolucioncompras/new', component: FormDevolucionComponent },
+            { path: 'devolucioncompras/view/:id', component: FormDevolucionComponent },
+            { path: 'devolucioncompras/edit/:id', component: FormDevolucionComponent },
             { path: 'monitorcompras', component: MonitorcomprasComponent },
             { path: 'monitorstock', component: MonitorstockComponent },
             { path: 'clientes/new', component: FormClienteComponent },
+            { path: 'ventas', component: VentaDirectaComponent },
             { path: 'ventas/new', component: FormVentaDirectaComponent },
+            { path: 'ventas/view/:id', component: FormVentaDirectaComponent },
+            { path: 'ventas/edit/:id', component: FormVentaDirectaComponent },
+            { path: 'ventapos', component: VentaPosComponent },
             { path: 'ventapos/new', component: FormVentaposComponent },
+            { path: 'ventapos/view/:id', component: FormVentaposComponent },
+            { path: 'ventapos/edit/:id', component: FormVentaposComponent },
+            { path: 'turno', component: TurnosComponent },
             { path: 'turno/new', component: FormTurnosComponent },
+            { path: 'turno/view/:id', component: FormTurnosComponent },
+            { path: 'turno/edit/:id', component: FormTurnosComponent },
+            { path: 'cierreturno', component: CierreturnoComponent },
+            { path: 'cierreturno/new', component: FormCierreturnoComponent },
+            { path: 'cierreturno/view/:id', component: FormCierreturnoComponent },
+            { path: 'cajas', component: CajasComponent },
+            { path: 'cajas/new', component: FormCajaComponent },
+            { path: 'cajas/view/:id', component: FormCajaComponent },
+            { path: 'cajas/edit/:id', component: FormCajaComponent },
+            { path: 'mediospago', component: MediospagoComponent },
+            { path: 'mediospago/new', component: FormMediospagoComponent },
+            { path: 'mediospago/view/:id', component: FormMediospagoComponent },
+            { path: 'mediospago/edit/:id', component: FormMediospagoComponent },
+            { path: 'documentos-venta', component: DocumentosVentaComponent },
+            { path: 'documentos-venta/new', component: FormDocumentoVentaComponent },
+            { path: 'documentos-venta/view/:idSucursal/:documento', component: FormDocumentoVentaComponent },
+            { path: 'documentos-venta/edit/:idSucursal/:documento', component: FormDocumentoVentaComponent },
             { path: 'login', component: LoginComponent },
         ]
     },

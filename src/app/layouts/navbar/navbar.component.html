@@ -49,10 +49,12 @@
 
 <mat-menu #subMenuCompras="matMenu">
     <button mat-menu-item routerLink="/proveedores/new">Proveedores</button>
+    <button mat-menu-item routerLink="/motivosdevolucion">Motivos Devolución</button>
 </mat-menu>
 
 <mat-menu #ComprasMenuTrans="matMenu">
     <button mat-menu-item routerLink="/compras/new">Compras Directa</button>
+    <button mat-menu-item routerLink="/devolucioncompras/new">Devolución a Proveedor</button>
 </mat-menu>
 
 <mat-menu #CompraReporte="matMenu">
@@ -67,6 +69,7 @@
 <mat-menu #subMenuVentasTras="matMenu">
     
     <button mat-menu-item routerLink="/turno/new">Abrir Turno</button>
+    <button mat-menu-item routerLink="/cierreturno/new">Cerrar Turno</button>
     <button mat-menu-item routerLink="/ventas/new">Venta Directa</button>
     <button mat-menu-item routerLink="/ventapos/new">Venta POS</button>
 </mat-menu>

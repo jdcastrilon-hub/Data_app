@@ -12,5 +12,8 @@ export class ValidacionAbrirTurno {
     nomCaja! : string;
     cliente!: ClienteSearch;
     mediopago?: MedioPago[];
+    turnoVencido!: boolean;
+    horasTranscurridas?: number;
+    horasLimite?: number;
 
 }

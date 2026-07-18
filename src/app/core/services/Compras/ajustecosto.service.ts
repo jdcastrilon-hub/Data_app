@@ -1,7 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { HistorialAjusteCosto } from '../../interfaces/Compras/HistorialAjusteCosto';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -30,5 +31,12 @@ export class AjustecostoService {
         return response.data;
       })
     );
+  }
+
+  historial(idArticulo: number, idBodega: number): Observable<HistorialAjusteCosto[]> {
+    const params = new HttpParams()
+      .set('id_articulo', idArticulo.toString())
+      .set('id_bodega', idBodega.toString());
+    return this.http.get<HistorialAjusteCosto[]>(this.url + "historial", { params });
   }
 }

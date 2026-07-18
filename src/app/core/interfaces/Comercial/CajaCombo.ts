@@ -1,5 +1,5 @@
 export class CajaCombo {
     idCaja? : number;
-    codCaja?: number;
-    nomCaja?: number;
+    codCaja?: string;
+    nomCaja?: string;
 }

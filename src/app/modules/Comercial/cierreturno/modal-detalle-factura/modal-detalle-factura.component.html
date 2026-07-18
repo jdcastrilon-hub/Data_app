@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>Detalle de Factura</h2>
+
+<mat-dialog-content>
+    @if (cargando) {
+    <div class="contenedor-cargando">
+        <mat-spinner diameter="32"></mat-spinner>
+    </div>
+    } @else if (error || !venta) {
+    <p class="mensaje-error">No se pudo cargar el detalle de esta factura.</p>
+    } @else {
+
+    <div class="cabecera-factura">
+        <div><span class="label">Factura:</span> {{ venta.factura }}</div>
+        <div><span class="label">Fecha:</span> {{ venta.fecDoc | date:'dd/MM/yyyy' }}</div>
+        <div><span class="label">Cliente:</span> {{ venta.cliente.nombreCompleto }}</div>
+        <div><span class="label">Total:</span> {{ formatearMoneda(venta.impTotal) }}</div>
+    </div>
+
+    <table mat-table [dataSource]="venta.detalles || []" class="tabla-articulos">
+
+        <ng-container matColumnDef="articulo">
+            <th mat-header-cell *matHeaderCellDef>Artículo</th>
+            <td mat-cell *matCellDef="let linea">{{ linea.referencia }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="cantidad">
+            <th mat-header-cell *matHeaderCellDef class="text-right">Cantidad</th>
+            <td mat-cell *matCellDef="let linea" class="text-right">{{ linea.cantidad }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="precio">
+            <th mat-header-cell *matHeaderCellDef class="text-right">Precio</th>
+            <td mat-cell *matCellDef="let linea" class="text-right">{{ formatearMoneda(linea.precio) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef class="text-right">Total</th>
+            <td mat-cell *matCellDef="let linea" class="text-right">{{ formatearMoneda(linea.importeTotal) }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    @if (venta.detallesPago && venta.detallesPago.length > 0) {
+    <div class="medios-pago">
+        <span class="label">Pagado con:</span>
+        @for (pago of venta.detallesPago; track pago.idMediopago) {
+        <span class="chip-pago">{{ pago.mediopago?.tipo }}: {{ formatearMoneda(pago.importe) }}</span>
+        }
+    </div>
+    }
+
+    }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button color="primary" type="button" (click)="cerrar()">Cerrar</button>
+</mat-dialog-actions>

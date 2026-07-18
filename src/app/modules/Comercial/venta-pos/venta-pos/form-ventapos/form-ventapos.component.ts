@@ -5,7 +5,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { ComboClienteComponent } from 'src/app/modules/resources/combo-cliente/combo-cliente.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 import { Ventas } from 'src/app/core/models/Ventas/Ventas';
@@ -29,7 +29,13 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import { FacturaPosService } from 'src/app/core/reports/Comercial/factura-pos.service';
 import { ModalPdfticketComponent } from '../../../resources/modal-pdfticket/modal-pdfticket.component';
-import { FormMediopagoComponent } from '../../../resources/form-mediopago/form-mediopago.component';
+import { FormMediopagoComponent, LineaPago } from '../../../resources/form-mediopago/form-mediopago.component';
+import { LoginService } from 'src/app/core/services/core/login.service';
+import { MediospagoService } from 'src/app/core/services/Ventas/mediospago.service';
+
+// Sentinel de UI, nunca se manda al backend como id_mediopago real - solo
+// activa la grilla de lineas de pago (form-mediopago) cuando se selecciona.
+const PAGO_MIXTO_SENTINEL: MedioPago = { id: -1, tipo: 'Pago Mixto' };
 
 // Acceso correcto usando corchetes para cumplir con las reglas estrictas de TypeScript
 const fonts = pdfFonts as any;
@@ -54,7 +60,12 @@ export class FormVentaposComponent {
   objeto_caja!: ValidacionAbrirTurno;
   titulo_form: string = 'VENTA POS';
   isEditMode: boolean = false; //Se define si el modo es nuevo o edicion
+  isReadOnly: boolean = false; //Se define si el modo es solo lectura (view)
   mostrarCampos: boolean = false;
+  // Se activa solo cuando se intento abrir /edit/:id de una venta cuyo turno ya
+  // esta cerrado - el formulario se fuerza a solo-lectura (ver ModoEdicion) y este
+  // flag es lo que hace visible el aviso explicando por que.
+  turnoCerrado: boolean = false;
 
   //tabla de articulos
   //detalle: CompraDetalle[] = [];
@@ -77,6 +88,25 @@ export class FormVentaposComponent {
   //lista de medios de pago
   list_mediospago: MedioPago[] = [];
   SelecmediosControl = new FormControl<MedioPago | null>(null, Validators.required);
+  // Lineas armadas por form-mediopago cuando se elige "Pago Mixto" (id/tipo/valor
+  // reales por medio de pago) - reemplaza al viejo campo unico formaPago/idPago.
+  lineasPagoMixto: LineaPago[] = [];
+  // Solo se llena en modo edicion/vista, para precargar la grilla con lo ya guardado.
+  lineasPagoIniciales: LineaPago[] = [];
+
+  get esPagoMixto(): boolean {
+    return this.SelecmediosControl.value?.tipo === 'Pago Mixto';
+  }
+
+  // La grilla de pago mixto no debe poder elegir "Pago Mixto" como si fuera
+  // un medio real - se filtra el sentinel de la lista que se le pasa.
+  get mediosPagoReales(): MedioPago[] {
+    return this.list_mediospago.filter(m => m.id !== PAGO_MIXTO_SENTINEL.id);
+  }
+
+  onPagosActualizados(lineas: LineaPago[]) {
+    this.lineasPagoMixto = lineas;
+  }
 
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
@@ -90,6 +120,8 @@ export class FormVentaposComponent {
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
     private dialog: MatDialog,
+    private loginService: LoginService,
+    private mediospagoService: MediospagoService,
     private router: Router) {
     this.objeto = new Ventas();
   }
@@ -130,10 +162,8 @@ export class FormVentaposComponent {
       fechaMod: this.objeto.fechaMod,
 
       //Medio de pago
-      formaPago: this.objeto.formaPago,
       impIgreso: this.objeto.impIgreso,
       impVuelto: this.objeto.impVuelto,
-      idPago: this.objeto.idPago,
 
       //Impuestos
       impuesto1: this.objeto.impuesto1,
@@ -154,15 +184,50 @@ export class FormVentaposComponent {
       detalles: this.fb.array([])
     });
 
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+
+    // Subcribir los cambios al selecionar el tipo de descuento (aplica en modo Nuevo
+    // y Edicion - antes vivian dentro del branch de "Nuevo" mas abajo, asi que en
+    // edicion el enable/disable de "porcDescuento" nunca reaccionaba al tipoDcto
+    // real de la venta cargada, aunque su VALOR si se restaurara bien).
+    this.SelecdctoControl.valueChanges.subscribe(objDcto => {
+      const porcDescuentoControl = this.formulario.get('porcDescuento');
+
+      if (porcDescuentoControl) {
+        if (objDcto === 'No Aplica') {
+          porcDescuentoControl.disable(); // Desactiva si eligen 'No Aplica' o 'Detalle'
+          porcDescuentoControl.setValue(0); // Opcional: Limpia el valor si deja de aplicar
+          this.ValidarColumnas("No Aplica");
+          this.aplicarDescuentoGeneral();
+        } if (objDcto === 'General') {
+          porcDescuentoControl.enable(); // <-- Corregido: Agregados los paréntesis ()
+          this.ValidarColumnas("General");
+          this.aplicarDescuentoGeneral();
+        } if (objDcto === 'Detalle') {
+          porcDescuentoControl.disable(); // Desactiva si eligen 'No Aplica' o 'Detalle'
+          porcDescuentoControl.setValue(0); // Opcional: Limpia el valor si deja de aplicar
+          this.ValidarColumnas("Detalle");
+        }
+
+      }
+    });
+
+    //Subcribimos los cambios al campo "porcDescuento"
+    this.formulario.get('porcDescuento')?.valueChanges.subscribe(() => {
+      if (this.SelecdctoControl.value === 'General' || this.SelecdctoControl.value === 'No Aplica') {
+        this.aplicarDescuentoGeneral();
+      }
+    });
+
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
       const id = params.get('id'); // Obtener el valor del parámetro 'id'
 
       if (id) {
-        // Si hay un ID, estamos en modo Edición
+        // Si hay un ID, estamos en modo Edición/Visualizacion
         console.log("Edicion")
         this.isEditMode = true;
-        //this.ModoEdicion(Number(id)); // Llama al método de carga
+        this.ModoEdicion(Number(id)); // Llama al método de carga
 
 
       } else {
@@ -175,37 +240,6 @@ export class FormVentaposComponent {
         //this.cargarSucursales();
         this.agregarLineaVacia();
         this.ValidarColumnas(this.defaultdcto);
-
-
-        //Subcribir los cambios al selecionar el tipo de descuento
-        this.SelecdctoControl.valueChanges.subscribe(objDcto => {
-          const porcDescuentoControl = this.formulario.get('porcDescuento');
-
-          if (porcDescuentoControl) {
-            if (objDcto === 'No Aplica') {
-              porcDescuentoControl.disable(); // Desactiva si eligen 'No Aplica' o 'Detalle'
-              porcDescuentoControl.setValue(0); // Opcional: Limpia el valor si deja de aplicar
-              this.ValidarColumnas("No Aplica");
-              this.aplicarDescuentoGeneral();
-            } if (objDcto === 'General') {
-              porcDescuentoControl.enable(); // <-- Corregido: Agregados los paréntesis ()  
-              this.ValidarColumnas("General");
-              this.aplicarDescuentoGeneral();
-            } if (objDcto === 'Detalle') {
-              porcDescuentoControl.disable(); // Desactiva si eligen 'No Aplica' o 'Detalle'
-              porcDescuentoControl.setValue(0); // Opcional: Limpia el valor si deja de aplicar
-              this.ValidarColumnas("Detalle");
-            }
-
-          }
-        });
-
-        //Subcribimos los cambios al campo "porcDescuento"
-        this.formulario.get('porcDescuento')?.valueChanges.subscribe(() => {
-          if (this.SelecdctoControl.value === 'General' || this.SelecdctoControl.value === 'No Aplica') {
-            this.aplicarDescuentoGeneral();
-          }
-        });
 
         //Subcribir el tipo de documento
         this.SelecmediosControl.valueChanges.subscribe(objPago => {
@@ -224,6 +258,175 @@ export class FormVentaposComponent {
       }
     })
 
+  }
+
+  //Metodo para cargar la venta POS que viene para edicion/visualizacion
+  ModoEdicion(id: number): void {
+    console.log("ModoEdicion");
+    this.VentasService.getVentaById(id).subscribe({
+      next: (data: Ventas) => {
+        this.objeto = data;
+        this.titulo_form = this.isReadOnly ? 'DETALLE VENTA POS' : 'ACTUALIZACION VENTA POS';
+
+        const logsFormArray = this.formulario.get('logs') as FormArray;
+        logsFormArray.clear();
+        if (this.objeto.logs?.length) {
+          this.objeto.logs.forEach((log: any) => {
+            logsFormArray.push(this.fb.group({
+              operacion: [log.operacion],
+              usuario_mod: [log.usuario_mod],
+              fecha_mod: [log.fecha_mod]
+            }));
+          });
+        }
+
+        this.formulario.patchValue({
+          idTrans: data.idTrans,
+          idEmp: data.idEmp,
+          idSucursalEmp: data.idSucursalEmp,
+          idCliente: data.idCliente,
+          fecDoc: data.fecDoc,
+          idBodega: data.idBodega,
+          idEstado: data.idEstado,
+          observaciones: data.observaciones,
+          documento: data.documento,
+          serie: data.serie,
+          secuencia: data.secuencia,
+          idTurno: data.idTurno,
+          nomCaja: data.nomCaja,
+          fecVenc: data.fecVenc,
+          impIgreso: data.impIgreso,
+          impVuelto: data.impVuelto,
+          porcDescuento: data.porcDescuento
+        });
+        this.formulario.get('nroDocum')?.patchValue(data.nroDocum);
+
+        // Carga el combo real de medios de pago (antes esto solo pasaba en modo
+        // "Nuevo", via validarTurno() - en edicion "Forma Pago" quedaba vacio
+        // pese a que la venta si tenia un medio guardado) y resuelve la
+        // seleccion: un solo medio -> se elige directo; varios -> "Pago Mixto"
+        // + se precarga la grilla con lo ya guardado.
+        this.mediospagoService.list().subscribe({
+          next: (medios) => {
+            this.list_mediospago = [...medios, PAGO_MIXTO_SENTINEL];
+            const detallesPago = data.detallesPago;
+            if (detallesPago && detallesPago.length === 1) {
+              const medioReal = this.list_mediospago.find(m => m.id === detallesPago[0].idMediopago);
+              if (medioReal) {
+                this.SelecmediosControl.setValue(medioReal);
+              }
+            } else if (detallesPago && detallesPago.length > 1) {
+              this.SelecmediosControl.setValue(PAGO_MIXTO_SENTINEL);
+              this.lineasPagoIniciales = detallesPago.map(d => ({
+                idMediopago: d.idMediopago,
+                tipo: d.mediopago?.tipo ?? '',
+                valor: Number(d.importe)
+              }));
+            }
+            if (this.isReadOnly) {
+              this.SelecmediosControl.disable();
+            }
+          },
+          error: (err) => console.error('Error cargando medios de pago', err)
+        });
+
+        // SelecdctoControl (tipo de descuento) nunca se restauraba en edicion -
+        // se quedaba siempre en su valor por defecto ("No Aplica"), lo que ademas
+        // dejaba "porcDescuento" deshabilitado sin importar el % real guardado
+        // (ver valueChanges de SelecdctoControl en ngOnInit). Mismo fix que en
+        // venta-directa.
+        if (data.tipoDcto) {
+          this.SelecdctoControl.setValue(data.tipoDcto);
+        }
+
+        this.onClienteChange(data.cliente);
+
+        // "nomCaja" no viene en la respuesta del backend (VentaBase no tiene ese
+        // campo, solo idTurno) - se resuelve aca via el turno guardado, mismo fix
+        // ya aplicado en venta-directa. De paso, si ese turno ya esta cerrado, la
+        // venta pasa a solo-lectura aunque la ruta haya sido /edit/:id - las ventas
+        // POS siempre se hacen con turno (nunca caja manual), asi que esta regla
+        // aplica siempre que hay idTurno.
+        if (data.idTurno) {
+          this.turnoService.getTurnoById(data.idTurno).subscribe({
+            next: (turno) => {
+              this.formulario.get('nomCaja')?.patchValue(turno.caja?.nomCaja || '');
+
+              if (this.isEditMode && turno.status === false) {
+                this.isReadOnly = true;
+                this.turnoCerrado = true;
+                this.titulo_form = 'DETALLE VENTA POS';
+                this.bloquearFormularioSoloLectura();
+              }
+            }
+          });
+        }
+
+        const detallesArray = this.detalles;
+        detallesArray.clear();
+        (data.detalles || []).forEach((det: any) => {
+          let stockData: VentaDisponible = {
+            idArticulo: det.idArticulo,
+            idCodBarra: det.idCodBarra,
+            codArticulo: '',
+            nomArticulo: det.referencia || '',
+            stock: det.stock || 0,
+            ubicacion: '',
+            idLote: det.idLote,
+            costo: 0,
+            precio: det.precio,
+            neto: det.neto,
+            objimpuesto1: { id: det.idTasaimp1, tasaImpuesto: det.impuesto1, porcentaje: 0, descripcion: '' },
+            impuesto1: det.impuesto1,
+            tasaimpuesto1: det.idTasaimp1,
+            valor_impu1: det.valorImpuesto1,
+            total: det.importeTotal
+          };
+          let articuloFiltro: ArticuloSearch = {
+            idArticulo: det.idArticulo,
+            codArticulo: '',
+            nomArticulo: det.referencia || ''
+          };
+
+          const nuevoDetalle = this.crearDetalleForm(stockData, det.linea, articuloFiltro);
+          nuevoDetalle.patchValue({
+            precio: det.precio,
+            cantidad: det.cantidad,
+            porc_dcto: det.porcDcto,
+            imp_dcto: det.importeDcto,
+            idLote: det.idLote,
+            neto: det.neto,
+            importeTotal: det.importeTotal,
+            valorImpuesto1: det.valorImpuesto1
+          });
+          nuevoDetalle.get('search')?.disable();
+          detallesArray.push(nuevoDetalle);
+        });
+        this.dataSource.data = detallesArray.controls as FormGroup[];
+
+        if (!this.isReadOnly) {
+          this.agregarLineaVacia();
+        }
+        this.ValidarColumnas(this.SelecdctoControl.value as string | null);
+
+        if (this.isReadOnly) {
+          this.bloquearFormularioSoloLectura();
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar la venta POS:', err);
+        this.router.navigate(['/ventapos']);
+      }
+    });
+  }
+
+  // Deshabilita todo el formulario (misma logica ya usada para /view/:id) - se
+  // extrajo aca para poder reutilizarla cuando se detecta que el turno de una
+  // venta ya esta cerrado y por lo tanto tampoco se debe permitir editarla.
+  private bloquearFormularioSoloLectura(): void {
+    this.formulario.disable();
+    this.SelecdctoControl.disable();
+    this.SelecmediosControl.disable();
   }
 
   /*
@@ -277,11 +480,17 @@ Receptores
   }
 
   validarTurno() {
-    const usuario = 'juan123'; // Esto vendría de tu servicio de auth
-    const fechaHoy = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const usuario = this.loginService.getUsuarioActual()?.usuario ?? '';
 
-    this.turnoService.ValidacionTurno("jcastrilon").subscribe({
+    this.turnoService.ValidacionTurno(usuario).subscribe({
       next: (data) => {
+        if (data.tieneturno && data.turnoVencido) {
+          // El turno existe pero ya supero horas_turno de la caja - se bloquea
+          // igual que "sin turno", pero con un mensaje especifico que manda a
+          // cerrarlo (no a abrir uno nuevo, ya tiene uno pendiente).
+          this.bloquearPantallaVencido(data.horasTranscurridas, data.horasLimite);
+          return;
+        }
         if (data.tieneturno) {
           this.objeto_caja = data;
           console.log("Respuesta")
@@ -307,15 +516,10 @@ Receptores
             searchCliente: cliente_filtro
           });
           //carga de tipos de pagos
-          this.list_mediospago = data.mediopago!;
+          this.list_mediospago = [...data.mediopago!, PAGO_MIXTO_SENTINEL];
           const primermedio = this.list_mediospago[0];
           if (primermedio) {
             this.SelecmediosControl.setValue(primermedio);
-
-            //Asignamos al path
-            this.formulario.patchValue({
-              formaPago: primermedio.tipo
-            });
           }
 
         } else {
@@ -334,6 +538,19 @@ Receptores
     this.dialog.open(ModalValturnoComponent, {
       width: '400px',
       disableClose: true // Evita que lo cierren haciendo clic afuera
+    });
+  }
+
+  bloquearPantallaVencido(horasTranscurridas?: number, horasLimite?: number) {
+    this.dialog.open(ModalValturnoComponent, {
+      width: '420px',
+      disableClose: true,
+      data: {
+        titulo: 'Turno Vencido',
+        mensaje: `Tienes un turno abierto desde hace ${horasTranscurridas ?? '?'} horas (limite: ${horasLimite ?? '?'} horas para esta caja). Debes cerrarlo antes de continuar.`,
+        textoBoton: 'Cerrar Turno Ahora',
+        ruta: '/cierreturno/new'
+      }
     });
   }
 
@@ -445,14 +662,14 @@ Receptores
 
       ]).subscribe(([cantidad, porc_dcto, porc_tasa1, precio]) => {
         console.log('Calculando...', { precio, cantidad }); // Ahora sí debería entrar
-        const Netototal = (precio || 0) * (cantidad || 0);
-        const imp_dcto = Netototal * ((porc_dcto / 100));
-        const valorImpu1 = ((Netototal - imp_dcto) || 0) * ((porc_tasa1 / 100) || 0);
+        const Netototal = this.redondear2((precio || 0) * (cantidad || 0));
+        const imp_dcto = this.redondear2(Netototal * ((porc_dcto / 100)));
+        const valorImpu1 = this.redondear2(((Netototal - imp_dcto) || 0) * ((porc_tasa1 / 100) || 0));
 
         nuevoDetalle.get('neto')?.setValue(Netototal, { emitEvent: false });
         nuevoDetalle.get('valorImpuesto1')?.setValue(valorImpu1, { emitEvent: false });
         nuevoDetalle.get('imp_dcto')?.setValue(imp_dcto, { emitEvent: false });
-        nuevoDetalle.get('importeTotal')?.setValue((Netototal - imp_dcto + valorImpu1), { emitEvent: false });
+        nuevoDetalle.get('importeTotal')?.setValue(this.redondear2(Netototal - imp_dcto + valorImpu1), { emitEvent: false });
 
       });
     }
@@ -460,6 +677,34 @@ Receptores
     this.detalles.push(nuevoDetalle);
     this.dataSource.data = this.detalles.controls as FormGroup[];
   }
+
+  // Cantidad obligatoria y mayor a 0 solo si la fila ya tiene articulo seleccionado
+  // (la fila vacia final del grid no debe marcarse en rojo antes de tiempo) - mismo
+  // patron ya aplicado en venta-directa.
+  validarCantidadPositiva = (control: AbstractControl): ValidationErrors | null => {
+    const fila = control.parent;
+    const idArticulo = fila?.get('idArticulo')?.value;
+    if (!idArticulo) {
+      return null;
+    }
+    if (control.value === null || control.value === undefined || control.value === '') {
+      return { required: true };
+    }
+    return Number(control.value) > 0 ? null : { min: { min: 1, actual: control.value } };
+  };
+
+  // Una venta siempre resta stock (no hay motivo/signo como en ajustestock), asi
+  // que la validacion es incondicional.
+  validarStockDisponible = (control: AbstractControl): ValidationErrors | null => {
+    const fila = control.parent;
+    const idArticulo = fila?.get('idArticulo')?.value;
+    if (!idArticulo) {
+      return null;
+    }
+    const stock = Number(fila?.get('stock')?.value) || 0;
+    const cantidad = Number(control.value) || 0;
+    return cantidad > stock ? { stockInsuficiente: true } : null;
+  };
 
   /**
     * Metodo para crear los datos de la linea vacia.
@@ -474,10 +719,10 @@ Receptores
       linea: [nextLinea, Validators.required],
       idArticulo: [data.idArticulo, Validators.required],
       idCodBarra: [data.idCodBarra, Validators.required],
-      refCompras: [data.nomArticulo],
+      referencia: [data.nomArticulo],
       costoUnit: [0, [Validators.required, Validators.min(0)]],
       precio: [0, [Validators.required, Validators.min(0)]],
-      cantidad: [0, [Validators.required, Validators.min(0)]],
+      cantidad: [0, [this.validarCantidadPositiva, this.validarStockDisponible]],
       porc_dcto: [0, [Validators.required, Validators.min(0)]],
       imp_dcto: 0,
       idLote: 0,
@@ -528,8 +773,8 @@ Receptores
             const stockData = data[0];
             console.log(stockData);
 
-            const valorIVA = Number(stockData.precio) * (Number(stockData.porcentaje) / 100);
-            const total = Number(stockData.precio) + valorIVA;
+            const valorIVA = this.redondear2(Number(stockData.precio) * (Number(stockData.porcentaje) / 100));
+            const total = this.redondear2(Number(stockData.precio) + valorIVA);
 
             const fila = this.detalles.at(index);
             fila.patchValue({
@@ -548,7 +793,7 @@ Receptores
               precioTotal: stockData.precio,
               nombreArticulo: articulo.nomArticulo,
               codigoArticulo: articulo.codArticulo,
-              refCompras:articulo.nomArticulo,
+              referencia:articulo.nomArticulo,
               search: articulo //articulo para bloquear la columna de search
             });
             fila.get('search')?.disable(); //Se bloque la primera columna.
@@ -590,14 +835,20 @@ Receptores
 
   //totales de grilla
 
+  /** Redondea a maximo 2 decimales (NUMERIC(14,2)) evitando el arrastre de
+   * error de punto flotante de JS (ej. 0.1+0.2 -> 36.480000000000004). */
+  private redondear2(valor: number): number {
+    return Math.round((valor + Number.EPSILON) * 100) / 100;
+  }
+
   get totalNeto(): number {
     // 1. Obtenemos el array de valores (incluyendo los campos disabled como 'neto')
     const todasLasFilas = this.detalles.getRawValue();
 
     // 2. Sumamos el campo 'neto' de cada objeto en el array
-    return todasLasFilas.reduce((acumulado, fila) => {
+    return this.redondear2(todasLasFilas.reduce((acumulado, fila) => {
       return acumulado + (Number(fila.neto) || 0);
-    }, 0);
+    }, 0));
   }
 
   get totalFinal(): number {
@@ -605,9 +856,9 @@ Receptores
     const todasLasFilas = this.detalles.getRawValue();
 
     // 2. Sumamos el campo 'neto' de cada objeto en el array
-    return todasLasFilas.reduce((acumulado, fila) => {
+    return this.redondear2(todasLasFilas.reduce((acumulado, fila) => {
       return acumulado + (Number(fila.importeTotal) || 0);
-    }, 0);
+    }, 0));
   }
 
   get vuelto(): number {
@@ -634,9 +885,9 @@ Receptores
     const todasLasFilas = this.detalles.getRawValue();
 
     // 2. Sumamos el campo 'neto' de cada objeto en el array
-    return todasLasFilas.reduce((acumulado, fila) => {
+    return this.redondear2(todasLasFilas.reduce((acumulado, fila) => {
       return acumulado + (Number(fila.valorImpuesto1) || 0);
-    }, 0);
+    }, 0));
   }
 
   get totalDcto(): number {
@@ -644,9 +895,9 @@ Receptores
     const todasLasFilas = this.detalles.getRawValue();
 
     // 2. Sumamos el campo 'neto' de cada objeto en el array
-    return todasLasFilas.reduce((acumulado, fila) => {
+    return this.redondear2(todasLasFilas.reduce((acumulado, fila) => {
       return acumulado + (Number(fila.imp_dcto) || 0);
-    }, 0);
+    }, 0));
   }
 
   // Método para agregar el log al FormArray
@@ -682,26 +933,65 @@ Receptores
       valorImpuesto2: 0,
       impuesto3: 'N/A',
       valorImpuesto3: 0,
-      impDescuento: 0,
+      // impDescuento (el total de descuento a nivel de cabecera) quedaba hardcodeado
+      // en 0 - mismo bug que venta-directa: el descuento por linea (imp_dcto) si se
+      // guardaba bien en el detalle, pero nunca se sumaba hacia la cabecera pese a
+      // que el getter totalDcto ya existia para esto.
+      impDescuento: this.totalDcto,
       impVuelto: this.vuelto || 0,
-      idPago: 0,
       serie: this.objeto.serie || "",
       nroDocum: this.objeto.nroDocum || 0,
       secuencia: this.objeto.secuencia || "",
       factura: this.objeto.factura || "",
-      observaciones: this.objeto.observaciones || "",
-      impIgreso: this.objeto.impIgreso || 0,
+      // observaciones e impIgreso son campos que el usuario si escribe en el
+      // formulario (formControlName="observaciones"/"impIgreso") - repatchearlos
+      // aca con "this.objeto" (el valor viejo, cargado al entrar al formulario)
+      // pisaba silenciosamente lo que el usuario acababa de escribir/cambiar, justo
+      // antes de guardar. serie/nroDocum/secuencia/factura si se dejan asi porque
+      // no son editables por el usuario en POS y el backend los recalcula o ignora
+      // en /savepos y /edit respectivamente.
       vista: 'VentaPOS',
       fechaMod: fecha_envio.toISOString()
     });
     console.log("Json original");
-    this.agregarLogAuditoria();
 
-    console.log(this.formulario.getRawValue());
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched(); // Para mostrar errores visualmente
       return; // Detiene la ejecución si el formulario no es válido
     }
+
+    // La fila vacia final del grid siempre existe (idArticulo 0/null); se exige
+    // al menos una linea con articulo real antes de permitir grabar.
+    const hayArticulos = this.detalles.controls
+      .some((fila: any) => fila.value.idArticulo !== 0 && fila.value.idArticulo !== null);
+    if (!hayArticulos) {
+      this.notificacion.showError('Debes agregar al menos un articulo antes de guardar.');
+      return;
+    }
+
+    // Construye las lineas de pago: un solo medio (lo elegido en "Forma Pago")
+    // o, si es "Pago Mixto", las lineas armadas por la grilla form-mediopago.
+    // El backend vuelve a validar esta suma (single round-trip), esto es solo
+    // feedback inmediato para el usuario antes de intentar guardar.
+    const detallesPago = this.esPagoMixto
+      ? this.lineasPagoMixto
+        .filter(l => l.valor > 0)
+        .map(l => ({ idMediopago: l.idMediopago, importe: l.valor }))
+      : [{ idMediopago: this.SelecmediosControl.value?.id, importe: this.totalFinal }];
+
+    const sumaPagos = this.redondear2(detallesPago.reduce((acc, d) => acc + (d.importe || 0), 0));
+    if (Math.abs(sumaPagos - this.totalFinal) > 0.01) {
+      this.notificacion.showError('La suma de los medios de pago no coincide con el total de la venta.');
+      return;
+    }
+
+    // El log de auditoria se agrega solo cuando ya se paso todas las validaciones,
+    // justo antes de armar el JSON a enviar - mismo motivo que en venta-directa:
+    // si se agregaba antes, cada intento fallido dejaba una entrada de log extra
+    // que nunca se limpiaba (resetCampos() solo corre tras un guardado exitoso).
+    this.agregarLogAuditoria();
+
+    console.log(this.formulario.getRawValue());
     console.log("Paso Json");
 
     // 1. Obtenemos todo el valor del formulario
@@ -722,17 +1012,27 @@ Receptores
     const jsonParaAPI = {
       ...dataCompleta,        // Copiamos todo lo del formulario (idTrans, idEmp, etc.)
       detalles: detallesLimpios, // Reemplazamos los detalles originales por los limpios
+      detallesPago,
       searchCliente: undefined // Si también quieres quitar el buscador de proveedor
     };
 
     // 4. Ahora sí, enviamos jsonParaAPI al servicio
     console.log('JSON Limpio:', jsonParaAPI);
-    // this.miServicio.post(jsonParaAPI).subscribe(...);
-
 
     //Evento nuevo
     if (this.isEditMode) {
       console.log("Editar")
+
+      this.VentasService.edit(this.objeto.idTrans!, jsonParaAPI).subscribe({
+        next: (venta) => {
+          this.notificacion.showSuccess('Venta POS actualizada con éxito!');
+          this.router.navigate(['/ventapos']);
+        },
+        error: (err) => {
+          console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo editar la venta.');
+        }
+      });
 
     } else {
       console.log("Nuevo")
@@ -797,12 +1097,9 @@ Receptores
     const primermedio = this.list_mediospago[0];
     if (primermedio) {
       this.SelecmediosControl.setValue(primermedio);
-
-      //Asignamos al path
-      this.formulario.patchValue({
-        formaPago: primermedio.tipo
-      });
     }
+    this.lineasPagoMixto = [];
+    this.lineasPagoIniciales = [];
   }
 
 
@@ -836,26 +1133,45 @@ Receptores
       console.log("URL de factura generada con éxito:", pdfUrl);
 
       // 2. Creamos un iframe oculto dinámicamente en el documento
+      // OJO: un iframe de 0x0 no dispara "load" en varios navegadores (Chrome no
+      // llega a inicializar su visor de PDF interno para un iframe sin tamaño real),
+      // asi que el blob se generaba bien pero el print() nunca se ejecutaba. Se usa
+      // 1x1px posicionado fuera de pantalla en vez de 0x0 - sigue siendo invisible
+      // para el usuario, pero el navegador si carga el PDF.
       const iframe = document.createElement('iframe');
       iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
+      iframe.style.right = '-9999px';
+      iframe.style.bottom = '-9999px';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
       iframe.style.border = 'none';
       iframe.src = pdfUrl;
 
       // 3. Esperamos a que el iframe cargue el PDF en memoria para lanzar la impresión
       iframe.onload = () => {
         if (iframe.contentWindow) {
+          let yaLimpio = false;
+          const limpiar = () => {
+            if (yaLimpio) return;
+            yaLimpio = true;
+            iframe.remove();
+            URL.revokeObjectURL(pdfUrl);
+          };
+
+          // 4. Limpieza: en navegadores modernos print() NO bloquea el hilo de JS
+          // (el dialogo de impresion es asincrono), asi que un setTimeout corto
+          // (el valor anterior, 1000ms) borraba el iframe y revocaba la URL del blob
+          // MIENTRAS el dialogo todavia estaba abierto/renderizando - resultado: 2
+          // segundos de dialogo en blanco y se cerraba solo. "afterprint" se dispara
+          // recien cuando el usuario imprime o cancela el dialogo, asi que es el
+          // momento correcto para limpiar. Se deja un timeout de respaldo generoso
+          // por si "afterprint" no dispara en algun navegador (evita que el iframe
+          // quede huerfano para siempre).
+          iframe.contentWindow.addEventListener('afterprint', limpiar);
+          setTimeout(limpiar, 60000);
+
           iframe.contentWindow.focus();
           iframe.contentWindow.print();
-
-          // 4. Limpieza: Removemos el iframe del DOM y revocamos la URL después de que abra la ventana
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            URL.revokeObjectURL(pdfUrl);
-          }, 1000);
         }
       };
 

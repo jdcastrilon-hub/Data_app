@@ -50,8 +50,7 @@ export class MonitorcomprasComponent {
   // Esto simularía los datos que vendrán de tu API en FastAPI
   kpisData: any = {
     compras: [],
-    variacion: [],
-    inventario: []
+    costos: []
   };
 
 

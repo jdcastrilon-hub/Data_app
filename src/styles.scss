@@ -165,6 +165,33 @@ body {
     }
 }
 
+/* Angular Material calcula la altura del contenido de cada mat-tab y a veces
+   deja una barra de scroll vertical aunque el contenido quepa - se ve en
+   todos los formularios que usan <mat-tab-group>. En vez de forzar
+   overflow:hidden (podria cortar contenido en pantallas chicas), se deja el
+   scroll mas fino y claro para que sea menos intrusivo. */
+/* Mismo tratamiento para el scroll de las grillas de detalle (.container-tabla,
+   clase reusada por venta-directa/venta-pos/compras/cierreturno/etc para el
+   contenedor con overflow:auto de la tabla de lineas). */
+.mat-mdc-tab-body-content,
+.container-tabla {
+    scrollbar-width: thin; // Firefox
+    scrollbar-color: #d8d8d8 transparent; // Firefox
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: #d8d8d8;
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+}
+
 .success-snackbar {
   --mdc-snackbar-container-color: #4caf50;
   --mdc-snackbar-label-text-color: white;

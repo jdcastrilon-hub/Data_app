@@ -63,6 +63,24 @@
   margin-top: 2px;
 }
 
+.contenedor-resumen {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+  font-size: 13px;
+}
+
+.suma-ok {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.suma-error {
+  color: #f44336;
+  font-weight: 600;
+}
+
 .container-tabla {
   min-height: 200px;
   max-height:  550px;

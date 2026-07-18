@@ -3,7 +3,7 @@
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
-                <a mat-icon-button color="primary" routerLink="/compras">
+                <a mat-icon-button color="primary" routerLink="/ventas">
                     <mat-icon>list</mat-icon>
                 </a>
                 <span>{{titulo_form}}</span>
@@ -11,6 +11,14 @@
             </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        @if (turnoCerrado) {
+        <div style="display:flex; align-items:center; gap:8px; padding:10px 16px; background-color:#fff3e0; color:#8a5a00; border-bottom:1px solid #ffe0b2;">
+            <mat-icon style="color:#f57c00;">warning</mat-icon>
+            <span>Esta venta se registro con un turno que ya esta cerrado, por eso solo se puede visualizar, no editar.</span>
+        </div>
+        }
+
         <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
 
             <mat-tab label="Datos Generales" style="background-color: brown;">
@@ -34,6 +42,7 @@
                         </div>
                         <div fxFlex="40">
                             <combo-cliente formControlName="searchCliente"
+                                [mostrarError]="intentoGuardar && !!formulario.get('idCliente')?.invalid"
                                 (clienteSelecionado)="onClienteChange($event)"></combo-cliente>
 
                         </div>
@@ -87,11 +96,24 @@
                                 (estadoSeleccionado)="recibirEstado($event)"></combo-estadostock>
                         </div>
                         <div fxFlex="15">
+                            @if (tieneTurnoActivo) {
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Caja</mat-label>
-                                <input matInput formControlName="codCaja">
-                                <mat-error>Codigo requerido</mat-error>
+                                <input matInput [value]="nombreCajaActiva" readonly>
                             </mat-form-field>
+                            } @else {
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Caja</mat-label>
+                                <mat-select [formControl]="SelectCajaUsuarioControl">
+                                    @for (obj_caja of list_cajasUsuario; track obj_caja.idCaja) {
+                                    <mat-option [value]="obj_caja">{{obj_caja.nomCaja}}</mat-option>
+                                    }
+                                </mat-select>
+                                @if (list_cajasUsuario.length === 0) {
+                                <mat-hint>No tienes cajas asociadas</mat-hint>
+                                }
+                            </mat-form-field>
+                            }
                         </div>
 
 
@@ -182,6 +204,9 @@
                                 </mat-error>
                                 <mat-error *ngIf="row.get('cantidad')?.hasError('min')">
                                     La cantidad debe ser mayor a 0.
+                                </mat-error>
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('stockInsuficiente')">
+                                    No hay stock suficiente para este articulo.
                                 </mat-error>
                             </td>
                             <td mat-footer-cell *matFooterCellDef>
@@ -303,7 +328,6 @@
                                     <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                         <mat-label>Observacion</mat-label>
                                         <input matInput formControlName="observaciones">
-                                        <mat-error>Codigo requerido</mat-error>
                                     </mat-form-field>
 
                                 </div>
@@ -390,15 +414,20 @@
 
 
             </mat-tab>
-            <!--
             <mat-tab label="Medio de Pago y Totales" style="background-color: brown;">
 
 
                 <div class="main-container">
                     <mat-card class="section facturacion">
                         <mat-card-content>
-                            <form-mediopago [totalFactura]="totalFinal" [mediospago]="list_mediospago">
+                            @if (esPagoMixto) {
+                            <form-mediopago [totalFactura]="totalFinal" [mediospago]="mediosPagoReales"
+                                [lineasIniciales]="lineasPagoIniciales"
+                                (pagosActualizados)="onPagosActualizados($event)">
                             </form-mediopago>
+                            } @else {
+                            <p>Selecciona "Pago Mixto" en Forma de Pago (pestaña Datos Generales) para dividir el pago en varios medios.</p>
+                            }
 
                         </mat-card-content>
                     </mat-card>
@@ -431,7 +460,6 @@
                     </div>
                 </div>
             </mat-tab>
-            -->
 
         </mat-tab-group>
         <br>
@@ -439,7 +467,7 @@
         <mat-card-actions class="mat-accion-botones">
             <button mat-raised-button color="primary" type="submit">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button">Cancelar</button>
+            <button mat-raised-button color="warn" type="button" routerLink="/ventas">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

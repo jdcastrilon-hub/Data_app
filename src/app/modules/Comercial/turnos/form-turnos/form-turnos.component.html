@@ -2,7 +2,7 @@
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
-                <a mat-icon-button color="primary" routerLink="/bodegas">
+                <a mat-icon-button color="primary" routerLink="/turno">
                     <mat-icon>list</mat-icon>
                 </a>
                 <span>{{titulo_form}}</span>
@@ -68,7 +68,7 @@
                         <div fxFlex="15">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Base.</mat-label>
-                                <input matInput formControlName="impBase">
+                                <input matInput #impBaseInput formControlName="impBase" (input)="onImpBaseInput($event)">
                                 <mat-error>Codigo requerido</mat-error>
                             </mat-form-field>
                         </div>
@@ -122,7 +122,7 @@
         <mat-card-actions class="mat-accion-botones">
             <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly">Cancelar</button>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly" routerLink="/turno">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

@@ -10,6 +10,7 @@ import { MatTable, MatTableDataSource, MatTableModule } from '@angular/material/
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MonitorCompraReporteCostosDetalle } from 'src/app/core/interfaces/Compras/MonitorCompraReporteCostosDetalle';
 import { AjustecostoComponent } from '../ajustecosto/ajustecosto.component';
+import { ModalHistorialCostoComponent } from '../modal-historial-costo/modal-historial-costo.component';
 import { MatIconModule } from '@angular/material/icon'
 import { MatDialog } from '@angular/material/dialog';
 import { AjusteCostos } from 'src/app/core/models/Compras/AjusteCostos';
@@ -91,7 +92,7 @@ export class ReportecostosComponent {
     const configurablesVisibles = this.columnasConfigurables
       .map(c => c.clave)
       .filter(clave => this.columnasVisibles.has(clave));
-    this.displayedColumns = ['position', ...configurablesVisibles, 'accion'];
+    this.displayedColumns = ['position', ...configurablesVisibles, 'acciones'];
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -159,6 +160,24 @@ export class ReportecostosComponent {
 
     });
 
+  }
+
+  abrirHistorial(index: number): void {
+    const fila = this.dataSource.data.at(index);
+    if (!fila) {
+      return;
+    }
+
+    this.dialog.open(ModalHistorialCostoComponent, {
+      width: '90%',
+      maxWidth: '1100px',
+      data: {
+        idArticulo: fila.idarticulo,
+        idBodega: fila.idbodega,
+        codArticulo: fila.codarticulo,
+        nomArticulo: fila.nomarticulo
+      }
+    });
   }
 
 }

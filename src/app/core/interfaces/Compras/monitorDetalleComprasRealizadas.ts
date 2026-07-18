@@ -8,5 +8,6 @@ export class monitorDetalleComprasRealizadas {
     importe !: number;
     nombreproveedor !: string;
     nombrebodega !: string;
+    num_devoluciones !: number;
 }
 

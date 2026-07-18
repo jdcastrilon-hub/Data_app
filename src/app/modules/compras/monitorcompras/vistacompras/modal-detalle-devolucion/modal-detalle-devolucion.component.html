@@ -1,0 +1,79 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon>assignment_return</mat-icon> Devoluciones — OC {{ data.numoc }} - Remito {{ data.remito }}
+</h2>
+
+<mat-dialog-content class="mat-typography">
+
+  @if (cargando) {
+  <div fxLayout="row" fxLayoutAlign="center center" class="cargando-container">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+  }
+
+  @if (!cargando) {
+  <table mat-table [dataSource]="lineas" class="mat-elevation-z1">
+    <ng-container matColumnDef="nroDevolucion">
+      <th mat-header-cell *matHeaderCellDef>N° Devolución</th>
+      <td mat-cell *matCellDef="let l">{{ l.nro_devolucion }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="fecha">
+      <th mat-header-cell *matHeaderCellDef>Fecha</th>
+      <td mat-cell *matCellDef="let l">{{ l.fecha | date:'dd/MM/yyyy' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="motivo">
+      <th mat-header-cell *matHeaderCellDef>Motivo</th>
+      <td mat-cell *matCellDef="let l">{{ l.motivo || '-' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="codBarra">
+      <th mat-header-cell *matHeaderCellDef>Código de Barra</th>
+      <td mat-cell *matCellDef="let l">{{ l.cod_barra }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="nomArticulo">
+      <th mat-header-cell *matHeaderCellDef>Artículo</th>
+      <td mat-cell *matCellDef="let l">{{ l.nom_articulo }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="lote">
+      <th mat-header-cell *matHeaderCellDef>Lote</th>
+      <td mat-cell *matCellDef="let l">{{ l.codigo_lote || '-' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="cantidad">
+      <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+      <td mat-cell *matCellDef="let l">{{ l.cantidad }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="costoUnit">
+      <th mat-header-cell *matHeaderCellDef>Costo Unit.</th>
+      <td mat-cell *matCellDef="let l">{{ l.costo_unit | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="costoTotal">
+      <th mat-header-cell *matHeaderCellDef>Costo Total</th>
+      <td mat-cell *matCellDef="let l">{{ l.costo_total | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnasDevolucion"></tr>
+    <tr mat-row *matRowDef="let row; columns: columnasDevolucion;"></tr>
+  </table>
+
+  @if (lineas.length === 0) {
+  <p>Esta compra no tiene devoluciones registradas.</p>
+  }
+
+  @if (lineas.length > 0) {
+  <div class="resumen-totales" fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="20px">
+    <span>Total Devuelto: <strong>{{ totalGeneral | currency:'COP':'symbol-narrow':'1.2-2' }}</strong></span>
+  </div>
+  }
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

@@ -15,5 +15,6 @@ export class Turnos {
     status_ref!: string;
     fechaMod!: Date;
     logs!: Auditoria[];
+    caja!: { nomCaja: string };
 }
 

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -13,10 +13,10 @@ import { SucursalServiceService } from 'src/app/core/services/General/sucursal-s
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 import { MatDividerModule } from '@angular/material/divider';
 import { UltimaCaja } from 'src/app/core/interfaces/Comercial/UltimaCaja';
-import { ServiciosiniService } from 'src/app/core/services/core/serviciosini.service';
-import { Numerador } from 'src/app/core/models/core/Numerador';
 import { AbrirturnoService } from 'src/app/core/services/Ventas/abrirturno.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { LoginService } from 'src/app/core/services/core/login.service';
+import { NumeradorService } from 'src/app/core/services/core/numerador.service';
 
 @Component({
   selector: 'app-form-turnos',
@@ -30,6 +30,8 @@ export class FormTurnosComponent {
   objeto!: Turnos;
   titulo_form !: string;
   ultima_caja!: UltimaCaja;
+
+  @ViewChild('impBaseInput') impBaseInputRef!: ElementRef<HTMLInputElement>;
 
   //parametros de entrada  
   isEditMode: boolean = false;
@@ -49,8 +51,9 @@ export class FormTurnosComponent {
     private sucursalService: SucursalServiceService,
     private turnoService: AbrirturnoService,
     private logAuditoria: AuditoriaService,
-    private serviceIni: ServiciosiniService,
     private notificacion: NotificacionesService,
+    private loginService: LoginService,
+    private numeradorService: NumeradorService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -61,7 +64,11 @@ export class FormTurnosComponent {
     console.log("form turno")
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({
-      id: [{ value: this.objeto.id, disabled: true }, Validators.required],
+      // id: el numero real lo asigna el backend (numerador "TURNO" en
+      // md_numeradores) recien al guardar. Aca solo se muestra un valor
+      // tentativo (previsualizarNumerador) - disabled para que no sea editable,
+      // mismo criterio que "Factura" en venta-directa.
+      id: [{ value: this.objeto.id, disabled: true }],
       idCaja: [this.objeto.idCaja, Validators.required],
       Fecha: [new Date(), Validators.required],
       status: [this.objeto.status],
@@ -91,9 +98,9 @@ export class FormTurnosComponent {
         console.log("Edicion")
         this.isEditMode = true;
         if (this.isReadOnly) {
-          this.titulo_form = "DETALLE BODEGA"
+          this.titulo_form = "DETALLE TURNO"
         } else {
-          this.titulo_form = "ACTUALIZACION BODEGA"
+          this.titulo_form = "ACTUALIZACION TURNO"
         }
 
         this.ModoEdicion(Number(id)); // Llama al método de carga
@@ -106,15 +113,16 @@ export class FormTurnosComponent {
         this.objeto = new Turnos();
         //Carga sucursales
         this.cargarSucursales();
-        this.obtenerNumerador("t_abrirturno_id_seq");
         this.cargarUltimaCaja();
+        this.previsualizarNumerador();
       }
     });
   }
 
   //Metodo para cargar lista de sucursales.
   cargarSucursales(): void {
-    this.sucursalService.sucursalesxCaja().subscribe({
+    const usuario = this.loginService.getUsuarioActual()?.usuario ?? '';
+    this.sucursalService.sucursalesxCaja(usuario).subscribe({
       next: (data) => {
         this.list_sucursal = data;
 
@@ -143,7 +151,8 @@ export class FormTurnosComponent {
   }
   //Metodo para cargar lista de sucursales.
   cargarUltimaCaja(): void {
-    this.turnoService.cargarUltimaCaja("jcastrilon").subscribe({
+    const usuario = this.loginService.getUsuarioActual()?.usuario ?? '';
+    this.turnoService.cargarUltimaCaja(usuario).subscribe({
       next: (data) => {
         //actualizar path
         if (data.idturno != 0) {
@@ -160,22 +169,45 @@ export class FormTurnosComponent {
   }
 
   /**
-  * Metodo para obtener el numerador siguiente de (nroDocum)
-  *
-  * @param numerador Numerador de la base de datos.
-  * @returns No tiene return , carga directamente en el patchValue de 'nroDocum'
-  */
-  obtenerNumerador(numerador: string): void {
-    console.log("obtenerNumerador");
-    console.log(numerador)
-    this.serviceIni.numeradorNext(numerador).subscribe({
-      next: (data: Numerador) => {
+   * Muestra el numero de turno tentativo (sin consumir el numerador real,
+   * mismo mecanismo que "Factura" en venta-directa). El numero definitivo lo
+   * asigna el backend recien al guardar (md_numeradores, codigo "TURNO").
+   */
+  previsualizarNumerador(): void {
+    const idEmp = this.loginService.getIdEmpresaActual();
+    if (!idEmp) {
+      return;
+    }
+    this.numeradorService.preview(idEmp, 'TURNO').subscribe({
+      next: (data) => {
         this.formulario.get('id')?.patchValue(data.next_value);
       },
       error: (err) => {
-        console.error('Error (obtenerNumerador)', err);
+        console.error('Error (previsualizarNumerador)', err);
       }
     });
+  }
+
+  /**
+   * Formatea "Base" con separador de miles (###.###.###) mientras se escribe.
+   * El FormControl (impBase) siempre guarda el numero real sin puntos - lo
+   * que se envia al backend - el punto solo se aplica al valor mostrado en
+   * el input, por eso no se usa formControlName aca sino [value]+ViewChild.
+   */
+  onImpBaseInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const soloDigitos = input.value.replace(/\D/g, '');
+    const valorNumerico = soloDigitos ? Number(soloDigitos) : null;
+    this.formulario.get('impBase')?.setValue(valorNumerico);
+    input.value = soloDigitos ? Number(soloDigitos).toLocaleString('es-CO') : '';
+  }
+
+  //Aplica el mismo formato al cargar un valor existente (edicion/vista).
+  formatearImpBaseVisible(valor: number | null | undefined): void {
+    if (!this.impBaseInputRef) {
+      return;
+    }
+    this.impBaseInputRef.nativeElement.value = valor ? Number(valor).toLocaleString('es-CO') : '';
   }
 
   /**
@@ -184,15 +216,62 @@ export class FormTurnosComponent {
   */
   ModoEdicion(id: number): void {
     console.log("ModoEdicion");
+    this.turnoService.getTurnoById(id).subscribe({
+      next: (data: Turnos) => {
+        this.objeto = data;
+
+        const logsFormArray = this.formulario.get('logs') as FormArray;
+        logsFormArray.clear();
+        if (this.objeto.logs?.length) {
+          this.objeto.logs.forEach((log: any) => {
+            logsFormArray.push(this.fb.group({
+              operacion: [log.operacion],
+              usuario_mod: [log.usuario_mod],
+              fecha_mod: [log.fecha_mod]
+            }));
+          });
+        }
+
+        this.formulario.patchValue({
+          idCaja: data.idCaja,
+          Fecha: data.Fecha,
+          status: data.status,
+          impBase: data.impBase,
+          usuario: data.usuario,
+          observacion: data.Observacion
+        });
+        this.formulario.get('id')?.patchValue(data.id);
+        this.formatearImpBaseVisible(data.impBase);
+
+        if (data.caja) {
+          this.SelectCajaControl.setValue({ idCaja: data.idCaja, nomCaja: data.caja.nomCaja } as any);
+        }
+
+        if (this.isReadOnly) {
+          this.SelectCajaControl.disable();
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar el turno:', err);
+        this.router.navigate(['/turno']);
+      }
+    });
   }
 
   enviarFormulario() {
+    //Bloqueo si ya existe un turno abierto para el usuario (solo aplica al crear uno nuevo,
+    //status_ref se carga via cargarUltimaCaja() unicamente en modo Nuevo).
+    if (!this.isEditMode && this.formulario.get('status_ref')?.value === 'Abierta') {
+      this.notificacion.showError('Ya tienes un turno abierto. Debes cerrarlo antes de abrir uno nuevo.');
+      return;
+    }
+
     //Asignacion de campos en cabezal
     console.log("enviarFormulario");
     this.formulario.patchValue({
       idCaja: this.SelectCajaControl.value?.idCaja,
       fechaMod: new Date().toISOString(),
-      usuario: 'jcastrilon',
+      usuario: this.loginService.getUsuarioActual()?.usuario ?? '',
       status: this.formulario.get('status')?.value ?? true,
       observacion: this.formulario.get('observacion')?.value || ''
     });
@@ -221,6 +300,17 @@ export class FormTurnosComponent {
     if (this.isEditMode) {
       console.log("Editar")
 
+      this.turnoService.edit(this.objeto.id, payload).subscribe({
+        next: (turno) => {
+          this.notificacion.showSuccess('Turno actualizado con éxito!');
+          this.router.navigate(['/turno']);
+        },
+        error: (err) => {
+          console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo editar el turno.');
+        }
+      });
+
     } else {
       console.log("Nuevo")
 
@@ -229,7 +319,7 @@ export class FormTurnosComponent {
           // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
           console.log(turno);
           this.notificacion.showSuccess('Turno Abierto con éxito!');
-          this.resetCampos();
+          this.router.navigate(['/turno']);
         },
         error: (err) => {
           console.error('Error al guardar:', err);
@@ -256,27 +346,6 @@ export class FormTurnosComponent {
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.push(auditoriaGroup);
   }
-
-  resetCampos() {
-    //Recuperar valores que no cambian
-    const idCaja = this.formulario.value.idCaja;
-    const feccjaCaja = this.formulario.value.fecha;
-
-
-    //Limpiar el formulario
-    this.objeto = new Turnos();
-    //reset grilla de logs
-    const logsArray = this.formulario.get('logs') as FormArray;
-    logsArray.clear();
-    //reset grilla de articulos
-    
-    //actualizo referencias
-    this.formulario.get('idCaja_ref')?.patchValue(idCaja);
-    this.formulario.get('Fecha_ref')?.patchValue(feccjaCaja);
-    this.formulario.get('status_ref')?.patchValue("Abierta");
-
-  }
-
 
 }
 

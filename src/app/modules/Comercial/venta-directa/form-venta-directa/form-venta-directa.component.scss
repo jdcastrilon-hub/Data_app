@@ -193,10 +193,15 @@
   /* Alinea los números a la derecha, se ve más profesional */
 }
 
-/* Busca la columna del artículo por su nombre de clase de Material */
+/* Busca la columna del artículo por su nombre de clase de Material.
+   matColumnDef="id" -> Angular Material genera la clase .mat-column-id, no
+   .mat-column-articulo (regla vieja mas abajo que nunca aplicaba, por eso esta
+   columna no tenia ancho minimo real y se encogia en pantallas mas chicas). */
 .mat-column-id {
   vertical-align: middle;
   /* Alineación base de tabla */
+  width: auto;
+  min-width: 220px;
 }
 
 /* El contenedor interno de la celda */
@@ -321,19 +326,6 @@ articulo-autocomplet {
   /* Simula el look de Material */
 }
 
-/* Estilo general para la tabla */
-.mat-column-index {
-  width: 40px;
-  text-align: center;
-}
-
-/* Columna # */
-.mat-column-articulo {
-  width: auto;
-  min-width: 200px;
-}
-
-/* La columna que debe ser ancha */
 /* Columnas numéricas compactas */
 .mat-column-stock,
 .mat-column-precio,

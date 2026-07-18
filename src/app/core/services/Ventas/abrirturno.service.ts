@@ -4,6 +4,10 @@ import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ValidacionAbrirTurno } from '../../interfaces/Comercial/ValidacionAbrirTurno';
 import { UltimaCaja } from '../../interfaces/Comercial/UltimaCaja';
+import { Turnos } from '../../models/Ventas/Turnos';
+import { PageResponse } from '../../models/core/PageResponse';
+import { TurnoListView } from '../../interfaces/Comercial/TurnoListView';
+import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -18,7 +22,39 @@ export class AbrirturnoService {
 
   private url: string = `${environment.baseUrl}/comercial/turnos/`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private loginService: LoginService) { }
+
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<TurnoListView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('idempresa', String(this.loginService.getIdEmpresaActual()))
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
+
+    return this.http.get<PageResponse<TurnoListView>>(this.url + "pagination", { params });
+  }
+
+  //Obtener turno por el ID
+  getTurnoById(id: number): Observable<Turnos> {
+    const params = new HttpParams().set('id', id);
+    return this.http.get<Turnos>(this.url + "search", { params });
+  }
+
+  //Editar turno
+  edit(id: number, objecto: any): Observable<any> {
+    return this.http.put<ApiResponse>(this.url + "edit/" + id, objecto).pipe(
+      map((response: ApiResponse) => {
+
+        if (response.status !== 'success') {
+          throw new Error(response.message || 'Error desconocido al editar el turno.');
+        }
+        return response.data;
+      })
+    );
+  }
 
   //Guardar turno
   save(objecto: any): Observable<any> {

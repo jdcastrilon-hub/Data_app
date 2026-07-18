@@ -2,9 +2,10 @@
     [matAutocompleteDisabled]="searchControl.disabled" 
     class="input-tabla">
 
-<mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
+<mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)"
+    panelWidth="380px" class="articulo-autocomplet-panel">
 
-    @for (item of filteredOptions(); track item.idArticulo) {
+    @for (item of filteredOptions(); track item.idCodBarra) {
     <mat-option [value]="item">
         {{ item.codArticulo }} - <small>{{ item.nomArticulo }}</small>
     </mat-option>

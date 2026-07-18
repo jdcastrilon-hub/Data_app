@@ -1,7 +1,6 @@
 import { Component, signal, computed, input, output, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormsModule, Validators } from '@angular/forms';
-import { MatTabsModule } from '@angular/material/tabs';
+import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -10,12 +9,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MedioPago } from 'src/app/core/models/Ventas/medioPago';
 
-interface LineaPago {
-  formaPago: string;
+export interface LineaPago {
+  idMediopago: number;
+  tipo: string;
   valor: number;
-  observacion: string;
 }
-
 
 @Component({
   selector: 'form-mediopago',
@@ -35,73 +33,86 @@ interface LineaPago {
 })
 export class FormMediopagoComponent {
 
-  list_mediospago: MedioPago[] = [];
-  SelecmediosControl = new FormControl<MedioPago | null>(null, Validators.required);
-
-  //Entrada
+  // Total real de la factura, para validar que la suma de las lineas cuadre.
   totalFactura = input.required<number>();
-  mediospago = input.required<any>();
+  // Medios de pago reales (m_mediopagos), reemplaza la lista hardcodeada que
+  // tenia este componente antes ('Efectivo', 'Tarjeta Credito', ...) - ahora
+  // cada linea guarda idMediopago, el mismo dato que ya usa el resto del
+  // sistema (td_cierreturno, p_movimientocajas).
+  mediospago = input.required<MedioPago[]>();
+  // Para modo edicion/vista: precarga las lineas ya guardadas de la venta.
+  lineasIniciales = input<LineaPago[]>([]);
 
-  //Salida
   pagosActualizados = output<LineaPago[]>();
 
+  lineasPago = signal<LineaPago[]>([]);
 
-  // Opciones disponibles para el Select
-  opcionesPago = ['Efectivo', 'Tarjeta Credito', 'Tarjeta Debito', 'Transferencia'];
-
-  // Inicializamos la tabla con una fila por defecto en "Efectivo"
-  lineasPago = signal<LineaPago[]>([
-    { formaPago: 'Efectivo', valor: 0, observacion: '' }
-  ]);
-
-  // Columnas fijas de la tabla
-  displayedColumns: string[] = ['formaPago', 'valor', 'observacion', 'acciones'];
-
-  ngOnInit() {
-    console.log("medios de pago")
-    console.log(this.mediospago());
-
-  }
+  displayedColumns: string[] = ['formaPago', 'valor', 'acciones'];
 
   constructor() {
-    // Un effect en Angular 19 reacciona automáticamente cada vez que las lineasPago cambian
-    // y notifica inmediatamente al componente padre.
+    // Precarga las lineas cuando llegan (edicion) - solo una vez que traen datos.
+    effect(() => {
+      const iniciales = this.lineasIniciales();
+      if (iniciales.length > 0) {
+        this.lineasPago.set(iniciales.map(l => ({ ...l })));
+      }
+    }, { allowSignalWrites: true });
+
+    // Cada vez que cambian las lineas, se notifica al formulario padre.
     effect(() => {
       this.pagosActualizados.emit(this.lineasPago());
     });
   }
 
-  
+  ngOnInit() {
+    if (this.lineasPago().length === 0 && this.lineasIniciales().length === 0) {
+      this.agregarLinea();
+    }
+  }
 
-  // Agregar una nueva línea vacía a la tabla
   agregarLinea() {
+    const primerMedio = this.mediospago()[0];
     this.lineasPago.update(lineas => [
       ...lineas,
-      { formaPago: 'Efectivo', valor: 0, observacion: '' }
+      { idMediopago: primerMedio?.id ?? 0, tipo: primerMedio?.tipo ?? '', valor: 0 }
     ]);
   }
 
-  // Eliminar una línea específica (opcional, pero útil para control)
   eliminarLinea(index: number) {
     if (this.lineasPago().length > 1) {
       this.lineasPago.update(lineas => lineas.filter((_, i) => i !== index));
     } else {
-      // Si es la última, solo la reseteamos
-      this.lineasPago.set([{ formaPago: 'Efectivo', valor: 0, observacion: '' }]);
+      const primerMedio = this.mediospago()[0];
+      this.lineasPago.set([{ idMediopago: primerMedio?.id ?? 0, tipo: primerMedio?.tipo ?? '', valor: 0 }]);
     }
   }
 
-  // Forzar la actualización de la tabla cuando cambia un input interno
-  actualizarValor() {
-    this.lineasPago.update(lineas => [...lineas]);
+  actualizarMedio(index: number, medio: MedioPago) {
+    this.lineasPago.update(lineas => lineas.map((l, i) =>
+      i === index ? { ...l, idMediopago: medio.id, tipo: medio.tipo } : l
+    ));
   }
 
-  // Calculamos la suma de todos los valores ingresados
+  actualizarValor(index: number, valor: number) {
+    this.lineasPago.update(lineas => lineas.map((l, i) =>
+      i === index ? { ...l, valor: Number(valor) || 0 } : l
+    ));
+  }
+
+  // Suma de lo que el usuario ha distribuido entre las lineas.
   totalIngresado = computed(() => {
     return this.lineasPago().reduce((acc, linea) => acc + (linea.valor || 0), 0);
   });
 
-  // Calculamos la devuelta global si el total ingresado supera al de la factura
+  // Diferencia contra el total real de la factura (0 = cuadra exacto).
+  diferencia = computed(() => Math.round((this.totalFactura() - this.totalIngresado()) * 100) / 100);
+
+  // El backend valida esto igual antes de grabar - se muestra en pantalla para
+  // que el usuario no tenga que intentar guardar para enterarse.
+  sumaValida = computed(() => Math.abs(this.diferencia()) < 0.01);
+
+  // Solo tiene sentido "vuelto" si el usuario distribuyo mas de lo que cuesta
+  // la factura (ej. pago con efectivo redondeado y espera cambio).
   devueltaGoblal = computed(() => {
     const cambio = this.totalIngresado() - this.totalFactura();
     return cambio > 0 ? cambio : 0;

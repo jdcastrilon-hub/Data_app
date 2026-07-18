@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { UsuarioLogin } from '../../interfaces/Core/UsuarioLogin';
 import { DetalleUserEmpresa } from '../../interfaces/Core/DetalleUserEmpresa';
+import { DetalleUser } from '../../interfaces/Core/DetalleUserLogin';
 import { Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -55,6 +56,15 @@ export class LoginService {
 
   getIdEmpresaActual(): number | null {
     return this.getEmpresaActual()?.idEmp ?? null;
+  }
+
+  /**
+   * Usuario logueado actual (fuente única de verdad, evita hardcodear un
+   * usuario de prueba en las pantallas, ver project_data_comercial_module).
+   */
+  getUsuarioActual(): DetalleUser | null {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
   }
 
   /**

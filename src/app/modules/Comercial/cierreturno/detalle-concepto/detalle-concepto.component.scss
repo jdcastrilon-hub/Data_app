@@ -1,0 +1,50 @@
+.contenedor-detalle-concepto {
+  background-color: #fcfcfc;
+  border: 1px solid #c5c5c5;
+  margin-top: 8px;
+  max-height: 800px;
+  overflow: auto;
+
+  // Mismo scroll fino y claro ya usado en .container-tabla/.mat-mdc-tab-body-content
+  // (ver styles.scss) - aca en local porque este contenedor tiene su propia clase.
+  scrollbar-width: thin;
+  scrollbar-color: #d8d8d8 transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #d8d8d8;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.mensaje-vacio {
+  padding: 16px;
+  color: #777;
+  font-style: italic;
+  margin: 0;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.nota-pago-parcial {
+  display: block;
+  font-size: 11px;
+  color: #777;
+}
+
+table {
+  width: 100%;
+}

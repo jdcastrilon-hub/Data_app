@@ -1,15 +1,15 @@
 <div class="contenedor-pago">
-    <div >
+    <div>
         <table mat-table [dataSource]="lineasPago()" class="container-tabla mat-elevation-z2">
 
-
             <ng-container matColumnDef="formaPago">
-                <th mat-header-cell *matHeaderCellDef> Forma de Pago </th>
+                <th mat-header-cell *matHeaderCellDef> Medio de Pago </th>
                 <td mat-cell *matCellDef="let element; let i = index">
-                    <select [(ngModel)]="element.formaPago" (selectionChange)="actualizarValor()"
+                    <select [ngModel]="element.idMediopago"
+                        (ngModelChange)="actualizarMedio(i, $event)"
                         class="input-tabla-select">
-                        @for (opcion of opcionesPago; track opcion) {
-                        <option [value]="opcion">{{ opcion }}</option>
+                        @for (medio of mediospago(); track medio.id) {
+                        <option [ngValue]="medio.id">{{ medio.tipo }}</option>
                         }
                     </select>
                 </td>
@@ -17,8 +17,9 @@
 
             <ng-container matColumnDef="valor">
                 <th mat-header-cell *matHeaderCellDef>Valor</th>
-                <td mat-cell *matCellDef="let element">
-                    <input matInput type="number" [(ngModel)]="element.valor" (input)="actualizarValor()"
+                <td mat-cell *matCellDef="let element; let i = index">
+                    <input matInput type="number" [ngModel]="element.valor"
+                            (ngModelChange)="actualizarValor(i, $event)"
                             placeholder="0.00" min="0" required class="text-right" #valorInput="ngModel" />
                     @if (valorInput.invalid && (valorInput.dirty || valorInput.touched)) {
                     <small class="error-texto">Obligatorio</small>
@@ -26,17 +27,10 @@
                 </td>
             </ng-container>
 
-            <ng-container matColumnDef="observacion">
-                <th mat-header-cell *matHeaderCellDef> Observación </th>
-                <td mat-cell *matCellDef="let element">
-                   <input matInput type="text" [(ngModel)]="element.observacion"
-                            placeholder="Ej. No. Transacción" />
-                </td>
-            </ng-container>
             <ng-container matColumnDef="acciones">
                 <th mat-header-cell *matHeaderCellDef class="text-center"> Acciones </th>
                 <td mat-cell *matCellDef="let element; let i = index" class="text-center">
-                    <button mat-icon-button color="warn" (click)="eliminarLinea(i)" title="Eliminar fila">
+                    <button mat-icon-button color="warn" type="button" (click)="eliminarLinea(i)" title="Eliminar fila">
                         <mat-icon>delete</mat-icon>
                     </button>
                 </td>
@@ -47,9 +41,20 @@
         </table>
     </div>
     <div class="acciones-tabla">
-        <button mat-flat-button color="primary" (click)="agregarLinea()">
+        <button mat-flat-button color="primary" type="button" (click)="agregarLinea()">
             <mat-icon>add</mat-icon> Agregar Medio de Pago
         </button>
+    </div>
+
+    <div class="contenedor-resumen">
+        <span>Distribuido: {{ totalIngresado() | currency }}</span>
+        @if (sumaValida()) {
+        <span class="suma-ok">✓ Cuadra con el total</span>
+        } @else {
+        <span class="suma-error">
+            {{ diferencia() > 0 ? 'Falta distribuir ' : 'Sobra ' }}{{ (diferencia() | number:'1.2-2') }}
+        </span>
+        }
     </div>
 
     @if (devueltaGoblal() > 0) {

@@ -31,9 +31,10 @@ export class SucursalServiceService {
     return this.http.get<SucursalCombo[]>(this.url + "comboBybodegas", { params });
   }
 
-   sucursalesxCaja(): Observable<SucursalXCajas[]> {
+   sucursalesxCaja(usuario: string): Observable<SucursalXCajas[]> {
     const params = new HttpParams()
       .set('id_empresa', String(this.loginService.getIdEmpresaActual()))
+      .set('usuario', usuario)
     return this.http.get<SucursalXCajas[]>(this.url + "comboBycajas", { params });
   }
 
