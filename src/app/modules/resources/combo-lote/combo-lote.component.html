@@ -1,5 +1,10 @@
-<input #inputInterno matInput type="text" placeholder="Código de lote" [formControl]="searchControl"
-    [matAutocomplete]="autoLote" class="input-tabla">
+<div class="combo-lote-wrapper">
+    <input #inputInterno matInput type="text" placeholder="Código de lote" [formControl]="searchControl"
+        [matAutocomplete]="autoLote" class="input-tabla" (blur)="onBlurInput()">
+    @if (searchControl.disabled) {
+    <button type="button" class="btn-limpiar" (click)="limpiarSeleccion($event)" title="Cambiar lote">×</button>
+    }
+</div>
 
 <mat-autocomplete #autoLote="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
 
@@ -9,7 +14,7 @@
     </mat-option>
     }
 
-    @if (textoActual) {
+    @if (textoActual && permitirCrear) {
     <mat-option [value]="OPCION_CREAR">
         + Crear lote "{{ textoActual }}"
     </mat-option>

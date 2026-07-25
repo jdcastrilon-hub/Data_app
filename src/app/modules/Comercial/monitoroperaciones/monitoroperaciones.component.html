@@ -1,0 +1,31 @@
+<main class="contenido">
+  <mat-card appearance="raised" class="monitor-card">
+
+    <mat-card-header class="mat-header">
+      <mat-card-title>MONITOR DE OPERACIONES</mat-card-title>
+
+      <span class="spacer"></span> <mat-form-field appearance="outline" class="select-inline">
+        <mat-label>Tipo de Informe</mat-label>
+        <mat-select [(value)]="reporteSeleccionado" (selectionChange)="reporteSeleccionado = $event.value">
+          <mat-option value="ventas">🧾 Ventas Realizadas</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card-header>
+
+    <div class="divider"></div>
+    <mat-card-content class="mat-content">
+      <div class="kpi-grid">
+        <kpiventas *ngFor="let kpi of currentKpis" [titulo]="kpi.titulo" [valor]="kpi.valor" [icono]="kpi.icono"
+          [color]="kpi.color">
+        </kpiventas>
+      </div>
+
+      @if (reporteSeleccionado==='ventas') {
+      <filtrosventas [obj_filtros]="obj_filtros" (alConsultar)="ReporteVentas($event)"></filtrosventas>
+      <vistaventasrealizadas [datos]="lista_ventasrealizadas" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
+        [filtrosActuales]="filtrosActuales" (paginacion)="PaginacionReporteVentas($event)"></vistaventasrealizadas>
+      }
+
+    </mat-card-content>
+  </mat-card>
+</main>

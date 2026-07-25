@@ -109,5 +109,14 @@ export class ComboClienteComponent implements OnInit, ControlValueAccessor {
     this.onChange(null);               // Notificamos al formulario padre
     this.clienteSelecionado.emit(null as any); // Avisamos al monitor
   }
+
+  // Permite a un padre que usa este combo en modo "agregar a una grilla" (ej.
+  // filtros de un monitor) reactivar el campo tras cada seleccion, mismo patron
+  // que combo-articulo/combo-proveedor.
+  resetCampo(): void {
+    this.searchControl.enable();
+    this.searchControl.setValue(null);
+    this.filteredOptions.set([]);
+  }
 }
 

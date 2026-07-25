@@ -4,11 +4,13 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { NotificacionesService } from '../notificaciones.service';
 import { LoginService } from '../login.service';
+import { PermisosStateService } from '../permisos-state.service';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   // Inyectamos el servicio de notificaciones de forma moderna
   const notificacion = inject(NotificacionesService);
   const loginService = inject(LoginService);
+  const permisosState = inject(PermisosStateService);
   const router = inject(Router);
   console.log('--- INTERCEPTOR EJECUTÁNDOSE ---');
   return next(req).pipe(
@@ -17,6 +19,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       // Cerramos la sesión local y mandamos al login en vez de mostrar el error genérico.
       if (err.status === 401) {
         loginService.logout();
+        permisosState.invalidar();
         router.navigate(['/login']);
         notificacion.showError('Tu sesión expiró, por favor inicia sesión nuevamente');
         return throwError(() => err);

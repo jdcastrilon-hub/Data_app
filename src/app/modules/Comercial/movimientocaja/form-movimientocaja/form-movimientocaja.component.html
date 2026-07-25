@@ -1,0 +1,80 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <a mat-icon-button color="primary" routerLink="/movimientocaja">
+                    <mat-icon>list</mat-icon>
+                </a>
+                <span>{{titulo_form}}</span>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <div class="bloque">
+
+            <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="3px grid">
+                <div fxFlex="20">
+                    <label class="etiqueta-tipo">Tipo de Movimiento</label>
+                    <mat-radio-group aria-label="Tipo de movimiento" color="primary" [formControl]="tipoControl">
+                        <mat-radio-button [value]="1">Ingreso</mat-radio-button>
+                        <mat-radio-button [value]="-1">Gasto</mat-radio-button>
+                    </mat-radio-group>
+                </div>
+
+                <div fxFlex="30">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Concepto</mat-label>
+                        <mat-select [formControl]="SelecConceptoControl" required>
+                            @for (obj_concepto of list_conceptos; track obj_concepto.id) {
+                            <mat-option [value]="obj_concepto">{{ obj_concepto.nomConcepto }}</mat-option>
+                            }
+                        </mat-select>
+                        @if (SelecConceptoControl.hasError('required')) {
+                        <mat-error>Debe seleccionar un concepto</mat-error>
+                        }
+                        @if (list_conceptos.length === 0) {
+                        <mat-hint>No tienes conceptos asignados para este tipo de movimiento.</mat-hint>
+                        }
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex="20">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Importe</mat-label>
+                        <input matInput #importeInput formControlName="importe" (input)="onImporteInput($event)">
+                        @if (formulario.get('importe')?.hasError('required')) {
+                        <mat-error>Requerido.</mat-error>
+                        }
+                        @if (formulario.get('importe')?.hasError('min')) {
+                        <mat-error>Debe ser mayor a 0.</mat-error>
+                        }
+                        @if (formulario.get('importe')?.hasError('superaLimite')) {
+                        <mat-error>Supera el limite de este concepto (max.
+                            {{ formulario.get('importe')?.errors?.['superaLimite']?.limite | currency:'COP':'symbol-narrow':'1.2-2' }}).
+                        </mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex="30">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Observacion</mat-label>
+                        <input matInput formControlName="observacion">
+                    </mat-form-field>
+                </div>
+            </div>
+
+        </div>
+
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly"
+                routerLink="/movimientocaja">Cancelar</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

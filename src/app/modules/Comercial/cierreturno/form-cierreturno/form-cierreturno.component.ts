@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -38,6 +38,34 @@ export class FormCierreturnoComponent {
   lineasDetalle: DetalleConceptoLinea[] = [];
   cargandoDetalle: boolean = false;
 
+  // "Arqueo ciego": antes de mostrar la grilla (que trae el valor del sistema
+  // por medio de pago), se le pide al cajero un unico total contado a ciegas -
+  // asi no puede copiar el numero esperado en vez de contar de verdad. Un
+  // cierre ya realizado (isReadOnly) no tiene sentido que pase por esto, se
+  // muestra directo revelado (ver ngOnInit).
+  faseCierre: 'blindTotal' | 'revelado' = 'blindTotal';
+  totalContadoCiegoControl = new FormControl<number | null>(null, [Validators.required, Validators.min(0)]);
+  diferenciaGeneralCiega: number = 0;
+
+  // Una vez revelado, no debe poder salir a la lista y volver a intentar el
+  // conteo ciego ya sabiendo la respuesta (rompe todo el sentido del arqueo
+  // ciego). Se usa tanto para el boton "Cancelar" como para el icono de
+  // volver-a-la-lista del encabezado.
+  get puedeSalir(): boolean {
+    return this.isReadOnly || this.faseCierre !== 'revelado';
+  }
+
+  // Formatea "Total Contado" con separador de miles mientras se escribe (mismo
+  // patron ya usado en "Base" de form-turnos) - el FormControl siempre guarda
+  // el numero real sin puntos, el punto solo se aplica al valor mostrado.
+  onTotalContadoInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const soloDigitos = input.value.replace(/\D/g, '');
+    const valorNumerico = soloDigitos ? Number(soloDigitos) : null;
+    this.totalContadoCiegoControl.setValue(valorNumerico);
+    input.value = soloDigitos ? Number(soloDigitos).toLocaleString('es-CO') : '';
+  }
+
   constructor(
     private fb: FormBuilder,
     private cierreService: CierreTurnoService,
@@ -67,8 +95,10 @@ export class FormCierreturnoComponent {
     const idParam = this.route.snapshot.paramMap.get('id');
 
     if (idParam) {
-      // Visualizar un cierre ya realizado (solo lectura, no hay flujo de edicion).
+      // Visualizar un cierre ya realizado (solo lectura, no hay flujo de edicion) -
+      // no aplica el arqueo ciego, se muestra todo revelado directamente.
       this.isReadOnly = true;
+      this.faseCierre = 'revelado';
       this.cargarCierre(Number(idParam));
     } else {
       // Nuevo cierre: siempre es del turno PENDIENTE DEL USUARIO LOGUEADO (no se
@@ -182,6 +212,33 @@ export class FormCierreturnoComponent {
     }, { emitEvent: false });
   }
 
+  // Revela la grilla (con el valor del sistema) recien despues de que el
+  // cajero entrego su conteo ciego del total - compara ese total contra
+  // impTotal (ya calculado por recalcularTotales() al cargar el resumen).
+  compararTotal() {
+    if (this.totalContadoCiegoControl.invalid) {
+      this.totalContadoCiegoControl.markAsTouched();
+      return;
+    }
+
+    const totalSistema = Number(this.formulario.get('impTotal')?.value) || 0;
+    const totalContado = Number(this.totalContadoCiegoControl.value) || 0;
+    this.diferenciaGeneralCiega = Math.round((totalContado - totalSistema) * 100) / 100;
+    this.faseCierre = 'revelado';
+
+    // Si el total ciego ya cuadro exacto contra el sistema, no tiene sentido
+    // dejar tocar cada medio de pago individualmente - permitirlo solo abre la
+    // puerta a que alguien introduzca un descuadre donde no lo habia. Se deja
+    // "Valor Contado" fijo en el valor del sistema y bloqueado.
+    if (this.diferenciaGeneralCiega === 0) {
+      this.detalles.controls.forEach((fila) => {
+        fila.get('valorUsuario')?.setValue(fila.get('importeSistema')?.value);
+        fila.get('valorUsuario')?.disable();
+      });
+      this.recalcularTotales();
+    }
+  }
+
   // Muestra/oculta el detalle de facturas de una fila de concepto (nivel 2).
   // Solo un concepto activo a la vez - clic de nuevo sobre el mismo lo cierra.
   toggleDetalleConcepto(index: number) {
@@ -257,6 +314,13 @@ export class FormCierreturnoComponent {
   }
 
   enviarFormulario() {
+    // Defensa extra ademas del *ngIf del boton: un Enter dentro del campo de
+    // "Total Contado" (arqueo ciego) tambien dispara (ngSubmit) del <form>,
+    // asi que sin este guard se podria cerrar el turno saltandose la revelacion.
+    if (this.faseCierre !== 'revelado') {
+      return;
+    }
+
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;

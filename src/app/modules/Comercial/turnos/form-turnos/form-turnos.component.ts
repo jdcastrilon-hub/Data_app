@@ -70,7 +70,7 @@ export class FormTurnosComponent {
       // mismo criterio que "Factura" en venta-directa.
       id: [{ value: this.objeto.id, disabled: true }],
       idCaja: [this.objeto.idCaja, Validators.required],
-      Fecha: [new Date(), Validators.required],
+      fecha: [new Date(), Validators.required],
       status: [this.objeto.status],
       impBase: [this.objeto.impBase, Validators.required],
       usuario: [this.objeto.usuario],

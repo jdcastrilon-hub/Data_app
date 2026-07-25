@@ -6,6 +6,7 @@ import { MotivoAjusteView } from '../../models/Bodega/MotivoAjusteView';
 import { PageResponse } from '../../models/core/PageResponse';
 import { environment } from 'src/environments/environment';
 import { MotivosCombo } from '../../interfaces/Bodega/MotivoCombo';
+import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error';
@@ -20,7 +21,7 @@ export class MotivosAjusteService {
 
   private url: string = `${environment.baseUrl}/bodega/motivos/`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private loginService: LoginService) { }
 
   listSelection(): Observable<MotivosCombo[]> {
     return this.http.get<MotivosCombo[]>(this.url + "listCombo");
@@ -45,7 +46,8 @@ export class MotivosAjusteService {
 
   //Guardar Motivo
   save(objecto: any): Observable<any> {
-    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.post<ApiResponse>(this.url + "save", objecto, { params }).pipe(
       map((response: ApiResponse) => {
         if (response.status !== 'success') {
           throw new Error(response.message || 'Error desconocido al guardar el motivo.');
@@ -57,7 +59,9 @@ export class MotivosAjusteService {
 
   //Editar Motivo
   edit(objecto: any, id_motivo: number): Observable<any> {
-    const params = new HttpParams().set('id_motivo', String(id_motivo));
+    const params = new HttpParams()
+      .set('id_motivo', String(id_motivo))
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
 
     return this.http.put<ApiResponse>(this.url + "edit", objecto, { params }).pipe(
       map((response: ApiResponse) => {
@@ -70,7 +74,9 @@ export class MotivosAjusteService {
   }
 
   delete(id: number): Observable<void> {
-    const params = new HttpParams().set('id_motivo', id.toString());
+    const params = new HttpParams()
+      .set('id_motivo', id.toString())
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
     return this.http.delete<void>(this.url + "delete", { params });
   }
 }

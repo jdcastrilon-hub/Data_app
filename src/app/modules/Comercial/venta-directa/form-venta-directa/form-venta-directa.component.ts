@@ -3,7 +3,6 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatDialogModule } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { combineLatest, startWith } from 'rxjs';
@@ -29,10 +28,10 @@ import { modules_depencias } from 'src/app/modules/dependencias/modules_depencia
 import { ArticuloAutocompletComponent } from 'src/app/modules/resources/articulo-autocomplet/articulo-autocomplet.component';
 import { ComboClienteComponent } from 'src/app/modules/resources/combo-cliente/combo-cliente.component';
 import { ComboEstadostockComponent } from 'src/app/modules/resources/combo-estadostock/combo-estadostock.component';
+import { ComboLoteComponent } from 'src/app/modules/resources/combo-lote/combo-lote.component';
+import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
 import { MedioPago } from 'src/app/core/models/Ventas/medioPago';
 import { CajaCombo } from 'src/app/core/interfaces/Comercial/CajaCombo';
-import { MatDialog } from '@angular/material/dialog';
-import { ModalValturnoComponent } from 'src/app/modules/resources/modal-valturno/modal-valturno.component';
 import { FormMediopagoComponent, LineaPago } from 'src/app/modules/Comercial/resources/form-mediopago/form-mediopago.component';
 
 // Sentinel de UI, nunca se manda al backend como id_mediopago real - solo
@@ -42,9 +41,9 @@ const PAGO_MIXTO_SENTINEL: MedioPago = { id: -1, tipo: 'Pago Mixto' };
 @Component({
   selector: 'app-form-venta-directa',
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
-    RouterModule, MatDialogModule, ComboClienteComponent, MatDatepickerModule,
+    RouterModule, ComboClienteComponent, MatDatepickerModule,
     MatCheckboxModule, ArticuloAutocompletComponent, ComboEstadostockComponent,
-    FormMediopagoComponent],
+    ComboLoteComponent, FormMediopagoComponent],
   templateUrl: './form-venta-directa.component.html',
   styleUrl: './form-venta-directa.component.scss'
 })
@@ -138,7 +137,11 @@ export class FormVentaDirectaComponent {
   tieneTurnoActivo: boolean = false;
   nombreCajaActiva: string = '';
   list_cajasUsuario: CajaCombo[] = [];
-  SelectCajaUsuarioControl = new FormControl<CajaCombo | null>(null);
+  // Requerido solo aplica en escenario B (sin turno activo); en escenario A el
+  // control ni se muestra, por eso el guard en enviarFormulario() lo revisa
+  // condicionado a !tieneTurnoActivo en vez de dejar Validators.required roto
+  // el formulario cuando hay turno.
+  SelectCajaUsuarioControl = new FormControl<CajaCombo | null>(null, Validators.required);
 
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
@@ -152,8 +155,7 @@ export class FormVentaDirectaComponent {
     private tasaService: TasaImpuestoServiceService,
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
-    private router: Router,
-    private dialog: MatDialog) {
+    private router: Router) {
     this.objeto = new Ventas();
   }
 
@@ -566,12 +568,15 @@ Receptores
 
   /**
    * Resuelve la caja/turno de la venta segun 2 escenarios:
-   * A. El usuario tiene un turno/caja POS abierto -> se toma el idTurno de ahi
-   *    (igual que hace venta-pos con ValidacionTurno), la caja se muestra de
-   *    solo lectura.
-   * B. El usuario no tiene turno abierto (ej. administrador de backoffice) ->
-   *    se le deja elegir entre las cajas asociadas a su usuario (m_cajasxuser),
-   *    y se guarda idCaja en su lugar (idTurno queda null).
+   * A. El usuario tiene un turno/caja POS abierto (y vigente) -> se toma el
+   *    idTurno de ahi (igual que hace venta-pos con ValidacionTurno), la caja
+   *    se muestra de solo lectura.
+   * B. El usuario no tiene turno abierto, o lo tiene pero esta vencido (ej.
+   *    administrador de backoffice) -> se le deja elegir entre las cajas NO
+   *    POS asociadas a su usuario (m_cajasxuser), y se guarda idCaja en su
+   *    lugar (idTurno queda null). A diferencia de venta-pos/movimientocaja,
+   *    aqui el turno POS nunca es obligatorio, por lo que un turno vencido no
+   *    bloquea la pantalla: simplemente no se usa como caja de movimiento.
    */
   resolverCajaTurno(): void {
     const usuario = this.loginService.getUsuarioActual();
@@ -581,23 +586,7 @@ Receptores
 
     this.turnoService.ValidacionTurno(usuario.usuario).subscribe({
       next: (data) => {
-        if (data.tieneturno && data.turnoVencido) {
-          // El turno existe pero ya supero horas_turno de la caja - se bloquea la
-          // pantalla con un mensaje que manda a cerrarlo (no se cae al Escenario B
-          // de elegir caja manual: el usuario SI tiene turno, solo esta vencido).
-          this.dialog.open(ModalValturnoComponent, {
-            width: '420px',
-            disableClose: true,
-            data: {
-              titulo: 'Turno Vencido',
-              mensaje: `Tienes un turno abierto desde hace ${data.horasTranscurridas ?? '?'} horas (limite: ${data.horasLimite ?? '?'} horas para esta caja). Debes cerrarlo antes de continuar.`,
-              textoBoton: 'Cerrar Turno Ahora',
-              ruta: '/cierreturno/new'
-            }
-          });
-          return;
-        }
-        if (data.tieneturno) {
+        if (data.tieneturno && !data.turnoVencido) {
           this.tieneTurnoActivo = true;
           this.nombreCajaActiva = data.nomCaja;
           this.formulario.patchValue({
@@ -740,16 +729,18 @@ Receptores
   }
 
   ValidarColumnas(tipoDcto: string | null) {
+    // "Lote" ya no se oculta de forma fija: se mantiene siempre en la tabla y
+    // cada fila decide si muestra el combo-lote o un "-" segun si el articulo
+    // de ESA fila maneja lote (ver celda "Lote" en el html, mismo patron que
+    // ajuste-stock/ValidarColumnas).
     if (tipoDcto === 'General' || tipoDcto === 'Detalle') {
-      // Mostramos porc_dcto e imp_dcto (Ocultamos solo 'Lote' si aplica)
-      this.displayedColumns = this.todasLasColumnas.filter(columna => columna !== 'Lote');
+      this.displayedColumns = this.todasLasColumnas;
 
       // Si es 'Detalle' permitimos editar, si es 'General' quedan bloqueadas
       this.columnasEditables = (tipoDcto === 'Detalle');
     } else {
-      // 'No Aplica' o null: Ocultamos las columnas de descuento y Lote
-      const columnasAOcultar = ['Lote', 'porc_dcto'];
-      this.displayedColumns = this.todasLasColumnas.filter(columna => !columnasAOcultar.includes(columna));
+      // 'No Aplica' o null: Ocultamos solo la columna de descuento.
+      this.displayedColumns = this.todasLasColumnas.filter(columna => columna !== 'porc_dcto');
       this.columnasEditables = false;
     }
   }
@@ -862,6 +853,27 @@ Receptores
     return cantidad > stock ? { stockInsuficiente: true } : null;
   };
 
+  // Si el articulo de la fila maneja lote, se debe haber seleccionado uno real
+  // (id > 0) - mismo validador que ajuste-stock.
+  validarLoteRequerido = (control: AbstractControl): ValidationErrors | null => {
+    const fila = control.parent;
+    const manejaLote = fila?.get('manejaLote')?.value;
+    if (!manejaLote) {
+      return null;
+    }
+    return Number(control.value) > 0 ? null : { loteRequerido: true };
+  };
+
+  // Se activa cuando el combo-lote de una fila emite un lote seleccionado.
+  // A diferencia de ajuste-stock, en ventas no se permite crear un lote nuevo
+  // (no tiene sentido vender de un lote que todavia no existe), asi que no hay
+  // manejo de "esNuevo"/nuevosLotes aca.
+  onLoteChange(lote: LoteDisponible, index: number): void {
+    const fila = this.detalles.at(index);
+    fila.patchValue({ idLote: lote.idLote });
+    fila.get('idLote')?.updateValueAndValidity();
+  }
+
   /**
     * Metodo para crear los datos de la linea vacia.
     * @returns No tiene return
@@ -881,7 +893,10 @@ Receptores
       cantidad: [0, [this.validarCantidadPositiva, this.validarStockDisponible]],
       porc_dcto: [0, [Validators.required, Validators.min(0)]],
       imp_dcto: 0,
-      idLote: 0,
+      idLote: [0, this.validarLoteRequerido],
+      // Solo indica si la celda "Lote" debe mostrar el combo (no se envia al
+      // backend, ver enviarFormulario) - mismo patron que ajuste-stock.
+      manejaLote: false,
       stock: data.stock,
       //objimpuesto1: [data.objimpuesto1],
       impuesto1: "IVA",
@@ -953,8 +968,14 @@ Receptores
               // silenciosamente y referencia se quedaba vacia para siempre (aunque el
               // input SI mostrara el articulo bien, via el control "search" de abajo).
               referencia: articulo.nomArticulo,
+              // Se resetea idLote (un articulo distinto no puede quedarse con el lote
+              // del articulo anterior) y se marca si este articulo maneja lote -
+              // mismo patron que ajuste-stock.
+              idLote: 0,
+              manejaLote: articulo.manejaLote || false,
               search: articulo //articulo para bloquear la columna de search
             });
+            fila.get('idLote')?.updateValueAndValidity();
             fila.get('search')?.disable(); //Se bloque la primera columna.
             fila.get('btoCrearCodBarra')?.setValue(true);
             this.agregarLineaVacia();
@@ -1114,6 +1135,17 @@ Receptores
     if (this.formulario.get('idCliente')?.invalid) {
       this.notificacion.showError('Debes seleccionar un cliente antes de guardar.');
       return;
+    }
+
+    // Igual que idCliente: SelectCajaUsuarioControl vive fuera de this.formulario,
+    // asi que formulario.invalid no lo detecta - se valida aparte. Solo aplica en
+    // escenario B (sin turno activo); con turno activo la caja viene resuelta sola.
+    if (!this.tieneTurnoActivo) {
+      this.SelectCajaUsuarioControl.markAsTouched();
+      if (this.SelectCajaUsuarioControl.invalid) {
+        this.notificacion.showError('Debes seleccionar una caja antes de guardar.');
+        return;
+      }
     }
 
     // La fila vacia final del grid siempre existe (idArticulo 0/null); se exige

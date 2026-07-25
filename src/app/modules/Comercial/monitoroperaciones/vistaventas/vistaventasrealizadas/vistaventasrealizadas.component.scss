@@ -1,0 +1,10 @@
+.mat-column-position {
+  width: 50px;
+  text-align: center;
+}
+
+::ng-deep .menu-columnas {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 16px;
+}

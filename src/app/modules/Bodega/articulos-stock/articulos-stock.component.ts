@@ -12,6 +12,10 @@ import { NotificacionesService } from 'src/app/core/services/core/notificaciones
 import { modules_depencias } from '../../dependencias/modules_depencias.module';
 import { ConfirmDialogComponent } from 'src/app/modules/resources/confirm-dialog/confirm-dialog.component';
 import { ModalLotesComponent } from './modal-lotes/modal-lotes.component';
+import { PermisosStateService } from 'src/app/core/services/core/permisos-state.service';
+
+// Codigo del formulario en md_menu (matriz de permisos)
+const MENU_CODIGO = 'INV_ART';
 
 @Component({
   selector: 'app-articulos-stock',
@@ -35,6 +39,11 @@ export class ArticulosStockComponent {
   pageSize: number = 15;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
+  // Segun los permisos del rol actual sobre este formulario
+  puedeCrear = false;
+  puedeEditar = false;
+  puedeEliminar = false;
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
@@ -42,10 +51,17 @@ export class ArticulosStockComponent {
     private notificacion: NotificacionesService,
     private router: Router,
     private listState: ArticuloListStateService,
+    private permisosState: PermisosStateService,
     private dialog: MatDialog
   ) { }
 
   ngOnInit() {
+    this.permisosState.cargar().subscribe(() => {
+      this.puedeCrear = this.permisosState.tienePermiso(MENU_CODIGO, 'CREAR');
+      this.puedeEditar = this.permisosState.tienePermiso(MENU_CODIGO, 'EDITAR');
+      this.puedeEliminar = this.permisosState.tienePermiso(MENU_CODIGO, 'ELIMINAR');
+    });
+
     // Restaura el filtro/pagina donde haya quedado la ultima vez (sin importar si se
     // llega aqui desde "volver" en ver/editar/nuevo, o desde el menu directamente).
     this.buscadorControl.setValue(this.listState.texto, { emitEvent: false });

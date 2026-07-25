@@ -6,7 +6,9 @@
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
 
         <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            @if (puedeCrear) {
             <button mat-raised-button color="primary" routerLink="/bodegas/new">Nuevo</button>
+            }
             <div style="flex: 1; display: flex; justify-content: center;">
                 <mat-form-field class="form-field-compacto" appearance="outline"
                     style="width: 320px; margin-bottom: -1.25em;">
@@ -48,12 +50,16 @@
                                 matTooltipPosition="above">
                                 <mat-icon>description</mat-icon>
                             </button>
+                            @if (puedeEditar) {
                             <button mat-icon-button (click)="editarBodega(element.id)">
                                 <mat-icon>edit</mat-icon>
                             </button>
+                            }
+                            @if (puedeEliminar) {
                             <button mat-icon-button matSuffix (click)="eliminarBodega(element.id)">
                                 <mat-icon>close</mat-icon>
                             </button>
+                            }
 
                         </td>
                     </ng-container>

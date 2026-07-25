@@ -14,6 +14,8 @@ import { UnidadesStockComponent } from './modules/Bodega/unidadesStock/unidadesS
 import { FormUnidadComponent } from './modules/Bodega/unidadesStock/form-unidad/form-unidad.component';
 import { EstadosComponent } from './modules/Bodega/estados/estados.component';
 import { FormEstadoComponent } from './modules/Bodega/estados/form-estado/form-estado.component';
+import { CargastockComponent } from './modules/Bodega/cargastock/cargastock.component';
+import { FormCargastockComponent } from './modules/Bodega/cargastock/form-cargastock/form-cargastock.component';
 import { ProveedoresComponent } from './modules/compras/proveedores/proveedores.component';
 import { FormProveedorComponent } from './modules/compras/proveedores/form-proveedor/form-proveedor.component';
 import { CompraDirectaComponent } from './modules/compras/compra-directa/compra-directa.component';
@@ -35,15 +37,27 @@ import { FormTurnosComponent } from './modules/Comercial/turnos/form-turnos/form
 import { TurnosComponent } from './modules/Comercial/turnos/turnos.component';
 import { FormCierreturnoComponent } from './modules/Comercial/cierreturno/form-cierreturno/form-cierreturno.component';
 import { CierreturnoComponent } from './modules/Comercial/cierreturno/cierreturno.component';
+import { FormMovimientocajaComponent } from './modules/Comercial/movimientocaja/form-movimientocaja/form-movimientocaja.component';
+import { MovimientocajaComponent } from './modules/Comercial/movimientocaja/movimientocaja.component';
 import { CajasComponent } from './modules/Comercial/cajas/cajas.component';
 import { FormCajaComponent } from './modules/Comercial/cajas/form-caja/form-caja.component';
 import { MediospagoComponent } from './modules/Comercial/mediospago/mediospago.component';
 import { FormMediospagoComponent } from './modules/Comercial/mediospago/form-mediospago/form-mediospago.component';
 import { DocumentosVentaComponent } from './modules/Comercial/documentos-venta/documentos-venta.component';
 import { FormDocumentoVentaComponent } from './modules/Comercial/documentos-venta/form-documento-venta/form-documento-venta.component';
+import { MonitoroperacionesComponent } from './modules/Comercial/monitoroperaciones/monitoroperaciones.component';
+import { ConceptosComponent } from './modules/tesoreria/conceptos/conceptos.component';
+import { FormConceptoComponent } from './modules/tesoreria/conceptos/form-concepto/form-concepto.component';
+import { AdministracionComponent } from './modules/administracion/administracion.component';
+import { FormUsuarioComponent } from './modules/administracion/usuarios/form-usuario/form-usuario.component';
+import { FormRolComponent } from './modules/administracion/roles/form-rol/form-rol.component';
+import { FormSucursalComponent } from './modules/administracion/sucursales/form-sucursal/form-sucursal.component';
+import { FormNegocioComponent } from './modules/administracion/negocios/form-negocio/form-negocio.component';
 import { LoginComponent } from './core/login/login.component';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { authGuard } from './core/guards/auth.guard';
+import { permisoGuard } from './core/guards/permiso.guard';
+import { NoAutorizadoComponent } from './modules/resources/no-autorizado/no-autorizado.component';
 
 export const routes: Routes = [
     // 1. Ruta pública e independiente a pantalla completa
@@ -58,39 +72,89 @@ export const routes: Routes = [
         canActivate: [authGuard],
         children: [
             { path: 'categorias', component: CategoriasComponent },
-            { path: 'categoria/new', component: FormCategoriaComponent },
+            {
+                path: 'categoria/new', component: FormCategoriaComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_CAT', accion: 'CREAR' }
+            },
             { path: 'categoria/view/:id', component: FormCategoriaComponent },
-            { path: 'categoria/edit/:id', component: FormCategoriaComponent },
+            {
+                path: 'categoria/edit/:id', component: FormCategoriaComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_CAT', accion: 'EDITAR' }
+            },
             { path: 'articulos', component: ArticulosStockComponent },
-            { path: 'articulos/new', component: FormArticuloComponent },
+            {
+                path: 'articulos/new', component: FormArticuloComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_ART', accion: 'CREAR' }
+            },
             { path: 'articulos/view/:id', component: FormArticuloComponent },
-            { path: 'articulos/edit/:id', component: FormArticuloComponent },
+            {
+                path: 'articulos/edit/:id', component: FormArticuloComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_ART', accion: 'EDITAR' }
+            },
             { path: 'ajustestock', component: AjusteStockComponent },
-            { path: 'ajustestock/new', component: FormAjusteComponent },
-            { path: 'ajustestock/edit/:id', component: FormAjusteComponent },
+            {
+                path: 'ajustestock/new', component: FormAjusteComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_AJU', accion: 'CREAR' }
+            },
+            {
+                path: 'ajustestock/edit/:id', component: FormAjusteComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_AJU', accion: 'EDITAR' }
+            },
             { path: 'ajustestock/view/:id', component: FormAjusteComponent },
-            { path: 'articulos/edit/:id', component: FormArticuloComponent },            
             { path: 'motivosajuste', component: MotivosAjusteComponent },
-            { path: 'motivosajuste/new', component: FormMotivoComponent },
+            {
+                path: 'motivosajuste/new', component: FormMotivoComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_MOT', accion: 'CREAR' }
+            },
             { path: 'motivosajuste/view/:id', component: FormMotivoComponent },
-            { path: 'motivosajuste/edit/:id', component: FormMotivoComponent },
+            {
+                path: 'motivosajuste/edit/:id', component: FormMotivoComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_MOT', accion: 'EDITAR' }
+            },
             { path: 'inventariostock', component: InventarioStockComponent },
             { path: 'bodegas', component: BodegasComponent },
-            { path: 'bodegas/new', component: FormBodegaComponent },
+            {
+                path: 'bodegas/new', component: FormBodegaComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_BOD', accion: 'CREAR' }
+            },
             { path: 'bodegas/view/:id', component: FormBodegaComponent },
-            { path: 'bodegas/edit/:id', component: FormBodegaComponent },
+            {
+                path: 'bodegas/edit/:id', component: FormBodegaComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_BOD', accion: 'EDITAR' }
+            },
             { path: 'trasladobodega', component: TrasladoBodegasComponent },
-            { path: 'trasladobodega/new', component: FormTrasladoComponent },
-            { path: 'trasladobodega/edit/:id', component: FormTrasladoComponent },
+            {
+                path: 'trasladobodega/new', component: FormTrasladoComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_TRAS', accion: 'CREAR' }
+            },
+            {
+                path: 'trasladobodega/edit/:id', component: FormTrasladoComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_TRAS', accion: 'EDITAR' }
+            },
             { path: 'trasladobodega/view/:id', component: FormTrasladoComponent },
             { path: 'unidades', component: UnidadesStockComponent },
-            { path: 'unidades/new', component: FormUnidadComponent },
+            {
+                path: 'unidades/new', component: FormUnidadComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_UNI', accion: 'CREAR' }
+            },
             { path: 'unidades/view/:id', component: FormUnidadComponent },
-            { path: 'unidades/edit/:id', component: FormUnidadComponent },
+            {
+                path: 'unidades/edit/:id', component: FormUnidadComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_UNI', accion: 'EDITAR' }
+            },
             { path: 'estados', component: EstadosComponent },
-            { path: 'estados/new', component: FormEstadoComponent },
+            {
+                path: 'estados/new', component: FormEstadoComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_EST', accion: 'CREAR' }
+            },
             { path: 'estados/view/:id', component: FormEstadoComponent },
-            { path: 'estados/edit/:id', component: FormEstadoComponent },
+            {
+                path: 'estados/edit/:id', component: FormEstadoComponent,
+                canActivate: [permisoGuard], data: { menuCodigo: 'INV_EST', accion: 'EDITAR' }
+            },
+            { path: 'cargastock', component: CargastockComponent },
+            { path: 'cargastock/new', component: FormCargastockComponent },
+            { path: 'cargastock/view/:id', component: FormCargastockComponent },
             { path: 'proveedores', component: ProveedoresComponent },
             { path: 'proveedores/new', component: FormProveedorComponent },
             { path: 'proveedores/view/:id', component: FormProveedorComponent },
@@ -109,6 +173,7 @@ export const routes: Routes = [
             { path: 'devolucioncompras/edit/:id', component: FormDevolucionComponent },
             { path: 'monitorcompras', component: MonitorcomprasComponent },
             { path: 'monitorstock', component: MonitorstockComponent },
+            { path: 'monitoroperaciones', component: MonitoroperacionesComponent },
             { path: 'clientes/new', component: FormClienteComponent },
             { path: 'ventas', component: VentaDirectaComponent },
             { path: 'ventas/new', component: FormVentaDirectaComponent },
@@ -125,6 +190,9 @@ export const routes: Routes = [
             { path: 'cierreturno', component: CierreturnoComponent },
             { path: 'cierreturno/new', component: FormCierreturnoComponent },
             { path: 'cierreturno/view/:id', component: FormCierreturnoComponent },
+            { path: 'movimientocaja', component: MovimientocajaComponent },
+            { path: 'movimientocaja/new', component: FormMovimientocajaComponent },
+            { path: 'movimientocaja/view/:id', component: FormMovimientocajaComponent },
             { path: 'cajas', component: CajasComponent },
             { path: 'cajas/new', component: FormCajaComponent },
             { path: 'cajas/view/:id', component: FormCajaComponent },
@@ -136,8 +204,26 @@ export const routes: Routes = [
             { path: 'documentos-venta', component: DocumentosVentaComponent },
             { path: 'documentos-venta/new', component: FormDocumentoVentaComponent },
             { path: 'documentos-venta/view/:idSucursal/:documento', component: FormDocumentoVentaComponent },
-            { path: 'documentos-venta/edit/:idSucursal/:documento', component: FormDocumentoVentaComponent },
+            { path: 'documentos-venta/edit/:idSucursal/:documento', component: FormDocumentoVentaComponent },            
+            { path: 'conceptos', component: ConceptosComponent },
+            { path: 'conceptos/new', component: FormConceptoComponent },
+            { path: 'conceptos/view/:id', component: FormConceptoComponent },
+            { path: 'conceptos/edit/:id', component: FormConceptoComponent },
+            { path: 'administracion', component: AdministracionComponent },
+            { path: 'usuarios/new', component: FormUsuarioComponent },
+            { path: 'usuarios/view/:id', component: FormUsuarioComponent },
+            { path: 'usuarios/edit/:id', component: FormUsuarioComponent },
+            { path: 'roles/new', component: FormRolComponent },
+            { path: 'roles/view/:id', component: FormRolComponent },
+            { path: 'roles/edit/:id', component: FormRolComponent },
+            { path: 'sucursales/new', component: FormSucursalComponent },
+            { path: 'sucursales/view/:id', component: FormSucursalComponent },
+            { path: 'sucursales/edit/:id', component: FormSucursalComponent },
+            { path: 'negocios/new', component: FormNegocioComponent },
+            { path: 'negocios/view/:id', component: FormNegocioComponent },
+            { path: 'negocios/edit/:id', component: FormNegocioComponent },
             { path: 'login', component: LoginComponent },
+            { path: 'no-autorizado', component: NoAutorizadoComponent },
         ]
     },
 

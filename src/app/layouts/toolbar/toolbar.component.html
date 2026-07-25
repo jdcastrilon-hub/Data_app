@@ -16,7 +16,7 @@
 
             <mat-icon>business</mat-icon>
 
-            <span>EMPRESA DEMO</span>
+            <span>{{empresa.nomEmpresa}}</span>
 
         </div>
 
@@ -27,11 +27,11 @@
         <button mat-button class="user-button" [matMenuTriggerFor]="menuUsuario">
 
             <div class="avatar">
-                J
+                {{user.nombre.charAt(0)}}
             </div>
 
             <span class="user-name">
-                Juan David
+                {{user.nombre}}
             </span>
 
             <mat-icon>

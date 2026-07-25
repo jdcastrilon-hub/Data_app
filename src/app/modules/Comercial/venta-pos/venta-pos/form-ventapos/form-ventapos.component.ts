@@ -20,6 +20,8 @@ import { ClienteSearch } from 'src/app/core/interfaces/Comercial/ClienteSearch';
 import { Numerador } from 'src/app/core/models/core/Numerador';
 import { VentaDisponible } from 'src/app/core/interfaces/Comercial/VentaDisponible';
 import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
+import { ComboLoteComponent } from 'src/app/modules/resources/combo-lote/combo-lote.component';
+import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
 import { combineLatest, startWith } from 'rxjs';
 import { AbrirturnoService } from 'src/app/core/services/Ventas/abrirturno.service';
 import { ValidacionAbrirTurno } from 'src/app/core/interfaces/Comercial/ValidacionAbrirTurno';
@@ -47,7 +49,7 @@ const fonts = pdfFonts as any;
   selector: 'form-ventapos',
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
     RouterModule, MatDialogModule, ComboClienteComponent, MatDatepickerModule,
-    MatCheckboxModule, ArticuloAutocompletComponent,FormMediopagoComponent],
+    MatCheckboxModule, ArticuloAutocompletComponent, ComboLoteComponent, FormMediopagoComponent],
   templateUrl: './form-ventapos.component.html',
   styleUrl: './form-ventapos.component.scss'
 })
@@ -583,16 +585,18 @@ Receptores
   }
 
   ValidarColumnas(tipoDcto: string | null) {
+    // "Lote" ya no se oculta de forma fija: se mantiene siempre en la tabla y
+    // cada fila decide si muestra el combo-lote o un "-" segun si el articulo
+    // de ESA fila maneja lote (ver celda "Lote" en el html, mismo patron que
+    // ajuste-stock/ValidarColumnas).
     if (tipoDcto === 'General' || tipoDcto === 'Detalle') {
-      // Mostramos porc_dcto e imp_dcto (Ocultamos solo 'Lote' si aplica)
-      this.displayedColumns = this.todasLasColumnas.filter(columna => columna !== 'Lote');
+      this.displayedColumns = this.todasLasColumnas;
 
       // Si es 'Detalle' permitimos editar, si es 'General' quedan bloqueadas
       this.columnasEditables = (tipoDcto === 'Detalle');
     } else {
-      // 'No Aplica' o null: Ocultamos las columnas de descuento y Lote
-      const columnasAOcultar = ['Lote', 'porc_dcto'];
-      this.displayedColumns = this.todasLasColumnas.filter(columna => !columnasAOcultar.includes(columna));
+      // 'No Aplica' o null: Ocultamos solo la columna de descuento.
+      this.displayedColumns = this.todasLasColumnas.filter(columna => columna !== 'porc_dcto');
       this.columnasEditables = false;
     }
   }
@@ -706,6 +710,27 @@ Receptores
     return cantidad > stock ? { stockInsuficiente: true } : null;
   };
 
+  // Si el articulo de la fila maneja lote, se debe haber seleccionado uno real
+  // (id > 0) - mismo validador que ajuste-stock.
+  validarLoteRequerido = (control: AbstractControl): ValidationErrors | null => {
+    const fila = control.parent;
+    const manejaLote = fila?.get('manejaLote')?.value;
+    if (!manejaLote) {
+      return null;
+    }
+    return Number(control.value) > 0 ? null : { loteRequerido: true };
+  };
+
+  // Se activa cuando el combo-lote de una fila emite un lote seleccionado.
+  // A diferencia de ajuste-stock, en ventas no se permite crear un lote nuevo
+  // (no tiene sentido vender de un lote que todavia no existe), asi que no hay
+  // manejo de "esNuevo"/nuevosLotes aca.
+  onLoteChange(lote: LoteDisponible, index: number): void {
+    const fila = this.detalles.at(index);
+    fila.patchValue({ idLote: lote.idLote });
+    fila.get('idLote')?.updateValueAndValidity();
+  }
+
   /**
     * Metodo para crear los datos de la linea vacia.
     * @returns No tiene return
@@ -725,7 +750,10 @@ Receptores
       cantidad: [0, [this.validarCantidadPositiva, this.validarStockDisponible]],
       porc_dcto: [0, [Validators.required, Validators.min(0)]],
       imp_dcto: 0,
-      idLote: 0,
+      idLote: [0, this.validarLoteRequerido],
+      // Solo indica si la celda "Lote" debe mostrar el combo (no se envia al
+      // backend, ver enviarFormulario) - mismo patron que ajuste-stock.
+      manejaLote: false,
       stock: data.stock,
       //objimpuesto1: [data.objimpuesto1],
       impuesto1: "IVA",
@@ -794,8 +822,14 @@ Receptores
               nombreArticulo: articulo.nomArticulo,
               codigoArticulo: articulo.codArticulo,
               referencia:articulo.nomArticulo,
+              // Se resetea idLote (un articulo distinto no puede quedarse con el lote
+              // del articulo anterior) y se marca si este articulo maneja lote -
+              // mismo patron que ajuste-stock.
+              idLote: 0,
+              manejaLote: articulo.manejaLote || false,
               search: articulo //articulo para bloquear la columna de search
             });
+            fila.get('idLote')?.updateValueAndValidity();
             fila.get('search')?.disable(); //Se bloque la primera columna.
             fila.get('btoCrearCodBarra')?.setValue(true);
             this.agregarLineaVacia();

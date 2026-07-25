@@ -1,0 +1,66 @@
+<mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+    <button mat-raised-button color="primary" routerLink="/sucursales/new">Nuevo</button>
+    <div style="flex: 1; display: flex; justify-content: center;">
+        <mat-form-field class="form-field-compacto" appearance="outline"
+            style="width: 320px; margin-bottom: -1.25em;">
+            <mat-label>Buscar por codigo o nombre</mat-label>
+            <input matInput [formControl]="buscadorControl" placeholder="Ej: 01">
+            <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+    </div>
+</mat-card-actions>
+<mat-card-content class="mat-content">
+
+    <div class="table-scroll-container">
+        <table mat-table [dataSource]="dataSource">
+            <ng-container matColumnDef="id">
+                <th mat-header-cell *matHeaderCellDef>id</th>
+                <td mat-cell *matCellDef="let element">{{ element.id }}</td>
+            </ng-container>
+            <ng-container matColumnDef="codigo">
+                <th mat-header-cell *matHeaderCellDef>Codigo</th>
+                <td mat-cell *matCellDef="let element">{{ element.codSucursal }}</td>
+            </ng-container>
+            <ng-container matColumnDef="nombre">
+                <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                <td mat-cell *matCellDef="let element">{{ element.nomSucursal }}</td>
+            </ng-container>
+            <ng-container matColumnDef="activo">
+                <th mat-header-cell *matHeaderCellDef>Estado</th>
+                <td mat-cell *matCellDef="let element">
+                    <span class="status-badge" [ngClass]="element.activo ? 'active' : 'inactive'">
+                        {{ element.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                </td>
+            </ng-container>
+            <ng-container matColumnDef="fecha">
+                <th mat-header-cell *matHeaderCellDef>Ult. Modificacion</th>
+                <td mat-cell *matCellDef="let element">{{ element.fechaMod | date: 'dd/MM/yyyy HH:mm' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let element">
+                    <button mat-icon-button (click)="visualizarSucursal(element.id)"
+                        matTooltip="Visualizar" matTooltipPosition="above">
+                        <mat-icon>description</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="editarSucursal(element.id)"
+                        matTooltip="Editar" matTooltipPosition="above">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button matSuffix (click)="eliminarSucursal(element.id)"
+                        matTooltip="Eliminar" matTooltipPosition="above">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        </table>
+    </div>
+    <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+        [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+
+</mat-card-content>

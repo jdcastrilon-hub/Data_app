@@ -7,6 +7,7 @@ import { PageResponse } from '../../models/core/PageResponse';
 import { BodegaListView } from '../../interfaces/Bodega/BodegaListView';
 import { environment } from 'src/environments/environment';
 import { BodegaCombo } from '../../interfaces/Bodega/BodegaCombo';
+import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -21,7 +22,7 @@ export class BodegaService {
 
   private url: string = `${environment.baseUrl}/bodega/bodegas/`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private loginService: LoginService) { }
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<BodegaListView>> {
     let params = new HttpParams()
@@ -58,7 +59,8 @@ export class BodegaService {
 
   //Guardar Bodega
   save(objecto: any): Observable<any> {
-    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.post<ApiResponse>(this.url + "save", objecto, { params }).pipe(
       map((response: ApiResponse) => {
 
         if (response.status !== 'success') {
@@ -74,6 +76,7 @@ export class BodegaService {
   edit(objecto: any, id_bodega: number): Observable<any> {
     const params = new HttpParams()
       .set('bodega_id', String(id_bodega))
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()))
 
     return this.http.put<ApiResponse>(this.url + "edit", objecto, { params }).pipe(
       map((response: ApiResponse) => {
@@ -90,7 +93,9 @@ export class BodegaService {
 
   delete(id: number): Observable<void> {
     // Configuramos el query parameter: /delete?bodega_id=ID
-    const params = new HttpParams().set('bodega_id', id.toString());
+    const params = new HttpParams()
+      .set('bodega_id', id.toString())
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
 
     return this.http.delete<void>(this.url+"delete", { params });
   }

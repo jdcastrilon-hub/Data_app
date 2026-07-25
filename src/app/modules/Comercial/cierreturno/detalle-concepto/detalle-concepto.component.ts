@@ -18,9 +18,28 @@ export class DetalleConceptoComponent {
   @Input() lineas: DetalleConceptoLinea[] = [];
   @Input() cargando: boolean = false;
 
-  displayedColumns: string[] = ['factura', 'hora', 'cliente', 'importe', 'acciones'];
-
   constructor(private dialog: MatDialog) { }
+
+  // Todas las lineas de una misma tabla comparten concepto (se cargan para UN
+  // solo concepto/medio/signo a la vez), asi que basta con mirar la primera
+  // fila para saber si esto es una lista de facturas o de movimientos de caja.
+  get esFactura(): boolean {
+    return this.lineas[0]?.tipo === 'Factura';
+  }
+
+  get displayedColumns(): string[] {
+    return this.esFactura
+      ? ['factura', 'hora', 'cliente', 'importe', 'acciones']
+      : ['factura', 'hora', 'cliente', 'importe'];
+  }
+
+  get etiquetaFactura(): string {
+    return this.esFactura ? 'Factura' : 'Concepto';
+  }
+
+  get etiquetaCliente(): string {
+    return this.esFactura ? 'Cliente' : 'Observación';
+  }
 
   verDetalleFactura(linea: DetalleConceptoLinea): void {
     this.dialog.open(ModalDetalleFacturaComponent, {

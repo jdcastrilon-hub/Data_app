@@ -56,16 +56,19 @@ export class ArticuloServiceService {
 
   //Guardar Articulo
   save(objecto: any): Observable<any> {
-    return this.http.post<ApiResponse>(this.url + "save", objecto);
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.post<ApiResponse>(this.url + "save", objecto, { params });
   }
 
 
   update(objecto: Articulo): Observable<ApiResponse> {
-    return this.http.put<ApiResponse>(this.url + "edit/" + objecto.id_articulo, objecto);
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.put<ApiResponse>(this.url + "edit/" + objecto.id_articulo, objecto, { params });
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(this.url + "delete/" + id);
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.delete<void>(this.url + "delete/" + id, { params });
   }
 
   //Servicios adicionales

@@ -1,0 +1,33 @@
+<mat-card appearance="raised">
+    <mat-card-header class="mat-header">
+        <mat-card-title>
+            <span>ADMINISTRACION</span>
+        </mat-card-title>
+    </mat-card-header>
+    <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+    <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start"
+        [(selectedIndex)]="tabState.activeIndex">
+
+        <mat-tab label="Usuarios">
+            <app-usuarios></app-usuarios>
+        </mat-tab>
+
+        <mat-tab label="Roles">
+            <app-roles></app-roles>
+        </mat-tab>
+
+        <mat-tab label="Sucursales">
+            <app-sucursales></app-sucursales>
+        </mat-tab>
+
+        <mat-tab label="Negocios">
+            <app-negocios></app-negocios>
+        </mat-tab>
+
+        <mat-tab label="Permisos">
+            <app-permisos></app-permisos>
+        </mat-tab>
+
+    </mat-tab-group>
+</mat-card>

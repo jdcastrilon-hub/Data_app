@@ -86,13 +86,17 @@
                         <ng-container matColumnDef="Lote">
                             <th mat-header-cell *matHeaderCellDef>Lote</th>
                             <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                                <input matInput formControlName="idLote" placeholder="Nombre" />
-                                <mat-error *ngIf="row.get('idLote')?.hasError('required')">
-                                    La cantidad es obligatoria.
+                                @if (row.get('manejaLote')?.value) {
+                                <combo-lote [idArticulo]="row.get('idArticulo')?.value"
+                                    [idLoteActual]="row.get('idLote')?.value" [permitirCrear]="false"
+                                    (loteSeleccionado)="onLoteChange($event, i)"></combo-lote>
+                                <mat-error *ngIf="row.get('idLote')?.hasError('loteRequerido') && row.get('idLote')?.touched">
+                                    Debe seleccionar un lote
                                 </mat-error>
-                                <mat-error *ngIf="row.get('idLote')?.hasError('min')">
-                                    La cantidad debe ser mayor a 0.
-                                </mat-error>
+                                } @else {
+                                <span>-</span>
+                                }
+                                <input type="hidden" formControlName="idLote">
                             </td>
                             <td mat-footer-cell *matFooterCellDef></td>
                         </ng-container>

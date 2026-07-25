@@ -2,9 +2,11 @@
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
+                @if (puedeSalir) {
                 <a mat-icon-button color="primary" routerLink="/cierreturno">
                     <mat-icon>list</mat-icon>
                 </a>
+                }
                 <span>{{titulo_form}}</span>
             </mat-card-title>
         </mat-card-header>
@@ -55,6 +57,39 @@
                     </mat-form-field>
                 </div>
             </div>
+
+            @if (faseCierre === 'blindTotal') {
+            <div class="bloque-arqueo-ciego mat-elevation-z1">
+                <p class="texto-arqueo-ciego">
+                    Antes de ver el detalle, cuenta todo lo que tienes (efectivo + Nequi/transferencias + tarjetas,
+                    etc.) e ingresa el <strong>total</strong>.
+                </p>
+                <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="12px">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Total Contado</mat-label>
+                        <input matInput [formControl]="totalContadoCiegoControl" (input)="onTotalContadoInput($event)">
+                        <mat-error *ngIf="totalContadoCiegoControl.hasError('required')">Requerido.</mat-error>
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="button" (click)="compararTotal()">
+                        Comparar
+                    </button>
+                </div>
+            </div>
+            }
+
+            @if (faseCierre === 'revelado') {
+
+            @if (!isReadOnly) {
+            <div class="resumen-comparacion-ciega mat-elevation-z1">
+                <div><span class="label">Total Sistema:</span> {{ formatearMoneda(formulario.get('impTotal')?.value)
+                    }}</div>
+                <div><span class="label">Total Contado:</span> {{ formatearMoneda(totalContadoCiegoControl.value)
+                    }}</div>
+                <div [ngClass]="{'valor-positivo': diferenciaGeneralCiega > 0, 'valor-negativo': diferenciaGeneralCiega < 0}">
+                    <span class="label">Diferencia:</span> {{ formatearMoneda(diferenciaGeneralCiega) }}
+                </div>
+            </div>
+            }
 
             <div class="container-tabla mat-elevation-z2">
                 <table mat-table [dataSource]="dataSource" formArrayName="detalles">
@@ -130,15 +165,18 @@
             <app-detalle-concepto [lineas]="lineasDetalle" [cargando]="cargandoDetalle"></app-detalle-concepto>
             }
 
+            }
+
             <br />
         </div>
 
         <br>
 
         <mat-card-actions class="mat-accion-botones">
-            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Cerrar Turno</button>
+            <button mat-raised-button color="primary" type="submit"
+                *ngIf="!isReadOnly && faseCierre === 'revelado'">Cerrar Turno</button>
             <br>
-            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly"
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly && puedeSalir"
                 routerLink="/cierreturno">Cancelar</button>
         </mat-card-actions>
 
