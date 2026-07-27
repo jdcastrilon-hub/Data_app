@@ -9,6 +9,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PreferenciasDialogComponent } from 'src/app/modules/resources/preferencias-dialog/preferencias-dialog.component';
+import { ModalCambiarEmpresaComponent } from './modal-cambiar-empresa/modal-cambiar-empresa.component';
 import { PermisosStateService } from 'src/app/core/services/core/permisos-state.service';
 import { DetalleUser } from 'src/app/core/interfaces/Core/DetalleUserLogin';
 import { DetalleUserEmpresa } from 'src/app/core/interfaces/Core/DetalleUserEmpresa';
@@ -49,6 +50,14 @@ export class ToolbarComponent {
   abrirPreferencias() {
 
     this.dialog.open(PreferenciasDialogComponent, {
+      width: '350px'
+    });
+
+  }
+
+  abrirCambiarEmpresa() {
+
+    this.dialog.open(ModalCambiarEmpresaComponent, {
       width: '350px'
     });
 

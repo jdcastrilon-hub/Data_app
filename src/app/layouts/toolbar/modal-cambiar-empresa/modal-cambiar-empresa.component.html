@@ -1,0 +1,25 @@
+<h2 mat-dialog-title>Cambiar empresa</h2>
+
+<mat-dialog-content>
+    @if (cargando) {
+    <p>Cargando tus empresas...</p>
+    } @else if (empresas.length === 0) {
+    <p>No tienes otras empresas asociadas.</p>
+    } @else {
+    <mat-radio-group [(ngModel)]="idEmpSeleccionada" class="lista-empresas">
+        @for (empresa of empresas; track empresa.idEmp) {
+        <mat-radio-button [value]="empresa.idEmp">
+            {{ empresa.nomEmpresa }}
+        </mat-radio-button>
+        }
+    </mat-radio-group>
+    }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-raised-button type="button" (click)="cancelar()">Cancelar</button>
+    <button mat-raised-button color="primary" type="button" [disabled]="guardando || idEmpSeleccionada === null"
+        (click)="confirmar()">
+        {{ guardando ? 'Cambiando...' : 'Cambiar' }}
+    </button>
+</mat-dialog-actions>
