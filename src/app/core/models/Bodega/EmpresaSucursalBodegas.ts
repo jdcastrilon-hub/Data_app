@@ -1,10 +1,10 @@
-import { Negocio } from "../General/Negocio";
-import { Sucursal } from "../General/Sucursal";
+import { NegocioCombo } from "../../interfaces/Core/NegocioCombo";
+import { SucursalCombo } from "../../interfaces/Core/SucursalCombo";
 
 export class EmpresaSucursalBodegas {
     idEmpresa!: number;
     nombreEmpresa !: string;
-    sucursales!: Sucursal[];
-    negocios!: Negocio[];
+    sucursales!: SucursalCombo[];
+    negocios!: NegocioCombo[];
     
 }

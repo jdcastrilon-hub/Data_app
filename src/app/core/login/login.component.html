@@ -1,1 +1,40 @@
-<p>login works!</p>
+<div class="contenedor-login">
+  <mat-card class="tarjeta-login mat-elevation-z3">
+    <mat-card-header class="encabezado-login">
+      <mat-card-title class="titulo-sistema">NEXOR</mat-card-title>
+      <mat-card-subtitle class="subtitulo-sistema">Iniciar Sesión</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="ingresar()" class="formulario-login">
+        
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100 m-bottom">
+          <mat-label>Usuario</mat-label>
+          <input matInput type="text" formControlName="usuario" placeholder="Digite Usuario" autocomplete="username">
+          <mat-icon matSuffix>person</mat-icon>
+        </mat-form-field>
+        @if (loginForm.get('usuario')?.invalid && loginForm.get('usuario')?.touched) {
+          <small class="error-texto">El usuario es requerido.</small>
+        }
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-100 m-top m-bottom">
+          <mat-label>Contraseña</mat-label>
+          <input matInput [type]="ocultarClave() ? 'password' : 'text'" formControlName="clave" autocomplete="current-password" placeholder="Digite Clave">
+          <button type="button" mat-icon-button matSuffix (click)="conmutarVisibilidadClave($event)" [attr.aria-label]="'Ocultar clave'" [attr.aria-pressed]="ocultarClave()">
+            <mat-icon>{{ ocultarClave() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </mat-form-field>
+        @if (loginForm.get('clave')?.invalid && loginForm.get('clave')?.touched) {
+          <small class="error-texto">La contraseña es requerida (Mínimo 4 caracteres).</small>
+        }
+
+        <div class="contenedor-boton">
+          <button mat-flat-button color="primary" type="submit" class="w-100 boton-ingresar">
+            Ingresar
+          </button>
+        </div>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

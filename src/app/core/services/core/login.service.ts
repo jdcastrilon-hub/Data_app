@@ -1,0 +1,113 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { environment } from 'src/environments/environment';
+import { UsuarioLogin } from '../../interfaces/Core/UsuarioLogin';
+import { DetalleUserEmpresa } from '../../interfaces/Core/DetalleUserEmpresa';
+import { DetalleUser } from '../../interfaces/Core/DetalleUserLogin';
+import { CambiarEmpresaResponse } from '../../interfaces/Core/CambiarEmpresaResponse';
+import { Observable, tap } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class LoginService {
+
+  private url: string = `${environment.baseUrl}/auth/login/`;
+  private urlAuth: string = `${environment.baseUrl}/auth`;
+
+  constructor(private http: HttpClient) { }
+
+  /**
+   * Realiza la petición de Login al Backend
+   */
+  login(usuario: string, clave: string): Observable<UsuarioLogin> {
+    const body = { usuario, clave };
+
+    return this.http.post<UsuarioLogin>(this.url, body).pipe(
+      tap(response => {
+        console.log(response)
+        // Si el login es exitoso, guardamos el token en el almacenamiento del navegador
+
+        if (response && response.token) {
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          localStorage.setItem('empresa', JSON.stringify(response.empresa));
+        }
+
+      })
+    );
+  }
+
+  /**
+   * Obtiene el token guardado
+   */
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  /**
+   * Obtiene la empresa activa del login (la que se muestra en el toolbar y que
+   * el usuario puede cambiar si tiene permisos). Fuente única de verdad para
+   * cualquier consulta que deba filtrarse por empresa — evitar volver a
+   * hardcodear el id de empresa en los servicios.
+   */
+  getEmpresaActual(): DetalleUserEmpresa | null {
+    const raw = localStorage.getItem('empresa');
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  getIdEmpresaActual(): number | null {
+    return this.getEmpresaActual()?.idEmp ?? null;
+  }
+
+  /**
+   * Usuario logueado actual (fuente única de verdad, evita hardcodear un
+   * usuario de prueba en las pantallas, ver project_data_comercial_module).
+   */
+  getUsuarioActual(): DetalleUser | null {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  /**
+   * Empresas activas a las que el usuario autenticado tiene acceso, para el
+   * selector de cambio de empresa (modal-cambiar-empresa).
+   */
+  misEmpresas(): Observable<DetalleUserEmpresa[]> {
+    return this.http.get<DetalleUserEmpresa[]>(`${this.urlAuth}/mis-empresas`);
+  }
+
+  /**
+   * Cambia la empresa activa de la sesión sin volver a loguearse: pide un
+   * token nuevo firmado con la empresa elegida y reemplaza el token/empresa
+   * guardados. El interceptor de auth toma el token nuevo en la siguiente
+   * petición sin cambios adicionales.
+   */
+  cambiarEmpresa(idEmp: number): Observable<CambiarEmpresaResponse> {
+    return this.http.post<CambiarEmpresaResponse>(`${this.urlAuth}/cambiar-empresa`, { idEmp }).pipe(
+      tap(response => {
+        if (response && response.token) {
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('empresa', JSON.stringify(response.empresa));
+        }
+      })
+    );
+  }
+
+  /**
+   * Cierra la sesión limpiando el almacenamiento
+   */
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('empresa');
+  }
+
+  /**
+   * Verifica si el usuario está logueado localmente
+   */
+  isLoggedIn(): boolean {
+    return !!this.getToken();
+  }
+
+}

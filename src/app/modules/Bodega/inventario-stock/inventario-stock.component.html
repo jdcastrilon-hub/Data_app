@@ -57,7 +57,7 @@
                                 <mat-select [formControl]="SelectNegociosControl" required>
                                     <mat-option value="TODOS">TODOS</mat-option>
                                     @for (obj_negocios of list_negocios; track obj_negocios) {
-                                    <mat-option [value]="obj_negocios">{{obj_negocios.nombreNegocio}}</mat-option>
+                                    <mat-option [value]="obj_negocios">{{obj_negocios.NomNegocio}}</mat-option>
                                     }
                                 </mat-select>
                                 @if (SelectNegociosControl.hasError('required')) {
@@ -97,11 +97,11 @@
                         </ng-container>
                         <ng-container matColumnDef="articulo">
                             <th mat-header-cell *matHeaderCellDef>Articulo</th>
-                            <td mat-cell *matCellDef="let element">{{ element.codArticulo }}</td>
+                            <td mat-cell *matCellDef="let element">{{ element.codarticulo }}</td>
                         </ng-container>
                         <ng-container matColumnDef="nombre">
                             <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                            <td mat-cell *matCellDef="let element">{{ element.nomArticulo}}</td>
+                            <td mat-cell *matCellDef="let element">{{ element.nomarticulo}}</td>
                         </ng-container>
                         <ng-container matColumnDef="unidad">
                             <th mat-header-cell *matHeaderCellDef>Unidad</th>

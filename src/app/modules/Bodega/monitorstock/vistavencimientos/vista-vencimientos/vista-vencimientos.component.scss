@@ -1,0 +1,17 @@
+.mat-column-position {
+  width: 50px;
+  text-align: center;
+}
+
+.celda-critica {
+  color: #c62828;
+  font-weight: 600;
+}
+
+// El panel de mat-menu se renderiza en un overlay fuera del componente,
+// por eso se necesita ::ng-deep para poder darle estilo.
+::ng-deep .menu-columnas {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 16px;
+}

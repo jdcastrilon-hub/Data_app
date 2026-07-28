@@ -4,11 +4,21 @@ import { Router, RouterModule } from '@angular/router';
 import { MotivoAjusteView } from '../../../core/models/Bodega/MotivoAjusteView';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { MotivosAjusteService } from '../../../core/services/Bodega/motivos-ajuste.service';
+import { MotivoListStateService } from '../../../core/services/Bodega/motivo-list-state.service';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { ConfirmDialogComponent } from 'src/app/modules/resources/confirm-dialog/confirm-dialog.component';
+import { PermisosStateService } from 'src/app/core/services/core/permisos-state.service';
+
+// Codigo del formulario en md_menu (matriz de permisos)
+const MENU_CODIGO = 'INV_MOT';
 
 @Component({
   selector: 'motivos-ajuste',
-  imports: [modules_depencias, RouterModule],
+  imports: [modules_depencias, RouterModule, ReactiveFormsModule],
   templateUrl: './motivos-ajuste.component.html',
   styleUrl: './motivos-ajuste.component.scss'
 })
@@ -17,43 +27,108 @@ export class MotivosAjusteComponent {
   //Paginador
   lista_motivos: MotivoAjusteView[] = [];
   dataSource!: MatTableDataSource<MotivoAjusteView>;
+  Columnas: string[] = ['id', 'name', 'estado', 'fecha', 'actions'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  //Buscador (filtra por codigo o nombre en el backend)
+  buscadorControl = new FormControl('');
+
   //Datos generales de paginacion
   totalRegistros: number = 0;
   paginaActual: number = 0;
   pageSize: number = 10;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
-  constructor(private service: MotivosAjusteService,
-    private router: Router
-  ) {
-  }
+  // Segun los permisos del rol actual sobre este formulario
+  puedeCrear = false;
+  puedeEditar = false;
+  puedeEliminar = false;
+
+  constructor(
+    private service: MotivosAjusteService,
+    private notificacion: NotificacionesService,
+    private router: Router,
+    private listState: MotivoListStateService,
+    private permisosState: PermisosStateService,
+    private dialog: MatDialog
+  ) { }
 
   ngOnInit() {
-    this.cargarCategoriasPaginadas();
+    this.permisosState.cargar().subscribe(() => {
+      this.puedeCrear = this.permisosState.tienePermiso(MENU_CODIGO, 'CREAR');
+      this.puedeEditar = this.permisosState.tienePermiso(MENU_CODIGO, 'EDITAR');
+      this.puedeEliminar = this.permisosState.tienePermiso(MENU_CODIGO, 'ELIMINAR');
+    });
+
+    // Restaura el filtro/pagina donde haya quedado la ultima vez.
+    this.buscadorControl.setValue(this.listState.texto, { emitEvent: false });
+    this.paginaActual = this.listState.page;
+    this.pageSize = this.listState.size;
+
+    this.cargarMotivosPaginados();
+
+    // Espera a que el usuario deje de escribir antes de consultar el backend.
+    this.buscadorControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.paginaActual = 0; // toda busqueda nueva vuelve a la primera pagina
+      this.cargarMotivosPaginados();
+    });
   }
 
-
   // 1. Método para cargar datos con paginación
-  cargarCategoriasPaginadas() {
-    console.log(`Cargando página: ${this.paginaActual}, tamaño: ${this.pageSize}`);
+  cargarMotivosPaginados() {
+    const texto = this.buscadorControl.value?.trim() || undefined;
 
-    // Llama al servicio con los parámetros actuales
-    this.service.listPaginacion(this.paginaActual, this.pageSize).subscribe(data => {
+    // Recuerda el estado actual para cuando se vuelva a esta lista mas adelante.
+    this.listState.texto = texto || '';
+    this.listState.page = this.paginaActual;
+    this.listState.size = this.pageSize;
 
-      // Mapea la respuesta Page
-      this.lista_motivos = data.content; //  Solo el contenido para la tabla
-      this.totalRegistros = data.totalElements; //  El total de registros en el DB
-
-      // Actualiza el dataSource con la data de la página actual
+    this.service.listPaginacion(this.paginaActual, this.pageSize, texto).subscribe(data => {
+      this.lista_motivos = data.content;
+      this.totalRegistros = data.totalElements;
       this.dataSource = new MatTableDataSource<MotivoAjusteView>(this.lista_motivos);
     });
   }
 
+  //Método para manejar el cambio de página/tamaño
   cambiarPagina(event: PageEvent) {
     this.paginaActual = event.pageIndex;
     this.pageSize = event.pageSize;
-    this.cargarCategoriasPaginadas(); // Llama al API con los nuevos parámetros
+    this.cargarMotivosPaginados();
+  }
+
+  //Edicion del registro
+  editarMotivo(id: number): void {
+    this.router.navigate(['/motivosajuste/edit', id]);
+  }
+
+  visualizarMotivo(id: number): void {
+    this.router.navigate(['/motivosajuste/view', id]);
+  }
+
+  //Eliminar registro (previa confirmación del usuario)
+  eliminarMotivo(id: number): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: {
+        titulo: 'Eliminar motivo',
+        mensaje: '¿Seguro que deseas eliminar este motivo? Esta acción no se puede deshacer.'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmado => {
+      if (!confirmado) {
+        return;
+      }
+      this.service.delete(id).subscribe(data => {
+        this.lista_motivos = this.lista_motivos.filter(motivo => motivo.id !== id);
+        this.dataSource = new MatTableDataSource<MotivoAjusteView>(this.lista_motivos);
+        this.notificacion.showSuccess('Motivo eliminado con exito!');
+      });
+    });
   }
 
 }

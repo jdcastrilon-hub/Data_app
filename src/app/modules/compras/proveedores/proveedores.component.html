@@ -5,10 +5,68 @@
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
 
-        <mat-card-actions class="mat-accion">
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
             <button mat-raised-button color="primary" routerLink="/proveedores/new">Nuevo</button>
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por documento o nombre</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: proveedor, 900123">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
         </mat-card-actions>
         <mat-card-content class="mat-content">
+
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+                    <ng-container matColumnDef="id">
+                        <th mat-header-cell *matHeaderCellDef>id</th>
+                        <td mat-cell *matCellDef="let element">{{ element.idProveedor}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="codtit">
+                        <th mat-header-cell *matHeaderCellDef>Documento</th>
+                        <td mat-cell *matCellDef="let element">{{ element.codTit}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="nombre">
+                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <td mat-cell *matCellDef="let element">{{ element.razonSocial }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="activo">
+                        <th mat-header-cell *matHeaderCellDef>Estado</th>
+                        <td mat-cell *matCellDef="let element">
+                            <span class="status-badge" [ngClass]="element.activo ? 'active' : 'inactive'">
+                                {{ element.activo ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef>Ult. Modificacion</th>
+                        <td mat-cell *matCellDef="let element">{{ element.fechaMod | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarProveedor(element.idProveedor)"
+                                matTooltip="Visualizar" matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                            <button mat-icon-button (click)="editarProveedor(element.idProveedor)">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button matSuffix (click)="eliminarProveedor(element.idProveedor)">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
 
         </mat-card-content>
     </mat-card>

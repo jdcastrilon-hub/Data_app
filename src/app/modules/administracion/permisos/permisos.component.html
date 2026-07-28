@@ -1,0 +1,70 @@
+<mat-card-content class="mat-content">
+
+    <div fxLayout="row" fxLayoutAlign="start stretch" fxLayoutGap="16px" class="filtros">
+        <div fxFlex="30">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                <mat-label>Rol</mat-label>
+                <mat-select [formControl]="rolControl">
+                    @for (rol of list_roles; track rol.idRol) {
+                    <mat-option [value]="rol.idRol">{{rol.nombre}}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div fxFlex="30">
+            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                <mat-label>Módulo</mat-label>
+                <mat-select [formControl]="moduloControl">
+                    @for (modulo of list_modulos; track modulo.idModulo) {
+                    <mat-option [value]="modulo.idModulo">{{modulo.nombre}}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </div>
+
+    @if (!rolControl.value || !moduloControl.value) {
+    <p class="sin-seleccion">Selecciona un rol y un módulo para ver/editar sus permisos.</p>
+    } @else if (formularios.length === 0 && !cargando) {
+    <p class="sin-seleccion">Este módulo no tiene formularios con permisos configurables.</p>
+    } @else {
+    <div class="table-scroll-container">
+        <table class="tabla-matriz">
+            <thead>
+                <tr>
+                    <th class="col-formulario">Formulario</th>
+                    @for (columna of columnasAcciones; track columna.codigo) {
+                    <th>{{columna.etiqueta}}</th>
+                    }
+                    <th class="col-check">Todas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (formulario of formularios; track formulario.idMenu) {
+                <tr>
+                    <td class="col-formulario">{{formulario.nombre}}</td>
+                    @for (columna of columnasAcciones; track columna.codigo) {
+                    <td class="col-check">
+                        @if (buscarAccion(formulario, columna.codigo); as accion) {
+                        <mat-checkbox [(ngModel)]="accion.otorgado" color="primary"></mat-checkbox>
+                        } @else {
+                        <span class="sin-accion">—</span>
+                        }
+                    </td>
+                    }
+                    <td class="col-check">
+                        <mat-checkbox [checked]="todasMarcadas(formulario)"
+                            (change)="toggleTodas(formulario, $event.checked)" color="primary"></mat-checkbox>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <mat-card-actions class="mat-accion-botones">
+        <button mat-raised-button color="primary" (click)="guardar()">Guardar</button>
+    </mat-card-actions>
+    }
+
+</mat-card-content>

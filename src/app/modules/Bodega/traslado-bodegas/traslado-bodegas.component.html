@@ -5,8 +5,18 @@
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
 
-        <mat-card-actions class="mat-accion">
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            @if (puedeCrear) {
             <button mat-raised-button color="primary" routerLink="/trasladobodega/new">Nuevo</button>
+            }
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por No. o observacion</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: 123, ajuste">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
         </mat-card-actions>
         <mat-card-content class="mat-content">
 
@@ -14,24 +24,46 @@
                 <table mat-table [dataSource]="dataSource">
 
                     <ng-container matColumnDef="codigo">
-                        <th mat-header-cell *matHeaderCellDef>Codigo</th>
-                        <td mat-cell *matCellDef="let element">{{ element.nroDocum}}</td>
+                        <th mat-header-cell *matHeaderCellDef>No. Proceso</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nroDocum }}</td>
                     </ng-container>
-                    <ng-container matColumnDef="nombre">
-                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                        <td mat-cell *matCellDef="let element">{{ element.fechaMovimiento }}</td>
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                        <td mat-cell *matCellDef="let element">{{ element.fechaMovimiento | date: 'dd/MM/yyyy' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="bodegaOrigen">
+                        <th mat-header-cell *matHeaderCellDef>Bodega Origen</th>
+                        <td mat-cell *matCellDef="let element">{{ element.bodegaOrigen?.nomBodega }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="bodegaDestino">
+                        <th mat-header-cell *matHeaderCellDef>Bodega Destino</th>
+                        <td mat-cell *matCellDef="let element">{{ element.bodegaDestino?.nomBodega }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="obs">
+                        <th mat-header-cell *matHeaderCellDef>Observacion</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Observaciones }}</td>
                     </ng-container>
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef>Acciones</th>
                         <td mat-cell *matCellDef="let element">
-                            <button mat-icon-button>
+                            <button mat-icon-button (click)="visualizarTraslado(element.idTrans)"
+                                matTooltip="Visualizar" matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                            @if (puedeEditar) {
+                            <button mat-icon-button (click)="editarTraslado(element.idTrans)">
                                 <mat-icon>edit</mat-icon>
                             </button>
-
+                            }
+                            @if (puedeEliminar) {
+                            <button mat-icon-button matSuffix (click)="eliminarTraslado(element.idTrans)">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                            }
                         </td>
                     </ng-container>
-                    <tr mat-header-row *matHeaderRowDef="['codigo', 'nombre', 'actions']"></tr>
-                    <tr mat-row *matRowDef="let row; columns: ['codigo', 'nombre', 'actions'];"></tr>
+                    <tr mat-header-row *matHeaderRowDef="Columnas"></tr>
+                    <tr mat-row *matRowDef="let row; columns: Columnas;"></tr>
                 </table>
             </div>
             <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"

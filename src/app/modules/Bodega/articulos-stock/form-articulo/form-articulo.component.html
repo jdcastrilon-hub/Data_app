@@ -1,11 +1,19 @@
-<form [formGroup]="formulario"  #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
-                <a mat-icon-button color="primary" routerLink="/bodegas">
-                    <mat-icon>list</mat-icon>
-                </a>
-                <span>REGISTRO DE ARTICULOS</span>
+                <div class="titulo-izquierda">
+                    <button mat-icon-button color="primary" type="button" (click)="volver()">
+                        <mat-icon>list</mat-icon>
+                    </button>
+                    <span>{{titulo_form}}</span>
+                </div>
+                @if (isEditMode) {
+                <button mat-icon-button color="primary" type="button" (click)="verHistorialAuditoria()"
+                    title="Ver historial de auditoría">
+                    <mat-icon>info</mat-icon>
+                </button>
+                }
             </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
@@ -21,7 +29,7 @@
                                 <mat-label>Negocio</mat-label>
                                 <mat-select [formControl]="SelectNegocioControl" required>
                                     @for (obj_negocio of list_negocios; track obj_negocio) {
-                                    <mat-option [value]="obj_negocio">{{obj_negocio.nombreNegocio}}</mat-option>
+                                    <mat-option [value]="obj_negocio">{{obj_negocio.NomNegocio}}</mat-option>
                                     }
                                 </mat-select>
                                 @if (SelectNegocioControl.hasError('required')) {
@@ -62,40 +70,104 @@
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Tipo Producto</mat-label>
                                 <mat-select [formControl]="SelecProductoControl" required>
-                                    @for (obj_tipo of list_productos; track obj_tipo) {
-                                    <mat-option [value]="obj_tipo">{{obj_tipo}}</mat-option>
+                                    @for (tiposProductos of list_productos; track tiposProductos) {
+                                    <mat-option [value]="tiposProductos">{{tiposProductos.nomServicio}}</mat-option>
                                     }
                                 </mat-select>
                                 @if (SelecProductoControl.hasError('required')) {
-                                <mat-error>Debe seleccionar una opcion</mat-error>
+                                <mat-error>Debe seleccionar un Tipo</mat-error>
                                 }
                             </mat-form-field>
                         </div>
                     </div>
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
-                        <div fxFlex="30">
+                        @if (isEditMode) {
+                        <div fxFlex="25">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Codigo Stock</mat-label>
-                                <input matInput formControlName="codArticulo">
+                                <input matInput formControlName="codArticulo" readonly>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="40">
+                        }
+                        <div fxFlex="50">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Nombre Articulo</mat-label>
-                                <input matInput formControlName="nomArticulo">
+                                <input matInput formControlName="nomArticulo" [readonly]="isReadOnly">
                             </mat-form-field>
                         </div>
-                        <div fxFlex="30">
-                            <mat-checkbox formControlName="activoComercial" color="primary">
-                                Estado Articulo
+                        <div fxFlex="25">
+                            <mat-checkbox formControlName="manejaLote" color="primary">
+                                Maneja Lote
                             </mat-checkbox>
                         </div>
                     </div>
                 </div>
+                <div class="bloque">
+                    <p>Codigos de Barra</p>
+                    <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+                    <table mat-table [dataSource]="dataSourceCodigoBarras" class="mat-elevation-z8 tabla-compacta"
+                        formArrayName="codigosBarra">
+                        <ng-container matColumnDef="codigo">
+                            <th mat-header-cell *matHeaderCellDef>Codigo</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input matInput formControlName="codBarra" placeholder="Código" [readonly]="isReadOnly" />
+                                <mat-error
+                                    *ngIf="row.get('codBarra')?.hasError('required') && (row.get('codBarra')?.touched || row.get('codBarra')?.dirty)">
+                                    Codigo Obligatorio
+                                </mat-error>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="nombre">
+                            <th mat-header-cell *matHeaderCellDef>Referencia</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                                <input matInput formControlName="nomBarra" placeholder="Nombre" [readonly]="isReadOnly" />
+                                <mat-error
+                                    *ngIf="row.get('nomBarra')?.hasError('required') && (row.get('nomBarra')?.touched || row.get('nomBarra')?.dirty)">
+                                    Nombre Obligatorio
+                                </mat-error>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="estado">
+                            <th mat-header-cell *matHeaderCellDef>Estado</th>
+                            <td mat-cell *matCellDef="let row" [formGroup]="row">
+                                <mat-slide-toggle color="primary" formControlName="estado">
+                                    {{ row.get('estado').value ? 'Activo' : 'Inactivo' }}
+                                </mat-slide-toggle>
+
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="stock">
+                            <th mat-header-cell *matHeaderCellDef>Stock</th>
+                            <td mat-cell *matCellDef="let row" [formGroup]="row">
+                                <span>
+                                    {{ row.get('stock')?.value }}
+                                </span>
+                                <input type="hidden" formControlName="stock">
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="actions">
+                            <th mat-header-cell *matHeaderCellDef> Acciones </th>
+                            <td mat-cell *matCellDef="let row; let i = index">
+                                @if (!isReadOnly) {
+                                <button mat-icon-button color="primary" type="button" (click)="agregarCodigoBarra()">
+                                    <mat-icon>add</mat-icon>
+                                </button>
+                                <button mat-icon-button color="primary" type="button" (click)="eliminarCodigoBarra(i)">
+                                    <mat-icon>remove</mat-icon>
+                                </button>
+                                }
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row *matHeaderRowDef="Columnas"></tr>
+                        <tr mat-row *matRowDef="let row; columns: Columnas;"></tr>
+                    </table>
+                </div>
             </mat-tab>
 
-            <mat-tab label="Inventario">
+            <mat-tab label="Stock & Impuestos">
                 <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
@@ -114,28 +186,20 @@
                         </div>
                         <div fxFlex="25">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Tipo Costeo</mat-label>
-                                <mat-select [formControl]="SelectTipoCosteoControl" required>
-                                    @for (obj_TipoCosteo of list_TipoCosteo; track obj_TipoCosteo) {
-                                    <mat-option [value]="obj_TipoCosteo">{{obj_TipoCosteo.nombreCosteo}}</mat-option>
-                                    }
-                                </mat-select>
-                                @if (SelectTipoCosteoControl.hasError('required')) {
-                                <mat-error>Debe seleccionar Tipo Costeo</mat-error>
-                                }
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="25">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Stock Minimo</mat-label>
-                                <input matInput formControlName="stockMin">
+                                <input matInput formControlName="stockMin" [readonly]="isReadOnly">
                             </mat-form-field>
                         </div>
                         <div fxFlex="25">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Stock Maximo</mat-label>
-                                <input matInput formControlName="stockMax">
+                                <input matInput formControlName="stockMax" [readonly]="isReadOnly">
                             </mat-form-field>
+                        </div>
+                        <div fxFlex="25">
+                            <mat-checkbox formControlName="activoStock" color="primary">
+                                Estado Articulo Stock
+                            </mat-checkbox>
                         </div>
                     </div>
 
@@ -149,13 +213,13 @@
                         <div fxFlex="30">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Grupo Contable</mat-label>
-                                <input matInput formControlName="grupoContable">
+                                <input matInput formControlName="grupoContable" [readonly]="isReadOnly">
                             </mat-form-field>
                         </div>
                         <div fxFlex="30">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Cuenta Inventario</mat-label>
-                                <input matInput formControlName="cuentaInventario">
+                                <input matInput formControlName="cuentaInventario" [readonly]="isReadOnly">
                             </mat-form-field>
                         </div>
                         <div fxFlex="30">
@@ -180,9 +244,9 @@
         <br>
 
         <mat-card-actions class="mat-accion-botones">
-            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button">Cancelar</button>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

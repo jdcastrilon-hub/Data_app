@@ -1,9 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { MatTableDataSource } from '@angular/material/table';
@@ -12,27 +12,33 @@ import { Compra } from '../../../../core/models/Compras/Compra';
 import { CompraDetalle } from '../../../../core/models/Compras/CompraDetalle';
 import { ArticuloSearch } from '../../../../core/models/Bodega/ArticuloSearch';
 import { ArticuloAutocompletComponent } from '../../../resources/articulo-autocomplet/articulo-autocomplet.component';
-import { EmpresaServiceService } from '../../../../core/services/core/empresa-service.service';
-import { Numerador } from '../../../../core/models/core/Numerador';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ComboProveedorComponent } from '../../../resources/combo-proveedor/combo-proveedor.component';
-import { ComboBodegaComponent } from '../../../resources/combo-bodega/combo-bodega.component';
 import { ComboEstadostockComponent } from '../../../resources/combo-estadostock/combo-estadostock.component';
 import { combineLatest, startWith } from 'rxjs';
 import { CompraDisponible } from '../../../../core/interfaces/Compras/CompraDisponible';
-import { Sucursal } from '../../../../core/models/General/Sucursal';
 import { SucursalServiceService } from '../../../../core/services/General/sucursal-service.service';
-import { Bodega } from '../../../../core/models/Bodega/Bodega';
 import { ProveedorSearch } from '../../../../core/interfaces/Compras/ProveedorSearch';
 import { TasasCombo } from '../../../../core/interfaces/Impuestos/TasasCombo';
 import { TasaImpuestoServiceService } from '../../../../core/services/impuestos/tasa-impuesto-service.service';
 import { ComprasService } from '../../../../core/services/Compras/compras.service';
+import { ServiciosiniService } from 'src/app/core/services/core/serviciosini.service';
+import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
+import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { CodigosBarra } from 'src/app/core/models/Bodega/CodigosBarra';
+import { ModalCodigobarraComponent } from '../modal-codigobarra/modal-codigobarra.component';
+import { Auditoria } from 'src/app/core/models/core/Auditoria';
+import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { ComboLoteComponent } from 'src/app/modules/resources/combo-lote/combo-lote.component';
+import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
 
 @Component({
   selector: 'form-compra-directa',
+  standalone: true,
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
     RouterModule, MatDialogModule, ArticuloAutocompletComponent, MatDatepickerModule,
-    MatCheckboxModule, ComboProveedorComponent, ComboEstadostockComponent],
+    MatCheckboxModule, ComboProveedorComponent, ComboEstadostockComponent, ComboLoteComponent],
   templateUrl: './form-compra-directa.component.html',
   styleUrl: './form-compra-directa.component.scss'
 })
@@ -41,16 +47,28 @@ export class FormCompraDirectaComponent {
   //Variables Generales
   formulario!: FormGroup;
   objeto!: Compra;
+  objeto_resultado!: CodigosBarra;
+  titulo_form: string = 'REGISTRO DE COMPRA DIRECTA';
   isEditMode: boolean = false; //Se define si el modo es nuevo o edicion
+  isReadOnly: boolean = false; //Se define si el modo es solo lectura (ver)
+
+  // Pestaña actualmente seleccionada del mat-tab-group (0 = Datos Generales, 1 = Recepcion y Totales)
+  selectedTabIndex = 0;
+  // Campos de cabecera agrupados por la pestaña donde viven, para poder saltar
+  // automaticamente a la primera pestaña con un campo obligatorio faltante al guardar.
+  private readonly camposPorPestana: string[][] = [
+    ['nroDocum', 'fecDoc', 'detalles'],   // Pestaña 0: Datos Generales
+    ['remito', 'observaciones'],          // Pestaña 1: Recepcion y Totales
+  ];
 
   //tabla de articulos
   detalle: CompraDetalle[] = [];
   dataSource = new MatTableDataSource<FormGroup>();
-  todasLasColumnas: string[] = ['id', 'costo', 'cantidad', 'neto', 'impuesto1', 'imp1', 'total', 'Lote', 'stock'];
+  todasLasColumnas: string[] = ['position', 'id', 'Lote', 'stock', 'costoant', 'costo', 'cantidad', 'porc_dcto', 'impuesto1', 'neto', 'imp_dcto', 'imp1', 'total'];
   displayedColumns: string[] = [];
 
   //Informacion general de articulos
-  list_info_Articulos: AjusteStockInfoArticulos[] = [];
+  //list_info_Articulos: AjusteStockInfoArticulos[] = [];
 
   //Status Compra
   defaultStatus = 'Borrador'; //Valor por defecto
@@ -58,24 +76,39 @@ export class FormCompraDirectaComponent {
   SelecStatusControl = new FormControl<String | null>(this.defaultStatus, Validators.required);
 
   //Seleccion para sucursales.
-  list_sucursal: Sucursal[] = [];
-  SelectSucursalControl = new FormControl<Sucursal | null>(null, Validators.required);
+  list_sucursal: SucursalCombo[] = [];
+  SelectSucursalControl = new FormControl<SucursalCombo | null>(null, Validators.required);
 
   //Bodegas
-  list_bodegas: Bodega[] = [];
-  SelectBodegasControl = new FormControl<Bodega | null>(null, Validators.required);
+  list_bodegas: BodegaCombo[] = [];
+  SelectBodegasControl = new FormControl<BodegaCombo | null>(null, Validators.required);
 
   //Impuestos
   list_impuestos: TasasCombo[] = [];
   SelectImpuestosControl = new FormControl<TasasCombo | null>(null, Validators.required);
 
+  //Para habilitar o deshabilitar el autoCompletar del articulo
+  isModalClosing = true;
+
+  // Capturamos la referencia del formulario del HTML
+  @ViewChild('formDirective') formDirective!: NgForm;
+
+  //Se refrencia el autoCompletar de articulos para cambiar de foco una vez se use.
+  @ViewChildren('inputCosto') inputsCostos!: QueryList<ElementRef>;
+
+  // Capturamos todos los triggers de la tabla
+  @ViewChildren(ArticuloAutocompletComponent) articulosComps!: QueryList<ArticuloAutocompletComponent>;
+
+
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
     private compraService: ComprasService,
-    private empresaService: EmpresaServiceService,
+    private serviceIni: ServiciosiniService,
     private sucursalService: SucursalServiceService,
     private tasaService: TasaImpuestoServiceService,
+    private notificacion: NotificacionesService,
     private route: ActivatedRoute,
+    private dialog: MatDialog,
     private router: Router) {
     this.objeto = new Compra();
   }
@@ -96,16 +129,19 @@ export class FormCompraDirectaComponent {
       idEmp: this.objeto.idEmp,
       idSucursal: this.objeto.idSucursal,
       idProveedor: this.objeto.idProveedor,
-      nroDocum: this.objeto.nroDocum,
+      // nroDocum ya no se maneja localmente: el backend lo asigna (numerador "COMPRA"
+      // en md_numeradores) en el proximo guardado.
+      nroDocum: [this.objeto.nroDocum],
       fecDoc: [new Date(), Validators.required],
-      remito: this.objeto.remito,
+      remito: [this.objeto.remito, Validators.required],
+      status: this.objeto.status,
       ingresaBodega: [this.objeto.ingresaBodega, Validators.required],
       idBodega: this.objeto.idBodega,
       idEstado: this.objeto.idEstado,
       impNeto: this.objeto.impNeto,
       impDescuento: this.objeto.impDescuento,
       impTotal: this.objeto.impTotal,
-      observaciones: this.objeto.observaciones,
+      observaciones: [this.objeto.observaciones, Validators.required],
       impuesto1: this.objeto.impuesto1,
       valorImpuesto1: this.objeto.valorImpuesto1,
       impuesto2: this.objeto.impuesto2,
@@ -116,9 +152,19 @@ export class FormCompraDirectaComponent {
       vista: this.objeto.vista,
       fechaMod: this.objeto.fechaMod,
       detalles: this.fb.array([]),
+      nuevoCodigoBarra: this.fb.array([]),
+      // Lotes pendientes (reservados, aun no existen en m_lotes) creados en esta
+      // edicion via combo-lote. Se materializan solo si se guarda la compra.
+      nuevosLotes: this.fb.array([]),
       logs: this.fb.array([]),
       searchProveedor: proveedor_filtro
     });
+
+    // No se usa [readonly] por input (a diferencia de otras CRUDs): esta grilla dinamica
+    // tiene varios componentes propios (combo-proveedor, articulo-autocomplet) que ya
+    // implementan ControlValueAccessor.setDisabledState, asi que formulario.disable()
+    // se propaga correctamente a todos ellos con un solo llamado.
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -128,39 +174,259 @@ export class FormCompraDirectaComponent {
         // Si hay un ID, estamos en modo Edición
         console.log("Edicion")
         this.isEditMode = true;
-        //this.ModoEdicion(Number(id)); // Llama al método de carga
+        this.ModoEdicion(Number(id)); // Llama al método de carga
+
 
       } else {
         // Si no hay ID (p. ej., si usas esta misma ruta para crear), estamos en modo Nuevo
         console.log("Nuevo")
         this.isEditMode = false;
         this.objeto = new Compra();
-        //Numerador de OC
-        this.obtenerNumerador("id_nrodocum_compra");
+
         this.formulario.get('ingresaBodega')?.patchValue(false);
+        this.cargarImpuestos();
         this.agregarLineaVacia();
         this.ValidarColumnas();
         this.cargarSucursales();
-        this.cargarImpuestos();
+
+
+        //Subcribir los cambios al selecionar la empresa
+        this.SelectSucursalControl.valueChanges.subscribe(objectoSucusal => {
+          if (objectoSucusal) {
+            this.list_bodegas = objectoSucusal.list_bodegas!;
+            const unicaBodega = this.list_bodegas[0];
+            this.SelectBodegasControl.setValue(unicaBodega);
+            this.formulario.patchValue({
+              idBodega: unicaBodega.id
+            });
+          } else {
+            this.list_bodegas = []; // Limpiar si no hay categoría seleccionada
+          }
+        });
       }
     })
 
-    //Subcribir los cambios al selecionar la empresa
-    this.SelectSucursalControl.valueChanges.subscribe(objectoSucusal => {
-      if (objectoSucusal) {
-        this.list_bodegas = objectoSucusal.list_bodegas!;
-        const unicaBodega = this.list_bodegas[0];
-        this.SelectBodegasControl.setValue(unicaBodega);
-      } else {
-        this.list_bodegas = []; // Limpiar si no hay categoría seleccionada
-      }
-    });
+
 
     //Subcribir la grilla de impuestos
   }
 
+  //Metodo para cargar la categoria , que viene para edicion
+  ModoEdicion(id: number): void {
+    console.log("ModoEdicion");
+    this.compraService.getCompraById(id).subscribe(
+      (data: Compra) => {
+        // Cargar la data de la categoría en el formulario
+        this.objeto = data;
+
+        this.titulo_form = this.isReadOnly ? 'DETALLE COMPRA' : 'ACTUALIZACION COMPRA';
+        //1. Cargar auditoria del formulario
+        //Obtener la referencia al FormArray que ya existe en tu FormGroup principal
+        const logsFormArray = this.formulario.get('logs') as FormArray;
+
+        //Limpiar el array por si acaso había algo previo (importante en ediciones)
+        logsFormArray.clear();
+
+        // Poblar con la data que viene de PostgreSQL
+        if (this.objeto.logs?.length) {
+          this.objeto.logs.forEach((log: Auditoria) => {
+            logsFormArray.push(this.fb.group({
+              operacion: [log.operacion],
+              usuario_mod: [log.usuario_mod],
+              fecha_mod: [log.fecha_mod]
+            }));
+          });
+        }
+
+        //2. Cargar la informacion del cabezal
+        this.formulario.get('idTrans')?.patchValue(data.idTrans);
+        this.formulario.get('nroDocum')?.patchValue(data.nroDocum);
+        this.formulario.get('idSucursal')?.patchValue(data.bodega.idSucursal);
+        this.formulario.get('idBodega')?.patchValue(data.idBodega);
+        this.formulario.get('idProveedor')?.patchValue(data.idProveedor);
+        this.formulario.get('status')?.patchValue(data.status === 'B' ? 'Borrador' :
+          data.status === 'F' ? 'Finalizado' :
+            data.status === 'C' ? 'Cancelado' : 'N/A',);
+        this.formulario.get('fecDoc')?.patchValue(data.fecDoc);
+        this.formulario.get('remito')?.patchValue(data.remito);
+        this.formulario.get('idEstado')?.patchValue(data.idEstado);
+        this.formulario.get('observaciones')?.patchValue(data.observaciones);
+        this.formulario.get('detalles')?.patchValue(data.detalles);
+
+        //Cargarmos status al controlador del combo
+        this.SelecStatusControl.setValue(this.formulario.get('status')?.value);
+        //Cargamos impuestos
+        this.cargarImpuestos();
+        //Cargamos sucursales
+        this.cargarSucursales();
+        //Creamos proveedor y lo asignamos al autocompletar
+        let proveedor: ProveedorSearch = {
+          idProveedor: data.idProveedor,
+          idPersona: 0,
+          codTit: data.proveedor.codTit,
+          nombreCompleto: data.proveedor.nombreCompleto
+        }
+        this.onProveedorChange(proveedor);
+
+
+        // 3. Recorrer el nivel de "detalles" para asignar en el formulario
+        const detallesArray = this.detalles;
+        detallesArray.clear();
+        data.detalles.forEach((det: any) => {
+
+          //Objecto impusto
+          let detalleImpuesto: TasasCombo = {
+            id: det.detalleimpuesto1.id,
+            tasaImpuesto: det.detalleimpuesto1.tasaImpuesto,
+            porcentaje: det.detalleimpuesto1.porcentaje,
+            descripcion: det.detalleimpuesto1.descripcion
+          }
+
+          // Simular el objeto stockData que espera crearDetalleForm
+          // Asegúrate de mapear los nombres de campos de tu modelo de API a los del formulario
+          let stockData: CompraDisponible = {
+            idArticulo: det.idArticulo,
+            idCodBarra: det.idCodBarra,
+            codArticulo: det.codigoArticulo || '',
+            nomArticulo: det.refCompras || '',
+            stock: det.stock || 0,
+            ubicacion: '',
+            idLote: det.idLote,
+            costo: det.costanterior,
+            neto: det.costoTotal,
+            objimpuesto1: detalleImpuesto,
+            impuesto1: det.impuesto1,
+            tasaimpuesto1: det.idTasaimp1,
+            valor_impu1: det.valorImpuesto1,
+            total: det.importeTotal
+          };
+
+          //Se valida si el objecto det.articulo viene vacio. Si viene vacio 
+          //Es porque el codigo de barra a un no se ha creado en el sistema.
+          let articuloFiltro: ArticuloSearch = {
+            idArticulo: det.idArticulo,
+            idCodBarra: det.idCodBarra,
+            codArticulo: det.articulo == null ? '' : det.articulo.codArticulo,
+            nomArticulo: det.articulo == null ? '' : det.articulo.nomArticulo
+          };
+
+
+          if (!det.articulo && data.nuevoCodigoBarra) {
+            console.log("******************")
+            console.log(data.nuevoCodigoBarra)
+            console.log(det)
+            const articuloNuevoCodigo = data.nuevoCodigoBarra.find(obj =>
+              obj.idArticulo === det.idArticulo && obj.idCodBarra === det.idCodBarra
+            );
+            console.log("******************")
+            if (articuloNuevoCodigo) {
+              console.log("-------------------")
+              console.log(articuloNuevoCodigo)
+              // Asignamos los valores a la linea correspondiente
+              articuloFiltro.codArticulo = articuloNuevoCodigo.codBarra;
+              articuloFiltro.nomArticulo = articuloNuevoCodigo.nomBarra;
+            }
+          }
+
+
+          // 3. Crear el FormGroup usando tu método existente
+          // Esto activará automáticamente los .valueChanges y calculos
+          const nuevoDetalle = this.crearDetalleForm(stockData, det.linea, articuloFiltro);
+
+          // 4. Seteamos los valores específicos de la edición que no son 0
+          nuevoDetalle.patchValue({
+            costoUnit: det.costoUnit,
+            cantidad: det.cantidad,
+            costoTotal: det.costoTotal,
+            importeTotal: det.importeTotal,
+            valorImpuesto1: det.valorImpuesto1,
+            idLote: det.idLote,
+            manejaLote: det.articulo?.manejaLote || false
+          });
+          nuevoDetalle.get('idLote')?.updateValueAndValidity();
+
+          // IMPORTANTE: Bloquear el buscador si ya tiene artículo
+          nuevoDetalle.get('search')?.disable();
+
+          detallesArray.push(nuevoDetalle);
+        });
+
+        // 3.1. Actualizar la fuente de datos de la tabla
+        this.dataSource.data = detallesArray.controls as FormGroup[];
+
+        // 4. Recorrer el nivel de "nuevoCodigoBarra" para asignar en el formulario
+        data.nuevoCodigoBarra.forEach((nuevoscodigos: any) => {
+          console.log(nuevoscodigos)
+          //Objecto Nuevos codigos de barra
+          let nuevoscodigosbarra: CodigosBarra = {
+            idCodBarra: nuevoscodigos.idCodBarra,
+            idArticulo: nuevoscodigos.idArticulo,
+            codBarra: nuevoscodigos.codBarra,
+            nomBarra: nuevoscodigos.nomBarra,
+            estado: true,
+            stock: 0,
+            movimientos: 0,
+            registro_nuevo: false
+          }
+
+          this.agregarCodigoBarraAlArray(nuevoscodigosbarra, nuevoscodigos.linea);
+        })
+
+        //5. Actualizar infomacion de stock y costos
+        this.actualizarStocksMasivo();
+        //6. agregar linea vacia (solo si se puede seguir editando) y validar columnas a mostrar
+        if (!this.isReadOnly) {
+          this.agregarLineaVacia();
+        }
+        this.ValidarColumnas();
+
+        if (this.isReadOnly) {
+          this.formulario.disable();
+          this.SelectSucursalControl.disable();
+          this.SelectBodegasControl.disable();
+          this.SelectImpuestosControl.disable();
+          this.SelecStatusControl.disable();
+        }
+
+
+        //Subcribir los cambios al selecionar la empresa
+        this.SelectSucursalControl.valueChanges.subscribe(objectoSucusal => {
+          if (objectoSucusal) {
+            this.list_bodegas = objectoSucusal.list_bodegas!;
+            //Evento Editar
+            if (this.isEditMode && this.objeto.idSucursal) {
+              //Buscar la bodega correspondiente
+              const buscarbodega = this.list_bodegas.find(
+                bodega => bodega.id === this.objeto.idBodega
+              );
+              if (buscarbodega) {
+                this.SelectBodegasControl.setValue(buscarbodega);
+              }
+              //Evento Nuevo
+            } else {
+              const unicaBodega = this.list_bodegas[0];
+              this.SelectBodegasControl.setValue(unicaBodega);
+              this.formulario.patchValue({
+                idBodega: unicaBodega.id
+              });
+            }
+
+
+          } else {
+            this.list_bodegas = []; // Limpiar si no hay categoría seleccionada
+          }
+        });
+      },
+      error => {
+        console.error('Error al cargar la compra:', error);
+        // Opcional: Redirigir si el ID es inválido o no existe
+        this.router.navigate(['/compras']);
+      }
+    );
+  }
+
   /*
-Receptores
+  Receptores
   */
   recibirEstado(estado: any) {
     console.log('El padre recibió la estado:', estado);
@@ -171,11 +437,21 @@ Receptores
 
   onProveedorChange(proveedor: ProveedorSearch) {
     console.log('onProveedorChange:', proveedor);
-    this.formulario.patchValue({
-      idProveedor: proveedor.idProveedor,
-      searchProveedor: proveedor
-    });
-    this.formulario.get('searchProveedor')?.disable();
+    if (proveedor != null) {
+      this.formulario.patchValue({
+        idProveedor: proveedor.idProveedor,
+        searchProveedor: proveedor
+      });
+      this.formulario.get('searchProveedor')?.disable();
+    } else {
+      this.formulario.get('searchProveedor')?.enable();
+      this.formulario.patchValue({
+        idProveedor: 0,
+        searchProveedor: proveedor
+      });
+    }
+
+
     //fila.get('search')?.disable(); //Se bloque la primera columna.
   }
 
@@ -183,7 +459,8 @@ Receptores
     this.sucursalService.sucursalesxBodegas().subscribe({
       next: (data) => {
         this.list_sucursal = data;
-
+        console.log("cargarSucursales")
+        console.log(this.objeto.idSucursal)
         // Si es metodo edicion y tengo una empresa cargada.
         //La busco en la lista que me retorno el API
         if (this.isEditMode && this.objeto.idSucursal) {
@@ -226,23 +503,6 @@ Receptores
 
 
   /**
-  * Metodo para obtener el numerador siguiente de (nroDocum)
-  *
-  * @param numerador Numerador de la base de datos.
-  * @returns No tiene return , carga directamente en el patchValue de 'nroDocum'
-  */
-  obtenerNumerador(numerador: string): void {
-    this.empresaService.numeradorNext(numerador).subscribe({
-      next: (data: Numerador) => {
-        this.formulario.get('nroDocum')?.patchValue(data.next_value);
-      },
-      error: (err) => {
-        console.error('Error (obtenerNumerador)', err);
-      }
-    });
-  }
-
-  /**
    * Metodo que tiene como finalidad agregar una linea vacia al final de la grilla. Se utiliza
    * cuando se carga una linea por el metodo "onArticuloChange"
    
@@ -261,6 +521,7 @@ Receptores
     //Se carga un metodo vacio de StockDisponible
     let stockData: CompraDisponible = {
       idArticulo: 0,
+      idCodBarra: 0,
       codArticulo: '',
       nomArticulo: '',
       stock: 0,
@@ -292,24 +553,29 @@ Receptores
     const costoCtrl = nuevoDetalle.get('costoUnit');
     const cantidadCtrl = nuevoDetalle.get('cantidad');
     const impuesto1Ctrl = nuevoDetalle.get('objimpuesto1');
-
+    const dctoCtrl = nuevoDetalle.get('porc_dcto');
 
     //subcripcion para columna neto.
-    if (costoCtrl && cantidadCtrl && impuesto1Ctrl) {
+    if (costoCtrl && cantidadCtrl && impuesto1Ctrl && dctoCtrl) {
       combineLatest([
         costoCtrl.valueChanges.pipe(startWith(costoCtrl.value)), // Toma el valor actual (0)
         cantidadCtrl.valueChanges.pipe(startWith(cantidadCtrl.value)),
         impuesto1Ctrl.valueChanges.pipe(startWith(impuesto1Ctrl.value)),
-      ]).subscribe(([costo, cantidad, objimpuesto1]) => {
+        dctoCtrl.valueChanges.pipe(startWith(dctoCtrl.value))
+
+      ]).subscribe(([costo, cantidad, objimpuesto1, porc_dcto]) => {
         console.log('Calculando...', { costo, cantidad }); // Ahora sí debería entrar
         console.log('Impuesto...', { objimpuesto1 }); // Ahora sí debería entrar
         const neto = (costo || 0) * (cantidad || 0);
-        const valorImpu1 = (neto || 0) * (objimpuesto1.porcentaje || 0);
         const tasaImpu1 = (objimpuesto1.id);
+        const imp_dcto = neto * ((porc_dcto / 100));
+        const valorImpu1 = ((neto - imp_dcto) || 0) * ((objimpuesto1.porcentaje / 100) || 0);
         nuevoDetalle.get('costoTotal')?.setValue(neto, { emitEvent: false });
         nuevoDetalle.get('idTasaimp1')?.setValue(tasaImpu1, { emitEvent: false });
         nuevoDetalle.get('valorImpuesto1')?.setValue(valorImpu1, { emitEvent: false });
-        nuevoDetalle.get('importeTotal')?.setValue((neto + valorImpu1), { emitEvent: false });
+        nuevoDetalle.get('imp_dcto')?.setValue(imp_dcto, { emitEvent: false });
+        nuevoDetalle.get('importeTotal')?.setValue((neto - imp_dcto + valorImpu1), { emitEvent: false });
+
       });
     }
     // añadir al FormGroup general
@@ -325,18 +591,20 @@ Receptores
 
     return this.fb.group({
       // Estructura de ID que ya tenías
-      id: this.fb.group({
-        idArticulo: [data.idArticulo, Validators.required],
-        linea: [nextLinea, Validators.required],
-        idTrans: [null]
-      }),
-
-
+      //llave compuesta
+      idTrans: [null],
+      linea: [nextLinea, Validators.required],
+      idArticulo: [data.idArticulo, Validators.required],
+      idCodBarra: [data.idCodBarra, Validators.required],
       refCompras: [data.nomArticulo],
-      codigoBarras: "0",
+      costanterior: 0,
       costoUnit: [0, [Validators.required, Validators.min(0)]],
       cantidad: [0, [Validators.required, Validators.min(0)]],
-      idLote: 0,
+      porc_dcto: [0, [Validators.required, Validators.min(0)]],
+      imp_dcto: 0,
+      idLote: [0, this.validarLoteRequerido],
+      // Solo indica si la celda "Lote" debe mostrar el combo (no se envia al backend, ver enviarFormulario)
+      manejaLote: false,
       stock: 0,
       objimpuesto1: [data.objimpuesto1],
       impuesto1: [data.impuesto1],
@@ -352,14 +620,75 @@ Receptores
       importeTotal: [{ value: data.total, disabled: true }],
 
       // Campo de entrada de usuario
-
-      search: search
+      search: search,
+      btoCrearCodBarra: true //Inicializa el boton deshabilitado
     });
+  }
+
+  agregarCodigoBarraAlArray(datos: CodigosBarra, index: number) {
+    const nuevoRegistro = this.fb.group({
+      idArticulo: [datos.idArticulo],
+      idCodBarra: [datos.idCodBarra],
+      codBarra: [datos.codBarra],
+      nomBarra: [datos.nomBarra], // O los campos que necesite tu API
+      fecha_registro: [new Date()],
+      linea: index
+    });
+
+    this.CodigoBarra.push(nuevoRegistro);
   }
 
   // Método para obtener el FormArray de detalles
   get detalles(): FormArray {
     return this.formulario.get('detalles') as FormArray;
+  }
+
+  get CodigoBarra(): FormArray {
+    return this.formulario.get('nuevoCodigoBarra') as FormArray;
+  }
+
+  // Método para obtener el FormArray de lotes nuevos pendientes
+  get nuevosLotes(): FormArray {
+    return this.formulario.get('nuevosLotes') as FormArray;
+  }
+
+  /**
+   * Validador: si el articulo de la fila maneja lote, se debe haber seleccionado uno real (id > 0).
+   */
+  validarLoteRequerido = (control: AbstractControl): ValidationErrors | null => {
+    const fila = control.parent;
+    const manejaLote = fila?.get('manejaLote')?.value;
+    if (!manejaLote) {
+      return null;
+    }
+    return Number(control.value) > 0 ? null : { loteRequerido: true };
+  };
+
+  /**
+   * Metodo que se activa cuando el combo-lote de una fila emite un lote seleccionado o creado.
+   */
+  onLoteChange(lote: LoteDisponible, index: number): void {
+    const fila = this.detalles.at(index);
+    fila.patchValue({ idLote: lote.idLote });
+    fila.get('idLote')?.updateValueAndValidity();
+
+    // Si es un lote recien reservado (aun no existe en m_lotes), lo agregamos a la
+    // lista de nuevosLotes para que se cree junto con la compra al guardar.
+    if (lote.esNuevo) {
+      this.agregarLoteAlArray(lote, fila.get('idArticulo')?.value, index + 1);
+    }
+  }
+
+  agregarLoteAlArray(lote: LoteDisponible, idArticulo: number, linea: number): void {
+    const nuevoRegistro = this.fb.group({
+      idArticulo: [idArticulo],
+      idLote: [lote.idLote],
+      codigoLote: [lote.codigoLote],
+      fecVencimiento: [lote.fecVencimiento],
+      linea: [linea]
+    });
+
+    this.nuevosLotes.push(nuevoRegistro);
   }
 
   compareImpuestos(o1: TasasCombo, o2: TasasCombo): boolean {
@@ -375,26 +704,53 @@ Receptores
    * @returns No tiene return
    */
   onArticuloChange(articulo: ArticuloSearch, index: number) {
+    console.log("onArticuloChange" + articulo)
+    if (articulo != null) {
 
-    const fila = this.detalles.at(index);
-    fila.patchValue({
-      id: {
-        idArticulo: articulo.idArticulo,
-        linea: index + 1,
-        idTrans: null
-      },
-      idUbicacion: 0,
-      idLote: 0,
-      cantDisp: 0,
-      nombreArticulo: articulo.nomArticulo,
-      codigoArticulo: articulo.codArticulo,
-      cantidad: 0,
-      search: articulo //articulo para bloquear la columna de search
-    });
-    fila.get('search')?.disable(); //Se bloque la primera columna.
+      //Se cargar las variables de bodega y estado , para consultar por el inventario.
+      const idBodega = this.formulario.value.idBodega;
+      const idEstado = this.formulario.value.idEstado;
+      //Con el articulo seleccionado se consulta por API , el stock.
+      this.serviceIni.stkCompraDisponible(articulo.idArticulo!, articulo.idCodBarra!, idBodega!, idEstado!).subscribe({
+        next: (data) => {
+          if (data && data.length > 0) {
+            //El api solo debe responder con una sola linea.
+            const stockData = data[0];
+            console.log(stockData);
 
-    this.agregarLineaVacia();
+            const fila = this.detalles.at(index);
+            fila.patchValue({
+              idTrans: null,
+              idArticulo: articulo.idArticulo,
+              idCodBarra: articulo.idCodBarra,
+              linea: index + 1,
+              costanterior: stockData.costo,
+              stock: stockData.stock,
+              nombreArticulo: articulo.nomArticulo,
+              codigoArticulo: articulo.codArticulo,
+              idLote: 0,
+              manejaLote: articulo.manejaLote || false,
+              search: articulo //articulo para bloquear la columna de search
+            });
+            fila.get('idLote')?.updateValueAndValidity();
 
+            // Precarga el impuesto por defecto del maestro de artículos (queda editable
+            // por línea: una compra puntual puede necesitar cambiarlo).
+            const impuestoArticulo = this.list_impuestos.find(t => t.id === stockData.impuesto);
+            if (impuestoArticulo) {
+              fila.get('objimpuesto1')?.setValue(impuestoArticulo);
+            }
+            fila.get('search')?.disable(); //Se bloque la primera columna.
+            fila.get('btoCrearCodBarra')?.setValue(true);
+            this.agregarLineaVacia();
+          }
+
+        },
+        error: (err) => {
+          console.error('Error (onArticuloChange)', err);
+        }
+      });
+    }
   }
 
   get totalNeto(): number {
@@ -403,7 +759,7 @@ Receptores
 
     // 2. Sumamos el campo 'neto' de cada objeto en el array
     return todasLasFilas.reduce((acumulado, fila) => {
-      return acumulado + (Number(fila.valorImpuesto1) || 0);
+      return acumulado + (Number(fila.costoTotal) || 0);
     }, 0);
   }
 
@@ -428,7 +784,7 @@ Receptores
 
     // 2. Sumamos el campo 'neto' de cada objeto en el array
     return todasLasFilas.reduce((acumulado, fila) => {
-      return acumulado + (Number(fila.costoUnit) || 0);
+      return acumulado + (Number(fila.valorImpuesto1) || 0);
     }, 0);
   }
 
@@ -437,12 +793,42 @@ Receptores
   * @returns No tiene return
   */
   eliminarLineaDetalles(index: number): void {
+    // 1. Obtenemos el grupo de la fila actual
+    const fila = this.detalles.at(index) as FormGroup;
+
+    // 2. Extraemos el objeto search
+    const searchObj: ArticuloSearch = fila.get('search')?.value;
+    if (!searchObj || !searchObj.idArticulo) {
+      console.warn("No se puede eliminar una línea que no tiene un artículo cargado.");
+      // Opcional: Mostrar un Toast o alerta de SweetAlert
+      return;
+    }
     this.detalles.removeAt(index);
     this.dataSource.data = this.detalles.controls as FormGroup[];
 
     if (this.detalles.length == 0) {
       this.agregarLineaVacia();
     }
+  }
+
+  /**
+  * Metodo para eliminar referencia del proveedor
+  * @returns No tiene return
+  */
+  //No esta en uso
+  eliminarReferenciaProveedor(): void {
+    let proveedor_filtro: ProveedorSearch = {
+      idProveedor: 0,
+      idPersona: 0,
+      codTit: '',
+      nombreCompleto: ''
+    }
+    this.formulario.get('searchProveedor')?.enable();
+    this.formulario.patchValue({
+      idProveedor: 0,
+      searchProveedor: proveedor_filtro
+    });
+
   }
 
   ValidarColumnas() {
@@ -455,6 +841,155 @@ Receptores
       this.detalles.removeAt(total - 1);
       this.dataSource.data = [...this.detalles.controls] as FormGroup[];
     }
+  }
+
+  ModalcrearCodigoBarra(index: number): void {
+    // 1. Abre el diálogo, pasando el componente modal y los datos
+    this.objeto_resultado = new CodigosBarra();
+    //inactivar
+    this.isModalClosing = false;
+    //this.isPersonSelected = true;
+    const dialogRef = this.dialog.open(ModalCodigobarraComponent, {
+      width: '70%', // Define el ancho del modal
+      data: {
+        titulo: 'REGISTRO CODIGO DE BARRA',
+        mensaje: 'Este mensaje fue enviado desde el componente principal.'
+      }
+    });
+
+    // 2. Suscríbete al observable 'afterClosed()' para obtener el resultado
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('El modal se cerró con el resultado:', result);
+
+      // 'result' contendrá 'Resultado Confirmado' o 'undefined' (si se cerró con 'Cancelar')
+      //this.resultadoModal = result || 'Cancelado por el usuario o cerrado por ESC';
+      this.objeto_resultado = result;
+
+
+      if (this.objeto_resultado) {
+
+        //Capturamos el evento de la linea
+        const triggerActual = this.articulosComps.toArray()[index];
+        if (triggerActual) {
+          //Cerramos el panel del autocompletar de esa fila inmediatamente
+          triggerActual.cerrarPanel();
+        }
+        console.log("********************")
+        console.log(this.objeto_resultado)
+        // 2. Cargamos los datos
+        const ArticuloAutocompletar: ArticuloSearch = {
+          idArticulo: this.objeto_resultado.idArticulo, // O el campo de ID correcto
+          idCodBarra: this.objeto_resultado.idCodBarra,
+          codArticulo: this.objeto_resultado.codBarra,
+          nomArticulo: this.objeto_resultado.nomBarra
+        };
+        //Cargamos la linea a la tabla
+        this.onArticuloChange(ArticuloAutocompletar, index);
+        //agregar nuevo objecto al arreglo
+        this.agregarCodigoBarraAlArray(this.objeto_resultado, index);
+        //Pasamos el foco
+        this.enfocarCosto(index);
+
+        setTimeout(() => {
+          this.isModalClosing = true;
+        }, 500);
+
+        // this.searchControl.setValue(personaParaAutocompletar);
+        //this.onPersonaSelected({ option: { value: personaParaAutocompletar } }); // Simular la selección
+      }
+
+    });
+
+
+    console.log("fin modal");
+    console.log(this.objeto_resultado);
+  }
+
+  enfocarCosto(index: number): void {
+
+    setTimeout(() => {
+      const listaCostos = this.inputsCostos.toArray();
+      const inputActual = listaCostos[index];
+
+      if (inputActual) {
+        inputActual.nativeElement.focus();
+        // Opcional: Seleccionar el texto para que el usuario solo tenga que escribir el precio
+        inputActual.nativeElement.select();
+      }
+    }, 150);
+  }
+
+  getSearchText(index: number): string {
+    console.log("getSearchText")
+    const value = this.detalles.at(index).get('search')?.value;
+
+    if (!value) return '';
+
+    // Si es el objeto de la interfaz ArticuloSearch
+    if (typeof value === 'object') {
+      return value.nomArticulo || '';
+    }
+
+    // Si el usuario solo ha escrito texto (string)
+    return value;
+  }
+
+  //Actualizar srtock y costo 
+  actualizarStocksMasivo(): void {
+    console.log("actualizarStocksMasivo");
+    const idBodega = this.formulario.get('idBodega')?.value;
+    const idEstado = this.formulario.get('idEstado')?.value;
+
+    // 1. Construir la cadena: idArticulo-idCodBarra;idArticulo-idCodBarra
+    const cadenaArticulos = this.detalles.controls
+      .map(f => ({ idA: f.get('idArticulo')?.value, idC: f.get('idCodBarra')?.value }))
+      .filter(f => f.idA && f.idC) // Solo filas con datos
+      .map(f => `${f.idA}-${f.idC}`)
+      .join(';');
+
+    console.log(cadenaArticulos);
+
+    if (!cadenaArticulos) return;
+
+    // 2. Llamada única al API
+    this.compraService.ActualizarStockCostos(cadenaArticulos, idBodega, idEstado).subscribe({
+      next: (data: any[]) => {
+        console.log(data);
+        data.forEach(info => {
+          // Buscar la fila correspondiente en el FormArray
+          const fila = this.detalles.controls.find(f =>
+            f.get('idArticulo')?.value === info.idarticulo &&
+            f.get('idCodBarra')?.value === info.idcodbarra
+          );
+
+          //Si encuentra fila actualiza el registro
+          if (fila) {
+            fila.patchValue({
+              stock: info.stock,
+              costanterior: info.costo
+            }, { emitEvent: false });
+          }
+        });
+      }
+    });
+
+  }
+
+  // Muestra en un dialogo el historial de auditoria del registro actual
+  verHistorialAuditoria(): void {
+    const dialogRef = this.dialog.open(AuditoriaDialogComponent, {
+      width: '500px',
+      data: {
+        titulo: `Historial de Auditoría - OC ${this.objeto.nroDocum}`,
+        logs: this.formulario.get('logs')?.value
+      }
+    });
+
+    // Material devuelve el foco al boton que abrio el dialogo al cerrarlo (accesibilidad),
+    // lo que deja el icono con el resaltado de "enfocado" pegado visualmente.
+    dialogRef.afterClosed().subscribe(() => {
+      (document.activeElement as HTMLElement)?.blur();
+    });
   }
 
   // Método para agregar el log al FormArray
@@ -474,15 +1009,31 @@ Receptores
     logsArray.push(auditoriaGroup);
   }
 
+  // Salta a la primera pestaña (en orden) que tenga un campo obligatorio invalido,
+  // para que el usuario no tenga que adivinar en cual quedo el error marcado en rojo.
+  irAPestanaConError(): void {
+    const pestanaConError = this.camposPorPestana.findIndex(campos =>
+      campos.some(campo => this.formulario.get(campo)?.invalid)
+    );
+    if (pestanaConError !== -1) {
+      this.selectedTabIndex = pestanaConError;
+    }
+  }
+
   enviarFormulario() {
     //Asignacion de campos en cabezal
     console.log("enviarFormulario")
+    const fecha_envio = new Date()
+
     this.formulario.patchValue({
       idEmp: this.SelectSucursalControl.value?.idEmpresa,
       idSucursal: this.SelectSucursalControl.value?.id,
       idBodega: this.SelectBodegasControl.value?.id,
       impNeto: this.totalNeto,
       impTotal: this.totalFinal,
+      status: this.SelecStatusControl.value === 'Borrador' ? 'B' :
+        this.SelecStatusControl.value === 'Finalizado' ? 'F' :
+          this.SelecStatusControl.value === 'Cancelado' ? 'C' : 'N/A',
       ingresaBodega: 'S',
       impuesto1: 'IVA',
       valorImpuesto1: this.totalImpuesto1,
@@ -492,19 +1043,20 @@ Receptores
       valorImpuesto3: 0,
       impDescuento: 0,
       documento: 'compra',
-      vista: 'AjusteStock',
-      fechaMod: new Date().toISOString()
+      vista: 'CompraDirecta',
+      fechaMod: fecha_envio.toISOString()
     });
     console.log("Json original");
     console.log(this.formulario.getRawValue());
 
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched(); // Para mostrar errores visualmente
+      this.irAPestanaConError();
       return; // Detiene la ejecución si el formulario no es válido
     }
 
     //Eliminar la ultima fila del arreglo porque esta vacia.
-    this.eliminarUltimaFilaEventsave();
+    //this.eliminarUltimaFilaEventsave();
     //Auditoria
     this.agregarLogAuditoria();
 
@@ -514,14 +1066,14 @@ Receptores
 
     // 2. Limpiamos solo el arreglo de detalles
     // Usamos .map para recorrer cada línea y quitar 'search' y lo que no necesites
-    const detallesLimpios = dataCompleta.detalles.map((linea: any) => {
-
-      // Desestructuración: sacamos 'search' y 'refCompras' (o las que no quieras)
-      // El resto de campos se guardarán en la variable 'resto'
-      const { search, objimpuesto1, ...resto } = linea;
-
-      return resto; // Retornamos la línea sin esos campos
-    });
+    // Se valida que solo se envien las lineas que tiene datos 
+    const detallesLimpios = dataCompleta.detalles
+      .filter((det: any) => det.idArticulo !== 0 && det.idArticulo !== null)
+      .map((linea: any) => {
+        // Desestructuración para quitar lo que no va al API
+        const { search, objimpuesto1, btoCrearCodBarra, ...resto } = linea;
+        return resto;
+      });
 
     // 3. Creamos el objeto final que se enviará a la API
     const jsonParaAPI = {
@@ -537,18 +1089,64 @@ Receptores
 
 
     //Evento nuevo
-    this.compraService.save(this.formulario.getRawValue()).subscribe({
-      next: (compra) => {
-        // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
-        console.log(compra);
-        // 4. Redirigir a la vista de lista principal.
-        //this.router.navigate(['/ajustestock']);
-      },
-      error: (err) => {
-        console.error('Error al guardar:', err);
-      }
-    });
+    if (this.isEditMode) {
+      console.log("Editar")
+      
+      this.compraService.edit(this.objeto.idTrans!, jsonParaAPI).subscribe({
+        next: (compra) => {
+          console.log(compra);
+          this.notificacion.showSuccess('compra actualizada con éxito!');
+          this.router.navigate(['/compras']);
+        },
+        error: (err) => {
+          console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo editar la compra.');
+        }
+      });
 
+    } else {
+      console.log("Nuevo")
+
+      this.compraService.save(jsonParaAPI).subscribe({
+        next: (compra) => {
+          console.log(compra);
+          this.notificacion.showSuccess('compra guardada con éxito!');
+          this.resetCampos();
+        },
+        error: (err) => {
+          console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo guardar la compra.');
+        }
+      });
+
+    }
+
+
+
+  }
+
+  resetCampos() {
+    //Recuperar valores que no cambian
+    const idBodega = this.formulario.value.idBodega;
+    const idEstado = this.formulario.value.idEstado;
+
+    //Limpiar el formulario
+    this.objeto = new Compra();
+    this.formDirective.resetForm();
+    //reset grilla de logs
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.clear();
+    //reset grilla de articulos
+    const detalle = this.formulario.get('detalles') as FormArray;
+    detalle.clear();
+    //reset lotes nuevos pendientes
+    this.nuevosLotes.clear();
+    // agregas la fila inicial "limpia"
+    this.agregarLineaVacia();
+
+    //actualizo referencias
+    this.formulario.get('idBodega')?.patchValue(idBodega);
+    this.formulario.get('idEstado')?.patchValue(idEstado);
   }
 
 

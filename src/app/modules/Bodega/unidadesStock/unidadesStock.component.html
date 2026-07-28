@@ -1,0 +1,77 @@
+<main class="contenido">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>GESTION DE UNIDADES</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            @if (puedeCrear) {
+            <button mat-raised-button color="primary" routerLink="/unidades/new">Nuevo</button>
+            }
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por codigo o nombre</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: unidad, 001">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
+        </mat-card-actions>
+        <mat-card-content class="mat-content">
+
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+
+                    <ng-container matColumnDef="codigo">
+                        <th mat-header-cell *matHeaderCellDef>Codigo</th>
+                        <td mat-cell *matCellDef="let element">{{ element.codUnidad }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="nombre">
+                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nomUnidad }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="espaquete">
+                        <th mat-header-cell *matHeaderCellDef>Es Paquete</th>
+                        <td mat-cell *matCellDef="let element">{{ element.esPaquete }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="conversion">
+                        <th mat-header-cell *matHeaderCellDef>Conversion</th>
+                        <td mat-cell *matCellDef="let element">{{ element.convertUnidad }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef>Ult. Modificacion</th>
+                        <td mat-cell *matCellDef="let element">{{ element.fechaMod | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarUnidad(element.id)" matTooltip="Visualizar"
+                                matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                            @if (puedeEditar) {
+                            <button mat-icon-button (click)="editarUnidad(element.id)">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            }
+                            @if (puedeEliminar) {
+                            <button mat-icon-button matSuffix (click)="eliminarUnidad(element.id)">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                            }
+
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="Columnas">
+                    </tr>
+                    <tr mat-row *matRowDef="let row; columns: Columnas;">
+                    </tr>
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+
+        </mat-card-content>
+    </mat-card>
+</main>

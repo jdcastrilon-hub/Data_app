@@ -1,0 +1,99 @@
+:host {
+  display: block;
+  background-color: #e2e2e2;
+  padding: 8px;
+}
+
+.monitor-card {
+  border-radius: 4px;
+}
+
+.mat-header {
+  padding: 16px;
+  mat-card-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+}
+
+// ESTE ES EL BLOQUE NUEVO
+.selector-informe-container {
+  padding: 0 16px; // Alineado con el padding del header
+  border-bottom: 1px solid #c9c7c7; // El borde que querías
+  display: flex;
+  align-items: center;
+  
+  // Quitamos la altura excesiva
+  .select-tipo-informe {
+    width: 350px; // Ancho similar al rango de fechas
+    margin-top: 10px; // Espacio respecto al título
+    
+    // Quitamos el espacio de abajo del input (donde van los errores) 
+    // para reducir la altura total
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+    
+    // Ajuste de altura interna para que se vea más compacto
+    ::ng-deep .mat-mdc-text-field-wrapper {
+        height: 50px; 
+        display: flex;
+        align-items: center;
+    }
+  }
+}
+
+.mat-content {
+  padding: 2px 16px !important;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 3px;
+}
+
+.mat-header {
+  display: flex;
+  align-items: center; // Alinea verticalmente el texto y el select
+  padding: 8px 16px !important; // Reducimos padding para ganar espacio
+  
+  mat-card-title {
+    margin-bottom: 0 !important; // Quita el margen que Material pone por defecto
+    font-weight: bold;
+    font-size: 1.1rem;
+    white-space: nowrap; // Evita que el título se parta en dos líneas
+  }
+}
+
+.spacer {
+  flex: 1 1 auto; // Toma todo el espacio disponible en medio
+}
+
+.select-inline {
+  width: 300px; // Ancho controlado
+  font-size: 0.9rem; // Un poco más pequeño para que no compita con el título
+
+  // Truco para que el select sea más bajito y no estire el header
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    height: 40px !important;
+    display: flex;
+    align-items: center;
+  }
+
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none; // Elimina el espacio de error/ayuda inferior
+  }
+  
+  ::ng-deep .mat-mdc-form-field-flex {
+    height: 40px !important;
+    align-items: center;
+  }
+}
+
+.divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 0 16px;
+}

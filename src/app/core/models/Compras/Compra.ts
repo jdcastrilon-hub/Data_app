@@ -1,3 +1,6 @@
+import { CompraInterfazSucursal } from "../../interfaces/Compras/CompraInterfazSucursal";
+import { ProveedorSearch } from "../../interfaces/Compras/ProveedorSearch";
+import { CodigosBarra } from "../Bodega/CodigosBarra";
 import { Auditoria } from "../core/Auditoria";
 import { CompraDetalle } from "./CompraDetalle";
 
@@ -10,6 +13,7 @@ export class Compra {
     documento!: string;
     nroDocum!: number;
     remito !: string;
+    status !: string;
     ingresaBodega!: string;
     idBodega!: number;
     idEstado !: number;
@@ -27,4 +31,7 @@ export class Compra {
     fechaMod!: Date;    
     logs!: Auditoria[];
     detalles!: CompraDetalle[];
+    bodega! : CompraInterfazSucursal; //Para recuperar la sucursal de la compra.
+    proveedor! : ProveedorSearch;//Para recuperar el proveedor de la compra.
+    nuevoCodigoBarra! : CodigosBarra[]; //Para recuperar listado de nuevos codigos de la compra.
 }

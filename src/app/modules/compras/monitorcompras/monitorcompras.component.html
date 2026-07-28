@@ -1,0 +1,39 @@
+<main class="contenido">
+  <mat-card appearance="raised" class="monitor-card">
+
+    <mat-card-header class="mat-header">
+      <mat-card-title>MONITOR DE COMPRAS</mat-card-title>
+
+      <span class="spacer"></span> <mat-form-field appearance="outline" class="select-inline">
+        <mat-label>Tipo de Informe</mat-label>
+        <mat-select [(value)]="reporteSeleccionado" (selectionChange)="reporteSeleccionado = $event.value">
+          <mat-option value="compras">📦 Compras Realizadas</mat-option>
+          <mat-option value="costos">🏷️ Costos</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card-header>
+
+    <div class="divider"></div>
+    <mat-card-content class="mat-content">
+      <div class="kpi-grid">
+        <kpicompras *ngFor="let kpi of currentKpis" [titulo]="kpi.titulo" [valor]="kpi.valor" [icono]="kpi.icono"
+          [color]="kpi.color">
+        </kpicompras>
+      </div>
+
+      @if (reporteSeleccionado==='compras') {
+      <filtroscompras [obj_filtros]="obj_filtros" (alConsultar)="ReporteCompras($event)"></filtroscompras>
+      <vistacomprasrealizadas [datos]="lista_comprasrealizadas" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
+        [filtrosActuales]="filtrosActuales" (paginacion)="PaginacionReporteCompras($event)"></vistacomprasrealizadas>
+      }
+      @if (reporteSeleccionado==='costos') {
+      <filtros-costos [obj_filtros]="obj_filtros" (alConsultar)="ReporteCostos($event)"></filtros-costos>
+      <reportecostos [datos]="lista_costos" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
+        [filtrosActuales]="filtrosActuales" (paginacion)="PaginacionReporteCostos($event)"></reportecostos>
+      }
+
+
+
+    </mat-card-content>
+  </mat-card>
+</main>

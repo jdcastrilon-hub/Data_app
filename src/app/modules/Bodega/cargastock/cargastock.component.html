@@ -1,0 +1,69 @@
+<main class="contenido">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>CARGA MASIVA DE INVENTARIO</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            <button mat-raised-button color="primary" routerLink="/cargastock/new">Nueva Carga</button>
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por observacion o archivo</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: inventario inicial">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
+        </mat-card-actions>
+        <mat-card-content class="mat-content">
+
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+
+                    <ng-container matColumnDef="nrodocum">
+                        <th mat-header-cell *matHeaderCellDef>No. Proceso</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nroDocum }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                        <td mat-cell *matCellDef="let element">{{ element.fechaMovimiento | date: 'dd/MM/yyyy' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="bodega">
+                        <th mat-header-cell *matHeaderCellDef>Bodega</th>
+                        <td mat-cell *matCellDef="let element">{{ element.bodega?.nomBodega }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="estado">
+                        <th mat-header-cell *matHeaderCellDef>Estado</th>
+                        <td mat-cell *matCellDef="let element">{{ element.estado?.codEstado }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="archivo">
+                        <th mat-header-cell *matHeaderCellDef>Archivo</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nombreArchivo }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="obs">
+                        <th mat-header-cell *matHeaderCellDef>Observacion</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Observaciones }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarCarga(element.idTrans)" matTooltip="Visualizar"
+                                matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                            <button mat-icon-button matSuffix (click)="eliminarCarga(element.idTrans)">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="Columnas"></tr>
+                    <tr mat-row *matRowDef="let row; columns: Columnas;"></tr>
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+
+        </mat-card-content>
+    </mat-card>
+</main>

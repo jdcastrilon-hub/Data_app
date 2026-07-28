@@ -6,7 +6,7 @@ export class Categoria{
     idEmpresa! : number;
     codCategoria! : string;
     nomCategoria! : string;
-    estado! : string;
+    estado! : Boolean;
     fechaMod! : Date;
     subCategorias!: SubCategorias[];
     logs!: Auditoria[];

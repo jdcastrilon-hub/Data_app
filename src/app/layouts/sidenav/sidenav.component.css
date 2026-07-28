@@ -1,10 +1,11 @@
-.mat-tree-node {
-    cursor: pointer;
-  }
+.container{
+    height:100vh;
+}
 
- .mat-tree li {
-    list-style-type: none; /* ❌ Quita el punto */
-    list-style-type: none;
-    margin-left: 10px;
-  
-  }
+mat-sidenav{
+    width:260px;
+}
+
+.contenido{
+    padding:15px;
+}

@@ -1,0 +1,81 @@
+<main class="contenido">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>GESTION DEVOLUCION A PROVEEDOR</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            <button mat-raised-button color="primary" routerLink="/devolucioncompras/new">Nuevo</button>
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por N° devolución o proveedor</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: 12, proveedor">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
+        </mat-card-actions>
+        <mat-card-content class="mat-content">
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+                    <ng-container matColumnDef="id">
+                        <th mat-header-cell *matHeaderCellDef>Trans</th>
+                        <td mat-cell *matCellDef="let element">{{ element.id_trans }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Fecha | date:'dd/MM/yyyy' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="proveedor">
+                        <th mat-header-cell *matHeaderCellDef>Proveedor</th>
+                        <td mat-cell *matCellDef="let element">{{ element.proveedor?.nombreCompleto }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="compraorigen">
+                        <th mat-header-cell *matHeaderCellDef>Compra Origen</th>
+                        <td mat-cell *matCellDef="let element">{{ element.compra_origen?.nroDocum }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="numdevolucion">
+                        <th mat-header-cell *matHeaderCellDef>N° Devolución</th>
+                        <td mat-cell *matCellDef="let element">{{ element.NumDevolucion }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="importe">
+                        <th mat-header-cell *matHeaderCellDef>Total</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Importe | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>Estado</th>
+                        <td mat-cell *matCellDef="let element">
+                            <span class="status-badge" [ngClass]="claseStatus(element.Status)">
+                                {{ etiquetaStatus(element.Status) }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarDevolucion(element.id_trans)"
+                                matTooltip="Visualizar" matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                            <button mat-icon-button (click)="editarDevolucion(element.id_trans)">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button matSuffix (click)="eliminarDevolucion(element.id_trans)">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+        </mat-card-content>
+    </mat-card>
+</main>

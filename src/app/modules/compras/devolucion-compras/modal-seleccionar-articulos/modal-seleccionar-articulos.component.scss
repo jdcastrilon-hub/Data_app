@@ -1,0 +1,68 @@
+.table-scroll-container {
+    max-height: 400px;
+    overflow-y: auto;
+    display: block;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.lote-tag {
+    font-size: 11px;
+    color: #666;
+}
+
+table {
+    width: 100%;
+}
+
+.mat-mdc-header-cell,
+.mat-mdc-cell {
+    padding: 2px 8px !important;
+}
+
+.mat-mdc-row,
+.mat-mdc-header-row {
+    height: 40px;
+}
+
+.celda-cantidad {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.input-cantidad {
+    width: 70px;
+    height: 30px;
+    padding: 0 6px;
+    text-align: center;
+    border: 1px solid #c0c0c0;
+    border-radius: 4px;
+    outline: none;
+    box-sizing: border-box;
+    font-size: 13px;
+
+    &:focus {
+        border-color: #1976d2;
+    }
+
+    &:read-only {
+        background-color: #f0f0f0;
+        color: #999;
+    }
+}
+
+.input-invalido {
+    border-color: #f44336 !important;
+}
+
+.error-cantidad {
+    font-size: 11px;
+    color: #f44336;
+    line-height: 1.2;
+}

@@ -1,0 +1,30 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon>inventory_2</mat-icon> Crear Nuevo Lote
+</h2>
+
+<form [formGroup]="formulario" (ngSubmit)="guardar()">
+  <mat-dialog-content class="mat-typography">
+    <div fxLayout="row" fxLayoutGap="15px">
+      <mat-form-field class="form-field-compacto" fxFlex="50" appearance="outline">
+        <mat-label>Código Lote</mat-label>
+        <input matInput formControlName="codigoLote">
+        <mat-error *ngIf="formulario.get('codigoLote')?.hasError('required')">Código requerido</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="form-field-compacto form-field-date" fxFlex="50" appearance="outline">
+        <mat-label>Fecha Vencimiento</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="fecVencimiento">
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="formulario.get('fecVencimiento')?.hasError('required')">Fecha requerida</mat-error>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close type="button">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="guardando">
+      <mat-icon>check_circle</mat-icon> Crear
+    </button>
+  </mat-dialog-actions>
+</form>

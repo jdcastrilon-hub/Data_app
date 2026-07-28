@@ -1,8 +1,8 @@
 
 export class ReporteInventarioxBodega{
     bodega! : string;
-    codArticulo! : string;
-    nomArticulo! : string;
+    codarticulo! : string;
+    nomarticulo! : string;
     estado! : string;
     unidad! : string;
     cantidad! : number;

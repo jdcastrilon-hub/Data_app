@@ -21,7 +21,7 @@ export class NotificacionesService {
 
   showError(message: string): void {
     this.snackBar.open(message, 'Entendido', {
-      duration: 5000,
+      duration: 6000,
       horizontalPosition: 'right',
       verticalPosition: 'top',
       panelClass: ['error-snackbar']

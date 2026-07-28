@@ -5,8 +5,18 @@
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
 
-        <mat-card-actions class="mat-accion">
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            @if (puedeCrear) {
             <button mat-raised-button color="primary" routerLink="/ajustestock/new">Nuevo</button>
+            }
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por No. o observacion</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: 123, sobrante">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
         </mat-card-actions>
         <mat-card-content class="mat-content">
 
@@ -15,23 +25,55 @@
 
                     <ng-container matColumnDef="id">
                         <th mat-header-cell *matHeaderCellDef>Nro.</th>
-                        <td mat-cell *matCellDef="let element">{{ element.nroDocum}}</td>
+                        <td mat-cell *matCellDef="let element">{{ element.idTrans}}</td>
                     </ng-container>
-                    <ng-container matColumnDef="name">
+                    <ng-container matColumnDef="nrodocum">
+                        <th mat-header-cell *matHeaderCellDef>No. Proceso</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nroDocum }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecha">
                         <th mat-header-cell *matHeaderCellDef>Fecha</th>
-                        <td mat-cell *matCellDef="let element">{{ element.fechaMovimiento }}</td>
+                        <td mat-cell *matCellDef="let element">{{ element.fechaMovimiento | date: 'dd/MM/yyyy' }}</td>
                     </ng-container>
+                    <ng-container matColumnDef="bodega">
+                        <th mat-header-cell *matHeaderCellDef>Bodega</th>
+                        <td mat-cell *matCellDef="let element">{{ element.bodega.nomBodega }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="estado">
+                        <th mat-header-cell *matHeaderCellDef>Estado</th>
+                        <td mat-cell *matCellDef="let element">{{ element.estado.codEstado }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="motivo">
+                        <th mat-header-cell *matHeaderCellDef>Motivo</th>
+                        <td mat-cell *matCellDef="let element">{{ element.motivo.nomMotivo }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="obs">
+                        <th mat-header-cell *matHeaderCellDef>Observacion</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Observaciones }}</td>
+                    </ng-container>
+
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef>Acciones</th>
                         <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarAjusteStock(element.idTrans)"
+                                matTooltip="Visualizar" matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                            @if (puedeEditar) {
                             <button mat-icon-button (click)="editarAjusteStock(element.idTrans)">
                                 <mat-icon>edit</mat-icon>
                             </button>
+                            }
+                            @if (puedeEliminar) {
+                            <button mat-icon-button matSuffix (click)="eliminarAjusteStock(element.idTrans)">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                            }
 
                         </td>
                     </ng-container>
-                    <tr mat-header-row *matHeaderRowDef="['id', 'name', 'actions']"></tr>
-                    <tr mat-row *matRowDef="let row; columns: ['id', 'name', 'actions'];"></tr>
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                 </table>
             </div>
             <mat-paginator [pageSize]="10" [pageSizeOptions]="[10, 20, 50]" showFirstLastButtons></mat-paginator>

@@ -12,10 +12,13 @@ import { SubCategorias } from '../../../../core/models/Bodega/SubCategorias';
 import { CategoriaService } from '../../../../core/services/Bodega/categoria-service.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
+import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
 
 @Component({
   selector: 'form-categoria',
-  imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule, RouterModule],
+  imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule, RouterModule, MatCheckboxModule],
   templateUrl: './form-categoria.component.html',
   styleUrl: './form-categoria.component.scss'
 })
@@ -25,6 +28,8 @@ export class FormCategoriaComponent {
   //parametros de entrada
   objeto!: Categoria;
   isEditMode: boolean = false;
+  isReadOnly: boolean = false;
+  titulo_form !: string;
 
 
   //Parametros del formulario
@@ -42,9 +47,17 @@ export class FormCategoriaComponent {
     private categoriaService: CategoriaService,
     private router: Router,
     private route: ActivatedRoute,
-    private notificacion: NotificacionesService
+    private notificacion: NotificacionesService,
+    private dialog: MatDialog
   ) {
     this.objeto = new Categoria();
+  }
+
+  // Vuelve al listado. El filtro/pagina en el que se quedo la lista se restaura
+  // desde CategoriaListStateService (no desde el historial del navegador: se puede
+  // llegar a este formulario desde cualquier otra pantalla, no solo desde la lista).
+  volver(): void {
+    this.router.navigate(['/categorias']);
   }
 
   //Empresas
@@ -59,13 +72,22 @@ export class FormCategoriaComponent {
       codCategoria: [this.objeto.codCategoria, Validators.required],
       nomCategoria: [this.objeto.nomCategoria, Validators.required],
       idEmpresa: [this.objeto.idEmpresa, Validators.required],
-      estado: [this.objeto.estado],
+      estado: [this.objeto.estado, { nonNullable: true }],
       fechaMod: [this.objeto.fechaMod],
       subCategorias: this.fb.array([]),
       logs: this.fb.array([]),
       id: [this.objeto.id]
     });
 
+    // No se usa formulario.disable(): los inputs de texto usan [readonly] en la
+    // plantilla (se ven normales, no apagados/grises). El select de empresa y el
+    // checkbox "estado" son la excepción: HTML no tiene un "readonly" real para
+    // ellos, así que esos controles sí se deshabilitan individualmente.
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+    if (this.isReadOnly) {
+      this.formulario.get('estado')?.disable();
+      this.SelectEmpresaControl.disable();
+    }
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -75,18 +97,23 @@ export class FormCategoriaComponent {
         // Si hay un ID, estamos en modo Edición
         console.log("Edicion")
         this.isEditMode = true;
+        this.titulo_form = this.isReadOnly ? "DETALLE CATEGORIA" : "ACTUALIZACION DE CATEGORIAS";
         this.ModoEdicion(Number(id)); // Llama al método de carga
+        this.formulario.get('estado')?.setValue(this.objeto.estado);
       } else {
         // Si no hay ID (p. ej., si usas esta misma ruta para crear), estamos en modo Nuevo
         console.log("Nuevo")
         this.isEditMode = false;
         this.objeto = new Categoria();
+        this.titulo_form = "REGISTRO DE CATEGORIAS";
+        this.formulario.get('estado')?.setValue(true);
         // Si es nuevo, agrega una fila vacía
         this.agregarSubCategoria();
         //Carga empresas
         this.cargarEmpresas();
       }
     });
+
 
   }
 
@@ -121,8 +148,10 @@ export class FormCategoriaComponent {
         console.log(this.objeto)
         this.cargarEmpresas();
 
-        //Cargo SubCategorias de la categoria
-        this.objeto.subCategorias.forEach((sub) => this.agregarSubCategoria(sub));
+        // Cargo SubCategorias de la categoria
+        this.objeto.subCategorias.forEach((sub) => {
+          this.agregarSubCategoria(sub);
+        });
       },
       error => {
         console.error('Error al cargar la categoría:', error);
@@ -139,7 +168,8 @@ export class FormCategoriaComponent {
       id: [data?.id || null],
       //codEmp: [data?.codEmp || ''],
       codSubCategoria: [data?.codSubCategoria || '', Validators.required],
-      nomSubCategoria: [data?.nomSubCategoria || '', Validators.required]
+      nomSubCategoria: [data?.nomSubCategoria || '', Validators.required],
+      tieneArticulos: [data?.tieneArticulos || false, Validators.required],
     });
     this.subCategorias.push(subCat);
     this.dataSource.data = this.subCategorias.controls as FormGroup[];
@@ -147,8 +177,36 @@ export class FormCategoriaComponent {
 
   //eliminar subCategoria
   eliminarSubCategoria(index: number): void {
+    //Capturamos el objecto de la fila
+    const fila = this.subCategorias.at(index) as FormGroup;
+
+    // 2. Extraemos el objeto movimientos
+    const objecto = fila.get('tieneArticulos')?.value;
+
+    //Si el codigo de barra a tenido algun movimiento de stock no se puede eliminar.
+    if (objecto) {
+      this.notificacion.showError('No se puede eliminar porque ya tiene relacionado articulos');
+      return;
+    }
     this.subCategorias.removeAt(index);
     this.dataSource.data = this.subCategorias.controls as FormGroup[]; // ⚠️ Actualiza la tabla
+  }
+
+  // Muestra en un dialogo el historial de auditoria del registro actual
+  verHistorialAuditoria(): void {
+    const dialogRef = this.dialog.open(AuditoriaDialogComponent, {
+      width: '500px',
+      data: {
+        titulo: `Historial de Auditoría - ${this.objeto.codCategoria}`,
+        logs: this.formulario.get('logs')?.value
+      }
+    });
+
+    // Material devuelve el foco al boton que abrio el dialogo al cerrarlo (accesibilidad),
+    // lo que deja el icono con el resaltado de "enfocado" pegado visualmente.
+    dialogRef.afterClosed().subscribe(() => {
+      (document.activeElement as HTMLElement)?.blur();
+    });
   }
 
   // Método para agregar el log al FormArray
@@ -220,7 +278,7 @@ export class FormCategoriaComponent {
     //Asignacion de campos en cabezal
     this.formulario.patchValue({
       idEmpresa: this.SelectEmpresaControl.value?.id_emp,
-      estado: 'A',
+      estado: this.formulario.get('estado')?.value ?? false,
       fechaMod: new Date().toISOString()
     });
     console.log("enviarFormulario");
@@ -236,7 +294,7 @@ export class FormCategoriaComponent {
     //Auditoria
     this.agregarLogAuditoria();
     console.log("OBJECTO");
-    console.log(this.formulario.value);
+    console.log(this.formulario.getRawValue());
 
 
 
@@ -244,14 +302,11 @@ export class FormCategoriaComponent {
       //Evento Edicion
       this.categoriaService.update(this.formulario.value).subscribe({
         next: (categoriaGuardada) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
-          console.log(categoriaGuardada);
-
-          // 4. Redirigir a la vista de lista principal.
-          this.router.navigate(['/categorias']);
+          this.notificacion.showSuccess('¡Catefgoria actualizada con éxito!');
         },
         error: (err) => {
           console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo editar la categoría.');
         }
       });
     } else {
@@ -260,30 +315,21 @@ export class FormCategoriaComponent {
       //Evento nuevo
       this.categoriaService.save(this.formulario.getRawValue()).subscribe({
         next: (categoriaGuardada) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
-          console.log(categoriaGuardada);
-          this.notificacion.showSuccess('¡Categoría guardada con éxito!');
 
+          this.notificacion.showSuccess('¡Categoría guardada con éxito!');
           // 2. Limpiar el formulario
           this.objeto = new Categoria();
           this.formDirective.resetForm();
           const logsArray = this.formulario.get('logs') as FormArray;
           logsArray.clear();
-          // 3. (Opcional) Setear valores por defecto que no deben ser null
-          /* this.formulario.patchValue({
-             idEmpresa: 1,  // O el ID que estés manejando
-             estado: 'A',
-             subcategorias: [] // Limpiar la tabla de subcategorías
-           });
-           */
+          this.formulario.get('estado')?.setValue(true);
+
         },
         error: (err) => {
           console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo guardar la categoría.');
         }
       });
     }
-
-
   }
-
 }

@@ -1,69 +1,97 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { ModalPersonaComponent } from '../modal-persona/modal-persona.component';
 import { PersonaSearch } from '../../../../core/interfaces/Compras/PersonaSearch';
-import { debounceTime, finalize, Observable, of, switchMap, tap } from 'rxjs';
 import { ProveedorService } from '../../../../core/services/Compras/proveedor.service';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { Persona } from '../../../../core/models/Compras/Personas';
 import { Proveedores } from '../../../../core/models/Compras/Proveedores';
+import { Auditoria } from '../../../../core/models/core/Auditoria';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
+import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
+import { ComboPersonaComponent } from 'src/app/modules/resources/combo-persona/combo-persona.component';
+import { PersonaComponent, PersonaResumen } from 'src/app/modules/Comercial/resources/persona/persona.component';
+import { PersonaService } from 'src/app/core/services/Compras/persona.service';
+import { MatDialog } from '@angular/material/dialog';
+import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+
+// Estados posibles del sub-formulario de persona dentro del proveedor:
+// - pendiente: aun no se decide si es una persona nueva o existente (bloqueado)
+// - existente: se seleccionó una persona ya registrada (bloqueado, datos cargados)
+// - nueva: se va a registrar una persona nueva (habilitado)
+type EstadoPersona = 'pendiente' | 'existente' | 'nueva';
 
 @Component({
   selector: 'app-form-proveedor',
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
-    RouterModule, MatDialogModule, MatAutocompleteModule, MatDatepickerModule, MatCheckboxModule],
+    RouterModule, MatAutocompleteModule, MatDatepickerModule,
+    MatCheckboxModule, ComboPersonaComponent, PersonaComponent],
   templateUrl: './form-proveedor.component.html',
   styleUrl: './form-proveedor.component.scss'
 })
 export class FormProveedorComponent {
 
   formulario!: FormGroup;
-  objeto_resultado!: Persona;
   objeto!: Proveedores;
+  titulo_form!: string;
   isEditMode: boolean = false;
+  isReadOnly: boolean = false;
 
+  // Mientras no se busque/elija una persona, el sub-formulario de persona permanece bloqueado
+  estadoPersona: EstadoPersona = 'pendiente';
 
-  //Autocompletar para el articulo
-  // 1. Control para el campo de entrada
-  searchControl = new FormControl();
-
-  // 2. Observable que contendrá los resultados del backend
-  filteredArticulos!: Observable<PersonaSearch[]>;
-
-  isLoading = false;
-  isPersonSelected = false;
-
+  // Capturamos la referencia del formulario del HTML
+  @ViewChild('formDirective') formDirective!: NgForm;
 
   constructor(private fb: FormBuilder,
     private proveedorService: ProveedorService,
+    private personaService: PersonaService,
     private logAuditoria: AuditoriaService,
     private route: ActivatedRoute,
-    private router: Router,
-    private dialog: MatDialog) {
+    private notificacion: NotificacionesService,
+    private dialog: MatDialog,
+    private router: Router) {
     this.objeto = new Proveedores();
+  }
+
+  // Vuelve al listado. El filtro/pagina en el que se quedo la lista se restaura
+  // desde ProveedorListStateService.
+  volver(): void {
+    this.router.navigate(['/proveedores']);
   }
 
   ngOnInit() {
 
+    let persona_filtro: PersonaSearch = {
+      idPersona: 0,
+      codTit: '',
+      nombreCompleto: ''
+    }
+
     this.formulario = this.fb.group({
-      isPersona: [false],
-      id: [this.objeto.id],
-      persona: this.objeto_resultado,
+      idEmp: [this.objeto.idEmp],
+      idProveedor: [this.objeto.idProveedor],
+      idPersona: [0],
+      persona: PersonaComponent.crearFormGroup(),
       codigoTitular: [this.objeto.codigoTitular, Validators.required],
       razonSocial: [this.objeto.razonSocial, Validators.required],
       regimen: [this.objeto.regimen, Validators.required],
       activo: [this.objeto.activo],
-      observacion: [this.objeto.observacion], //this.objeto.fechaMovimiento
+      observacion: [this.objeto.observacion],
+      searchPersona: [persona_filtro],
       fechaMod: this.objeto.fechaMod,
       logs: this.fb.array([]),
     });
+
+    // No se usa formulario.disable(): los inputs usan [readonly] en la plantilla.
+    // El checkbox es la excepción: HTML no tiene un "readonly" real, se deshabilita.
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+    if (this.isReadOnly) {
+      this.formulario.get('activo')?.disable();
+    }
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -71,170 +99,205 @@ export class FormProveedorComponent {
 
       if (id) {
         // Si hay un ID, estamos en modo Edición
-        console.log("Edicion")
+        this.isEditMode = true;
+        this.titulo_form = this.isReadOnly ? 'DETALLE PROVEEDOR' : 'ACTUALIZACION PROVEEDOR';
+        this.ModoEdicion(Number(id));
 
       } else {
         // Si no hay ID (p. ej., si usas esta misma ruta para crear), estamos en modo Nuevo
-        console.log("Nuevo")
         this.isEditMode = false;
+        this.titulo_form = 'REGISTRO PROVEEDOR';
         this.objeto = new Proveedores();
         this.formulario.get('activo')?.patchValue(false);
       }
     });
+  }
 
+  /**
+  * Metodo para cargar la informacion del proveedor (y su persona asociada) por el (id)
+  */
+  ModoEdicion(id: number): void {
+    this.proveedorService.getProveedorById(id).subscribe(
+      (data: Proveedores) => {
+        this.objeto = data;
 
-    this.filteredArticulos = this.searchControl.valueChanges.pipe(
+        this.formulario.patchValue({
+          idEmp: data.idEmp,
+          idProveedor: data.idProveedor,
+          idPersona: data.idPersona,
+          codigoTitular: data.codigoTitular,
+          razonSocial: data.razonSocial,
+          regimen: data.regimen,
+          activo: data.activo,
+          observacion: data.observacion,
+        });
 
-      // 3. Aplica debounce: espera 400ms después de la última pulsación para iniciar la búsqueda
-      debounceTime(400),
+        // La persona ya esta ligada al proveedor: queda bloqueada, igual que al
+        // seleccionar una "existente" desde el buscador.
+        this.estadoPersona = 'existente';
+        this.formulario.get('searchPersona')?.patchValue({
+          idPersona: data.idPersona,
+          codTit: data.persona.codigoTitular,
+          nombreCompleto: data.persona.nombreCompleto
+        } as PersonaSearch);
+        this.formulario.get('searchPersona')?.disable();
+        this.personaGroup.patchValue({
+          ...data.persona,
+          fechaNacimiento: data.persona.fechaNacimiento ? new Date(data.persona.fechaNacimiento) : null,
+        });
 
-      // 4. Tap para indicar que la carga ha iniciado
-      tap(() => this.isLoading = true),
-
-      // 5. switchMap cancela la búsqueda anterior si hay una nueva (importante para evitar respuestas desordenadas)
-      switchMap(value => {
-        console.log("entro a buscar articulo");
-        console.log(value.codigo);
-
-        if (value === null || value === undefined) {
-          console.log("Valor Nulo/Reset detectado");
-          this.isLoading = false;
-          return new Observable<any[]>(); // Retorna Observable vacío
-        }
-        let query: string;
-
-        if (typeof value === 'object' && value !== null) {
-          // El valor es un objeto (porque se seleccionó o se está mostrando el objeto)
-          // Asegúrate de que .codigo existe y conviértelo a string
-          query = String(value.codigo ?? '');
-        } else {
-          // El valor es una cadena (escritura) o un número
-          query = String(value);
-        }
-
-        // 3. Validar la longitud de la query
-        if (query && query.length > 2 && this.isPersonSelected === false) {
-          console.log("Entró a buscar artículo con query:", query);
-
-          // Llama al servicio para buscar en el backend
-          return this.proveedorService.PersonaSearch(query).pipe(
-            // 4. Mantiene la funcionalidad de limpieza después de la respuesta
-            finalize(() => this.isLoading = false)
-          );
-        } else {
-          console.log("Búsqueda cancelada (longitud < 3):", query);
-          console.log(this.isPersonSelected);
-          this.isLoading = false;
-          return new Observable<any[]>();
-        }
-      })
+        this.cargarLogsExistentes(data.logs);
+      },
+      error => {
+        console.error('Error al cargar el proveedor:', error);
+        this.router.navigate(['/proveedores']);
+      }
     );
   }
 
-  // 7. Maneja la selección del artículo
-  onPersonaSelected(event: any) {
-    console.log("onPersonaSelected");
-    //const personaSeleccionado: PersonaSearch = event.option.value;
-
-    // 2. Bloquea el input (ESTA ES LA CLAVE DE LA SOLUCIÓN)
-    this.searchControl.disable();
-
-    // 3. Actualiza el estado para la interfaz (botones)
-    this.isPersonSelected = true;
-
-    // Lógica clave: Aquí se llama al stock disponible para decidir
-    // si se auto-agrega o si se muestra el formulario de Lote/Ubicación
-    // (Lógica detallada en la respuesta anterior)
-    //this.iniciarProcesoDeConfiguracion(articuloSeleccionado.idArticulo!);
+  // Carga el historial de auditoria ya existente en el FormArray, para que al editar
+  // se acumule (en vez de que agregarLogAuditoria() sobrescriba todo el historial).
+  cargarLogsExistentes(logs: Auditoria[]): void {
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.clear();
+    (logs ?? []).forEach(log => {
+      logsArray.push(this.fb.group({
+        operacion: [log.operacion],
+        usuario_mod: [log.usuario_mod],
+        fecha_mod: [log.fecha_mod]
+      }));
+    });
   }
 
-  desvincularPersona(): void {
-    //this.filteredArticulos = new Observable<any[]>();
-    // 1. Limpia el valor del campo de búsqueda
-    this.searchControl.setValue('');
-
-    // 2. Habilita el input para que pueda buscar de nuevo
-    this.searchControl.enable();
-
-    // 3. Limpia la ID del proveedor
-    //this.formulario.get('personaId').setValue(null);
-
-    // 4. Actualiza el estado para la interfaz (botones)
-    this.isPersonSelected = false;
-
-    //
-    this.objeto_resultado = new Persona();
-    this.formulario.get('codigoTitular')?.patchValue(this.objeto_resultado.codigoTitular);
-    this.formulario.get('razonSocial')?.patchValue(this.objeto_resultado.nombreCompleto);
-  }
-
-  mascaraSalida(persona: PersonaSearch): string {
-    console.log("mascara salida");
-    console.log(persona);
-    if (persona) {
-      console.log("mascara sali FINAL");
-      // Devuelve el código y el nombre para una mejor referencia visual
-      return `${persona.nombreCompleto} - ${persona.codTit}`;
-    }
-    return ''; // Devuelve cadena vacía si no hay objeto (ej: cuando el input está vacío)
-  }
-
-
-  ModalcrearNuevaPersona(): void {
-    // 1. Abre el diálogo, pasando el componente modal y los datos
-    this.searchControl.setValue('');
-    this.objeto_resultado = new Persona();
-    //this.isPersonSelected = true;
-    const dialogRef = this.dialog.open(ModalPersonaComponent, {
-      width: '70%', // Define el ancho del modal
+  // Muestra en un dialogo el historial de auditoria del registro actual
+  verHistorialAuditoria(): void {
+    const dialogRef = this.dialog.open(AuditoriaDialogComponent, {
+      width: '500px',
       data: {
-        titulo: 'REGISTRO DE PERSONA',
-        mensaje: 'Este mensaje fue enviado desde el componente principal.'
+        titulo: `Historial de Auditoría - ${this.objeto.codigoTitular}`,
+        logs: this.formulario.get('logs')?.value
       }
     });
 
-    // 2. Suscríbete al observable 'afterClosed()' para obtener el resultado
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('El modal se cerró con el resultado:', result);
+    // Material devuelve el foco al boton que abrio el dialogo al cerrarlo (accesibilidad),
+    // lo que deja el icono con el resaltado de "enfocado" pegado visualmente.
+    dialogRef.afterClosed().subscribe(() => {
+      (document.activeElement as HTMLElement)?.blur();
+    });
+  }
 
-      // 'result' contendrá 'Resultado Confirmado' o 'undefined' (si se cerró con 'Cancelar')
-      //this.resultadoModal = result || 'Cancelado por el usuario o cerrado por ESC';
-      this.objeto_resultado = result;
+  get personaGroup(): FormGroup {
+    return this.formulario.get('persona') as FormGroup;
+  }
 
+  get personaSubformDeshabilitado(): boolean {
+    if (this.isReadOnly) {
+      return true;
+    }
+    // No existe todavia un maestro de personas dedicado: al editar un proveedor
+    // tambien se permite corregir los datos propios de la persona ya ligada
+    // (el buscador sigue bloqueado: no se puede reasignar a otra persona desde aqui).
+    if (this.isEditMode) {
+      return false;
+    }
+    return this.estadoPersona !== 'nueva';
+  }
 
-      if (this.objeto_resultado) {
+  // El buscador de personas (combo-persona) dispara esto al elegir/limpiar una coincidencia existente
+  onPersonaChange(persona: PersonaSearch) {
+    console.log('onPersonaChange:', persona);
+    if (persona != null) {
+      this.estadoPersona = 'existente';
+      this.formulario.patchValue({
+        idPersona: persona.idPersona,
+        searchPersona: persona,
+        codigoTitular: persona.codTit,
+        razonSocial: persona.nombreCompleto
+      });
+      this.formulario.get('searchPersona')?.disable();
 
-        this.formulario.get('codigoTitular')?.patchValue(this.objeto_resultado.codigoTitular);
-        this.formulario.get('razonSocial')?.patchValue(this.objeto_resultado.nombreCompleto);
+      // Cargamos el detalle completo para que el sub-formulario de persona lo muestre
+      this.personaService.getById(persona.idPersona!).subscribe({
+        next: (personaCompleta) => {
+          this.personaGroup.patchValue({
+            ...personaCompleta,
+            fechaNacimiento: personaCompleta.fechaNacimiento ? new Date(personaCompleta.fechaNacimiento) : null,
+          });
+        },
+        error: (err) => console.error('Error cargando el detalle de la persona', err)
+      });
+    } else {
+      this.reiniciarSeleccionPersona();
+    }
+  }
 
-        const personaParaAutocompletar: PersonaSearch = {
-          idPersona: 0, // O el campo de ID correcto
-          codTit: this.objeto_resultado.codigoTitular,
-          nombreCompleto: this.objeto_resultado.nombreCompleto
-        };
+  // El usuario indicó que quiere registrar una persona nueva (opción "Crear nueva persona" del buscador)
+  habilitarNuevaPersona(textoBuscado?: string) {
+    this.estadoPersona = 'nueva';
+    this.formulario.get('searchPersona')?.disable();
+    this.formulario.patchValue({
+      idPersona: 0,
+      codigoTitular: null,
+      razonSocial: null
+    });
+    this.personaGroup.reset(PersonaComponent.crearFormGroup({ codigoTitular: textoBuscado }).getRawValue());
+  }
 
-        this.searchControl.setValue(personaParaAutocompletar);
-        this.onPersonaSelected({ option: { value: personaParaAutocompletar } }); // Simular la selección
-      }
+  // Vuelve al estado inicial: ni persona existente ni nueva, todo bloqueado de nuevo
+  reiniciarSeleccionPersona() {
+    this.estadoPersona = 'pendiente';
+    this.formulario.get('searchPersona')?.enable();
+    this.formulario.patchValue({
+      idPersona: 0,
+      searchPersona: null,
+      codigoTitular: null,
+      razonSocial: null
+    });
+    this.personaGroup.reset(PersonaComponent.crearFormGroup().getRawValue());
+  }
+
+  // Mientras se registra una persona NUEVA, o se corrigen los datos de la persona
+  // ligada durante una edicion, reflejamos su documento/nombre en los campos propios del proveedor
+  onPersonaSubformChange(resumen: PersonaResumen) {
+    if (this.estadoPersona !== 'nueva' && !this.isEditMode) {
+      return;
+    }
+    this.formulario.patchValue({
+      codigoTitular: resumen.codigoTitular,
+      razonSocial: resumen.nombreCompleto
+    });
+  }
+
+  // Método para agregar el log al FormArray
+  agregarLogAuditoria() {
+    const logData = this.logAuditoria.generarLog(!this.isEditMode ? 'Nuevo' : 'Edicion');
+
+    const auditoriaGroup = this.fb.group({
+      operacion: [logData.operacion],
+      usuario_mod: [logData.usuario_mod],
+      fecha_mod: [logData.fecha_mod]
     });
 
-    console.log("fin modal");
-    console.log(this.objeto_resultado);
+    const logsArray = this.formulario.get('logs') as FormArray;
+    logsArray.push(auditoriaGroup);
   }
 
   enviarFormulario() {
-    //Asignacion de campos en cabezal
     console.log("enviarFormulario");
-    const estadoBodegaPrincipal = this.formulario.get('bodegaPrincipal')?.value;
-    const estadoUbucaciones = this.formulario.get('manejaUbicaciones')?.value;
     const estadoActivo = this.formulario.get('activo')?.value;
-    console.log(estadoBodegaPrincipal);
+
     this.formulario.patchValue({
       fechaMod: new Date().toISOString(),
-      activo: estadoActivo ? 'S' : 'N',
-      persona: this.objeto_resultado
+      activo: !!estadoActivo,
+      idEmp: 1
     });
 
+    if (this.estadoPersona === 'pendiente') {
+      this.notificacion.showError('Debes buscar una persona existente o crear una nueva antes de guardar.');
+      return;
+    }
+
+    console.log(this.formulario.getRawValue());
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched(); // Para mostrar errores visualmente
       return; // Detiene la ejecución si el formulario no es válido
@@ -242,45 +305,57 @@ export class FormProveedorComponent {
 
     //Auditoria
     this.agregarLogAuditoria();
-    console.log("OBJECTO");
-    console.log(this.formulario.getRawValue());
+
+    const dataCompleta = this.formulario.getRawValue();
+    // El detalle de persona solo se envia cuando el sub-formulario estuvo habilitado
+    // (persona nueva al crear, o cualquier edicion de proveedor, donde tambien se
+    // permite corregir los datos de la persona ya ligada). Si se eligio una persona
+    // existente durante la creacion, el backend no necesita (ni usa) ese detalle.
+    const personaEditable = this.isEditMode || this.estadoPersona === 'nueva';
+    const jsonParaAPI = {
+      ...dataCompleta,
+      searchPersona: undefined,
+      persona: personaEditable
+        ? PersonaComponent.aPayload(dataCompleta.persona)
+        : undefined,
+    };
 
     if (this.isEditMode) {
       //Evento Edicion
-      console.log("api ediccion");
-    } else {
-      //Evento nuevo
-      this.proveedorService.save(this.formulario.value).subscribe({
-        next: (ObjectSave) => {
-          // La notificación ya ocurrió DENTRO del servicio (paso 3 del código anterior).
-          console.log(ObjectSave);
-          // 4. Redirigir a la vista de lista principal.
+      this.proveedorService.edit(jsonParaAPI, this.objeto.idProveedor!).subscribe({
+        next: () => {
+          this.notificacion.showSuccess('¡Proveedor editado con éxito!');
           this.router.navigate(['/proveedores']);
         },
         error: (err) => {
+          console.error('Error al editar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo editar el proveedor.');
+        }
+      });
+    } else {
+      //Evento nuevo
+      this.proveedorService.save(jsonParaAPI).subscribe({
+        next: () => {
+          this.notificacion.showSuccess('¡Proveedor guardado con éxito!');
+          this.resetCampos();
+        },
+        error: (err) => {
           console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo guardar el proveedor.');
         }
       });
     }
-
   }
 
-  // Método para agregar el log al FormArray
-  agregarLogAuditoria() {
-    // 1. Obtienes el objeto de log ya completo y formateado del servicio
-    const logData = this.logAuditoria.generarLog(!this.isEditMode ? 'Nuevo' : 'Edicion');
-
-    // 2. Creas un nuevo FormGroup usando la data
-    const auditoriaGroup = this.fb.group({
-      operacion: [logData.operacion],
-      usuario_mod: [logData.usuario_mod],
-      fecha_mod: [logData.fecha_mod]
-    });
-
-    // 3. Lo añades al FormArray
+  resetCampos() {
+    //Limpiar el formulario
+    this.objeto = new Proveedores();
+    this.formDirective.resetForm();
+    this.estadoPersona = 'pendiente';
+    this.personaGroup.reset(PersonaComponent.crearFormGroup().getRawValue());
+    //reset grilla de logs
     const logsArray = this.formulario.get('logs') as FormArray;
-    logsArray.push(auditoriaGroup);
+    logsArray.clear();
   }
-
 
 }

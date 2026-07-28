@@ -1,8 +1,6 @@
 export class StockDisponible{
     idArticulo !: number;
-    codArticulo!: string;
-    nomArticulo! : string;
+    idCodBarra !: number;
     stock!: number;
-    ubicacion! : string;
-    lote !: string;
+    costo !: number;
 }

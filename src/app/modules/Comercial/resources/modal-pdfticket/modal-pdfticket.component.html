@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Vista Previa del Ticket</h2>
+    
+    <mat-dialog-content style="min-width: 320px; height: 450px; overflow: hidden; padding: 0;">
+      <iframe 
+        [src]="pdfUrlUrlSegura" 
+        width="100%" 
+        height="100%" 
+        style="border: none;">
+      </iframe>
+    </mat-dialog-content>
+
+    <mat-dialog-actions alignment="end">
+      <button mat-button (click)="cerrar()">Cerrar</button>
+      <button mat-raised-button color="primary" (click)="mandarAImprimir()">Imprimir</button>
+    </mat-dialog-actions>

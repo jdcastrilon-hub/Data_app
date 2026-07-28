@@ -1,0 +1,79 @@
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <div class="titulo-izquierda">
+                    <button mat-icon-button color="primary" type="button" (click)="volver()">
+                        <mat-icon>list</mat-icon>
+                    </button>
+                    <span>{{titulo_form}}</span>
+                </div>
+                @if (isEditMode) {
+                <button mat-icon-button color="primary" type="button" (click)="verHistorialAuditoria()"
+                    title="Ver historial de auditoría">
+                    <mat-icon>info</mat-icon>
+                </button>
+                }
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales">
+
+                <div class="bloque">
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="30" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Codigo Estado</mat-label>
+                                <input matInput formControlName="codEstado" [readonly]="isReadOnly">
+                                <mat-error>Codigo requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="70" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Nombre Estado</mat-label>
+                                <input matInput formControlName="nomEstado" [readonly]="isReadOnly">
+                                <mat-error>Nombre requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="100" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Observacion</mat-label>
+                                <input matInput formControlName="observacion" [readonly]="isReadOnly">
+                                <mat-error>Observacion requerida</mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="30" fxFlex.lt-md="100%">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="activo" color="primary">
+                                    Estado Activo
+                                </mat-checkbox>
+                            </section>
+                        </div>
+                    </div>
+
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly" (click)="volver()">Cancelar</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

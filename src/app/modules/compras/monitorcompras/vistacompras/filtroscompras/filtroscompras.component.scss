@@ -1,0 +1,63 @@
+:host {
+    // 1. Fondo gris fuera de la tarjeta
+    display: block;
+    background-color: #e2e2e2;
+
+    // 2. Padding de 8px en todos los ángulos
+    padding: 1px;
+
+}
+
+
+.bloque {
+    border: 1px solid #c5c5c5; // gris claro
+    //border-radius: 8px; // opcional: bordes redondeados
+    padding: 16px 16px 0px 16px;
+    background-color: #fcfcfc;
+}
+
+// Contenedor de botones de acción
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    button[mat-flat-button] {
+        padding: 0 20px;
+        height: 48px;
+        display: flex;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        align-items: center;
+        justify-content: center;
+
+
+    }
+
+    button[mat-icon-button] {
+        color: #666;
+        margin-top: 2px;
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+    }
+}
+
+
+// Alinea el boton "Consultar" contra la caja visible de los mat-form-field vecinos
+// (el form-field reserva ~22px invisibles debajo para hint/error que aqui no se usan,
+// asi que centrar contra su alto total lo deja mas abajo de lo que se ve)
+.btn-consultar-wrapper {
+    margin-top: 4px;
+}
+
+.proveedor-container {
+    display: flex !important;
+    flex-direction: row;
+    align-items: flex-start;
+    /* Alineamos arriba */
+    gap: 4px;
+    /* Espacio entre el buscador y el botón */
+    width: 100%;
+}

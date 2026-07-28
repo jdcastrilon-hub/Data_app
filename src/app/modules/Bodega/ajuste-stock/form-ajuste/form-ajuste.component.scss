@@ -14,9 +14,35 @@
   padding: 16px 16px 0px 16px;
 }
 
-.full-width_lista {
+/* El contenedor interno de la celda */
+.celda-articulo-container {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  /* Centra verticalmente el input y el botón */
+  gap: 8px;
+  /* Espacio entre el buscador y el botón */
   width: 100%;
-  height: 30px;
+}
+
+.mat-column-articulo {
+  width: auto;
+  min-width: 200px;
+}
+
+.mat-column-position {
+  width: 50px;
+  text-align: center;
+}
+
+.mat-column-stock {
+  width: 80px;
+  text-align: center;
+}
+
+.mat-column-cantidad {
+  width: 100px;
+  text-align: center;
 }
 
 .tabla-compacta {
@@ -51,9 +77,14 @@
 
 .titulo-con-boton {
   display: flex;
-  /* Activa el modo Flexbox */
   align-items: center;
-  /* Alinea verticalmente el icono y el texto al centro */
+  justify-content: space-between; // deja el icono de auditoria pegado al extremo derecho
+  width: 100%;
+}
+
+.titulo-izquierda {
+  display: flex;
+  align-items: center;
   gap: 8px;
   /* Espacio uniforme entre el botón y el texto */
 }
@@ -63,6 +94,8 @@
   font-weight: 500;
   letter-spacing: 0.5px;
 }
+
+
 
 ::ng-deep .mat-mdc-form-field {
   --mat-form-field-container-text-font: 'Titillium Web', sans-serif !important; // change Input placeholder & value font-family

@@ -1,0 +1,19 @@
+.mat-column-position {
+  width: 50px;
+  text-align: center;
+}
+
+// El panel de mat-menu se renderiza en un overlay fuera del componente,
+// por eso se necesita ::ng-deep para poder darle estilo.
+::ng-deep .menu-columnas {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 16px;
+}
+
+// El boton de "editar costo" mostraba el fondo gris por defecto del <button>
+// nativo del navegador en vez del transparente que aplica Material normalmente.
+.btn-sin-fondo {
+  background: transparent !important;
+  box-shadow: none !important;
+}

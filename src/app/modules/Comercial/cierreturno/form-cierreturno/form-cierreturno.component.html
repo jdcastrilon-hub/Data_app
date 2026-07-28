@@ -1,0 +1,185 @@
+<form [formGroup]="formulario" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                @if (puedeSalir) {
+                <a mat-icon-button color="primary" routerLink="/cierreturno">
+                    <mat-icon>list</mat-icon>
+                </a>
+                }
+                <span>{{titulo_form}}</span>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <div class="bloque">
+
+            <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="3px grid">
+                <div fxFlex="20">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Caja</mat-label>
+                        <input matInput [value]="nomCaja" readonly>
+                    </mat-form-field>
+                </div>
+                @if (isReadOnly) {
+                <div fxFlex="15">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Usuario</mat-label>
+                        <input matInput [value]="usuarioTurno" readonly>
+                    </mat-form-field>
+                </div>
+                }
+                <div fxFlex="15">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Turno No.</mat-label>
+                        <input matInput formControlName="idTurno" readonly>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="15">
+                    <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+                        <mat-label>Fecha Cierre</mat-label>
+                        <input matInput [matDatepicker]="picker" formControlName="fechaCierre">
+                        <mat-datepicker-toggle matIconSuffix [for]="picker"
+                            [disabled]="isReadOnly"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="15">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Base Apertura</mat-label>
+                        <input matInput [value]="formatearMoneda(formulario.get('impBase')?.value)" readonly>
+                    </mat-form-field>
+                </div>
+                <div fxFlex="35">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Observacion</mat-label>
+                        <input matInput formControlName="observacion">
+                    </mat-form-field>
+                </div>
+            </div>
+
+            @if (faseCierre === 'blindTotal') {
+            <div class="bloque-arqueo-ciego mat-elevation-z1">
+                <p class="texto-arqueo-ciego">
+                    Antes de ver el detalle, cuenta todo lo que tienes (efectivo + Nequi/transferencias + tarjetas,
+                    etc.) e ingresa el <strong>total</strong>.
+                </p>
+                <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="12px">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Total Contado</mat-label>
+                        <input matInput [formControl]="totalContadoCiegoControl" (input)="onTotalContadoInput($event)">
+                        <mat-error *ngIf="totalContadoCiegoControl.hasError('required')">Requerido.</mat-error>
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="button" (click)="compararTotal()">
+                        Comparar
+                    </button>
+                </div>
+            </div>
+            }
+
+            @if (faseCierre === 'revelado') {
+
+            @if (!isReadOnly) {
+            <div class="resumen-comparacion-ciega mat-elevation-z1">
+                <div><span class="label">Total Sistema:</span> {{ formatearMoneda(formulario.get('impTotal')?.value)
+                    }}</div>
+                <div><span class="label">Total Contado:</span> {{ formatearMoneda(totalContadoCiegoControl.value)
+                    }}</div>
+                <div [ngClass]="{'valor-positivo': diferenciaGeneralCiega > 0, 'valor-negativo': diferenciaGeneralCiega < 0}">
+                    <span class="label">Diferencia:</span> {{ formatearMoneda(diferenciaGeneralCiega) }}
+                </div>
+            </div>
+            }
+
+            <div class="container-tabla mat-elevation-z2">
+                <table mat-table [dataSource]="dataSource" formArrayName="detalles">
+                    <ng-container matColumnDef="concepto">
+                        <th mat-header-cell *matHeaderCellDef>Concepto</th>
+                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                            {{ row.get('concepto')?.value }}
+                        </td>
+                        <td mat-footer-cell *matFooterCellDef><strong>TOTALES</strong></td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="medioPago">
+                        <th mat-header-cell *matHeaderCellDef>Medio de Pago</th>
+                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
+                            {{ row.get('nombreMediopago')?.value }}
+                        </td>
+                        <td mat-footer-cell *matFooterCellDef></td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="importeSistema">
+                        <th mat-header-cell *matHeaderCellDef class="text-right">Valor Sistema</th>
+                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" class="text-right">
+                            {{ formatearMoneda(row.get('importeSistema')?.value) }}
+                        </td>
+                        <td mat-footer-cell *matFooterCellDef class="text-right">
+                            <strong>{{ formatearMoneda(formulario.get('impTotal')?.value) }}</strong>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="valorUsuario">
+                        <th mat-header-cell *matHeaderCellDef class="text-right">Valor Contado</th>
+                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i"
+                            class="text-right celda-valor-usuario">
+                            <input matInput type="number" formControlName="valorUsuario" class="text-right">
+                            <mat-error *ngIf="row.get('valorUsuario')?.hasError('required')">
+                                Requerido.
+                            </mat-error>
+                        </td>
+                        <td mat-footer-cell *matFooterCellDef></td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="diferencia">
+                        <th mat-header-cell *matHeaderCellDef class="text-right">Diferencia</th>
+                        <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" class="text-right"
+                            [ngClass]="{'valor-positivo': row.get('diferencia')?.value > 0, 'valor-negativo': row.get('diferencia')?.value < 0}">
+                            {{ formatearMoneda(row.get('diferencia')?.value) }}
+                        </td>
+                        <td mat-footer-cell *matFooterCellDef class="text-right"
+                            [ngClass]="{'valor-positivo': formulario.get('impDescuadre')?.value > 0, 'valor-negativo': formulario.get('impDescuadre')?.value < 0}">
+                            <strong>{{ formatearMoneda(formulario.get('impDescuadre')?.value) }}</strong>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="acciones">
+                        <th mat-header-cell *matHeaderCellDef class="text-center">Detalle</th>
+                        <td mat-cell *matCellDef="let row; let i = index" class="text-center">
+                            <button mat-icon-button type="button" (click)="toggleDetalleConcepto(i)"
+                                [matTooltip]="conceptoSeleccionado === i ? 'Ocultar detalle' : 'Ver detalle'">
+                                <mat-icon>{{ conceptoSeleccionado === i ? 'visibility_off' : 'visibility' }}</mat-icon>
+                            </button>
+                        </td>
+                        <td mat-footer-cell *matFooterCellDef></td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                    <tr mat-footer-row *matFooterRowDef="displayedColumns"></tr>
+                </table>
+
+            </div>
+
+            @if (conceptoSeleccionado !== null) {
+            <app-detalle-concepto [lineas]="lineasDetalle" [cargando]="cargandoDetalle"></app-detalle-concepto>
+            }
+
+            }
+
+            <br />
+        </div>
+
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit"
+                *ngIf="!isReadOnly && faseCierre === 'revelado'">Cerrar Turno</button>
+            <br>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly && puedeSalir"
+                routerLink="/cierreturno">Cancelar</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

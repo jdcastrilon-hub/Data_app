@@ -1,0 +1,80 @@
+<div class="table-scroll-container">
+    <div class="barra-acciones-tabla" fxLayout="row" fxLayoutAlign="end center">
+        <button mat-icon-button matTooltip="Exportar a Excel" [disabled]="exportando || !datos.length" (click)="exportarExcel()" type="button">
+            @if (exportando) {
+            <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+            <mat-icon>download</mat-icon>
+            }
+        </button>
+        <button mat-icon-button matTooltip="Elegir columnas" [matMenuTriggerFor]="menuColumnas" type="button">
+            <mat-icon>view_column</mat-icon>
+        </button>
+        <mat-menu #menuColumnas="matMenu">
+            <div class="menu-columnas" (click)="$event.stopPropagation()">
+                @for (col of columnasConfigurables; track col.clave) {
+                <mat-checkbox [checked]="esVisible(col.clave)" (change)="toggleColumna(col.clave)">
+                    {{ col.label }}
+                </mat-checkbox>
+                }
+            </div>
+        </mat-menu>
+    </div>
+    <table mat-table [dataSource]="dataSource">
+
+        <ng-container matColumnDef="position">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let element; let i = index">
+                {{ i + 1 }}
+            </td>
+        </ng-container>
+        <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let element">{{ element.fecha}}</td>
+        </ng-container>
+        <ng-container matColumnDef="proveedor">
+            <th mat-header-cell *matHeaderCellDef>Proveedor</th>
+            <td mat-cell *matCellDef="let element">{{ element.nombreproveedor}}</td>
+        </ng-container>
+        <ng-container matColumnDef="numoc">
+            <th mat-header-cell *matHeaderCellDef>Num. OC</th>
+            <td mat-cell *matCellDef="let element">{{ element.numoc}}</td>
+        </ng-container>
+        <ng-container matColumnDef="remito">
+            <th mat-header-cell *matHeaderCellDef>Remito</th>
+            <td mat-cell *matCellDef="let element">{{ element.remito}}</td>
+        </ng-container>
+        <ng-container matColumnDef="bodega">
+            <th mat-header-cell *matHeaderCellDef>Bodega</th>
+            <td mat-cell *matCellDef="let element">{{ element.nombrebodega}}</td>
+        </ng-container>
+        <ng-container matColumnDef="importe">
+            <th mat-header-cell *matHeaderCellDef>Total</th>
+            <td mat-cell *matCellDef="let element">{{ element.importe | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="devoluciones">
+            <th mat-header-cell *matHeaderCellDef>Devoluciones</th>
+            <td mat-cell *matCellDef="let element">{{ element.num_devoluciones > 0 ? element.num_devoluciones : '-' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let element">
+                <button mat-icon-button matTooltip="Ver detalle de la compra" (click)="abrirDetalle(element)" type="button">
+                    <mat-icon>receipt_long</mat-icon>
+                </button>
+                @if (element.num_devoluciones > 0) {
+                <button mat-icon-button matTooltip="Ver devoluciones" (click)="abrirDevoluciones(element)" type="button">
+                    <mat-icon>assignment_return</mat-icon>
+                </button>
+                }
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+    </table>
+    <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+        (page)="cambioPagina($event)" showFirstLastButtons></mat-paginator>
+
+</div>

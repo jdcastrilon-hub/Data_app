@@ -1,10 +1,15 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Articulo } from '../../models/Bodega/Articulo';
-import { map, Observable } from 'rxjs';
-import { ArticuloDTO } from '../../models/Bodega/ArticuloDTO';
+import { Observable } from 'rxjs';
 import { ArticuloSearch } from '../../models/Bodega/ArticuloSearch';
 import { environment } from 'src/environments/environment';
+import { registroarticuloCompra } from '../../interfaces/Compras/registroarticuloCompra';
+import { PageResponse } from '../../models/core/PageResponse';
+import { ArticuloListView } from '../../interfaces/Bodega/ArticuloListView';
+import { LoteDisponible } from '../../interfaces/Bodega/LoteDisponible';
+import { LoteReservado } from '../../interfaces/Bodega/LoteReservado';
+import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -19,47 +24,91 @@ export class ArticuloServiceService {
 
   private url: string = `${environment.baseUrl}/bodega/articulos/`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private loginService: LoginService) { }
 
-  list(): Observable<Articulo[]> {
-    return this.http.get<Articulo[]>(this.url + "list");
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<ArticuloListView>> {
+    let params = new HttpParams()
+      .set('page', page.toString())//Pagina
+      .set('size', size.toString())//Cantidad de registros a validar
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
+
+    return this.http.get<PageResponse<ArticuloListView>>(this.url + "pagination", { params });
   }
 
-  getEdition(objecto: Articulo): Observable<ArticuloDTO> {
+  //Obtener bodega por el ID
+  getArticuloById(id: number): Observable<Articulo> {
     const params = new HttpParams()
-      .set('id', String(objecto.id_articulo));
-    console.log("getEdition");
-    console.log(objecto.id_articulo);
-    return this.http.get<ArticuloDTO>(this.url + "getedition", { params });
+      .set('id_articulo', id);
+    return this.http.get<Articulo>(this.url + "search", { params });
+  }
+
+  //Actualizar stock de codigos de barra
+  ActualizarStock(id_articulo: number, cadena: string): Observable<any> {
+    const params = new HttpParams()
+      .set('cadena', cadena.toString())
+      .set('id_articulo', id_articulo)
+
+    return this.http.get<any>(this.url + "stock-masivo", { params });
   }
 
   //Guardar Articulo
   save(objecto: any): Observable<any> {
-    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
-      map((response: ApiResponse) => {
-
-        if (response.status !== 'success') {
-          // Si el estado no es 'ok', lanzamos un error para que lo maneje el 'subscribe'
-          throw new Error(response.message || 'Error desconocido al guardar el articulo.');
-        }
-        return response.data;
-      })
-    );
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.post<ApiResponse>(this.url + "save", objecto, { params });
   }
 
 
-  update(objecto: Articulo): Observable<Articulo> {
-    const params = new HttpParams()
-      .set('id', String(objecto.id_articulo));
-    return this.http.put<Articulo>(this.url + "update", objecto, { params });
+  update(objecto: Articulo): Observable<ApiResponse> {
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.put<ApiResponse>(this.url + "edit/" + objecto.id_articulo, objecto, { params });
+  }
+
+  delete(id: number): Observable<void> {
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.delete<void>(this.url + "delete/" + id, { params });
   }
 
   //Servicios adicionales
 
-  Search(query: string): Observable<ArticuloSearch[]> {
+  SearchCodigoBarra(query: string): Observable<ArticuloSearch[]> {
     const params = new HttpParams()
       .set('query', String(query));
-    return this.http.get<ArticuloSearch[]>(this.url + "search", { params });
+    return this.http.get<ArticuloSearch[]>(this.url + "searchCodigoBarra", { params });
+  }
+
+  SearchArticulo(query: string): Observable<ArticuloSearch[]> {
+    const params = new HttpParams()
+      .set('query', String(query));
+    return this.http.get<ArticuloSearch[]>(this.url + "searchCodigoStock", { params });
+  }
+  //buscar si existe el codigo de barra
+  SearchByCodigoBarra(id_articulo: number, codBarra: string): Observable<registroarticuloCompra> {
+    const params = new HttpParams()
+      .set('id_articulo', id_articulo)
+      .set('cod_barra', String(codBarra));
+
+    return this.http.get<registroarticuloCompra>(`${this.url}searchArticuloByCodigoBarra`, { params });
+  }
+
+  lotesArticulo(idArticulo: number): Observable<LoteDisponible[]> {
+    const params = new HttpParams()
+      .set('id_articulo', idArticulo.toString())
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+
+    return this.http.get<LoteDisponible[]>(this.url + "lotes", { params });
+  }
+
+  // Reserva un id real de lote (nextval) sin insertarlo en m_lotes; se materializa
+  // recien cuando se guarda la transaccion que lo usa (ver form-ajuste/nuevosLotes).
+  reservarLote(idArticulo: number, codigoLote: string): Observable<LoteReservado> {
+    const params = new HttpParams()
+      .set('id_articulo', idArticulo.toString())
+      .set('codigo_lote', codigoLote);
+
+    return this.http.get<LoteReservado>(this.url + "lotes/reservar", { params });
   }
 
 }

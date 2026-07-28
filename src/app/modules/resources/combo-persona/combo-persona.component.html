@@ -1,0 +1,27 @@
+<mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+    <mat-label>Documento o Nombre</mat-label>
+    <input matInput type="text" placeholder="Documento o Nombre" [formControl]="searchControl"
+        [matAutocomplete]="autoProveedor">
+
+    @if (searchControl.value) {
+    <button mat-icon-button matSuffix (click)="limpiarPersona($event)" type="button">
+        <mat-icon>close</mat-icon>
+    </button>
+    }
+</mat-form-field>
+
+<mat-autocomplete #autoProveedor="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
+
+    @for (item of filteredOptions(); track item.idPersona) {
+    <mat-option [value]="item">
+        {{ item.codTit }} - <small>{{ item.nombreCompleto }}</small>
+    </mat-option>
+    }
+
+    @if (mostrarOpcionCrear && filteredOptions().length === 0) {
+    <mat-option [value]="OPCION_CREAR_NUEVA">
+        Crear nueva persona
+    </mat-option>
+    }
+
+</mat-autocomplete>

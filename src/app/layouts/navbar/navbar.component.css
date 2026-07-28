@@ -1,35 +1,15 @@
-.navbar {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  height: 50px; /* Ajusta esto al alto de tu navbar */
-  background-color: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
+
+:host {
+    display: block;
+    background-color: #e2e2e2;
+
+    padding: 0px;
+    min-height: 100vh; 
 
 }
 
-.spacer {
-  flex: 1;
-}
 
-.content {
-  margin-top: 64px; /* Agregamos margen para evitar que el contenido quede debajo del navbar */
-}
-
-.mat-tab-group {
-  width: 100%;
-}
-
-.mat-tab-label {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center;
-  justify-content: center;
-}
-
-.full-width {
-  width: 100%;
+.mat-toolbar {
+    height: 45px !important;
+    min-height: 45px !important;
 }

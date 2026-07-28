@@ -1,0 +1,129 @@
+:host {
+  // 1. Fondo gris fuera de la tarjeta
+  display: block;
+  background-color: #fcfcfc;
+
+  // 2. Padding de 8px en todos los ángulos
+  padding: 8px;
+
+}
+
+/* Reduce la altura y el padding de las celdas de la tabla */
+.mat-mdc-table .mat-mdc-row {
+  height: 48px !important; /* Altura estándar compacta, puedes bajar a 44px si lo quieres más ajustado */
+}
+
+.mat-mdc-table .mat-mdc-cell, 
+.mat-mdc-table .mat-mdc-header-cell {
+  padding: 4px 8px !important; /* Estrecha el espacio hacia los lados y arriba/abajo */
+  vertical-align: middle;
+}
+
+/* Ajustes finos para que los componentes de Material no empujen la fila hacia abajo */
+.sub-form {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Opcional: Si el select tradicional desalinea la primera columna, dale un padding sutil */
+.input-tabla-select {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Quita los rellenos por defecto que hereda de la densidad de Material */
+::v-deep .mat-mdc-form-field-flex {
+  background-color: transparent !important; /* Elimina cualquier rastro del fondo gris */
+}
+
+/* Reduce la altura interna del contenedor outline para que se vea delgado */
+::v-deep .mat-mdc-text-field-wrapper {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Asegura un tamaño compacto y centrado para la fila */
+.mat-mdc-table .mat-mdc-row {
+  height: 52px !important; 
+}
+
+.mat-mdc-table .mat-mdc-cell {
+  padding: 2px 8px !important;
+  vertical-align: middle;
+}
+
+/* Opcional: Estilo rápido para el error si llega a saltar */
+.error-texto {
+  color: #f44336;
+  font-size: 11px;
+  display: block;
+  margin-top: 2px;
+}
+
+.contenedor-resumen {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+  font-size: 13px;
+}
+
+.suma-ok {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.suma-error {
+  color: #f44336;
+  font-weight: 600;
+}
+
+.container-tabla {
+  min-height: 200px;
+  max-height:  550px;
+  /* Ajusta según el espacio de tu pantalla */
+  overflow: auto;
+  border: 1px solid #ccc;
+
+  input {
+    width: 100%;
+    height: 35px; // Puedes ajustar aquí la altura
+    padding: 4px 8px;
+    font-size: 13px;
+    border: 1px solid #c0c0c0; // Borde gris claro (cuando no está enfocado)
+    border-radius: 6px; // Bordes redondeados
+    outline: none;
+    box-sizing: border-box;
+    background-color: white;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      border-color: #1976d2; // Azul (color de Angular Material primario)
+    }
+
+    &::placeholder {
+      font-size: 12px;
+      color: #999;
+    }
+  }
+
+  // Opcional: reducir padding de celdas si deseas más compactación
+  .mat-cell,
+  .mat-header-cell {
+    padding: 4px 8px;
+  }
+
+}
+
+.mat-mdc-table .mat-mdc-row {
+  height: 46px !important; /* Altura ideal compacta para POS */
+}
+
+.mat-mdc-table .mat-mdc-cell {
+  height: 46px !important;
+  padding: 0px 8px !important; /* Reducimos el padding vertical a 0 */
+  vertical-align: middle !important;
+}

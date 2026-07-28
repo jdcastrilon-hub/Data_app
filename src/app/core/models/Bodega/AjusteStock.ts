@@ -4,6 +4,7 @@ import { MotivosAjuste } from "./MotivosAjuste";
 
 export class AjusteStock {
     idTrans?: number;
+    idEmpresa!: number;
     idBodega!: number;
     documento!: string;
     nroDocum!: number;

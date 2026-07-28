@@ -8,9 +8,11 @@ import { MatTreeModule } from '@angular/material/tree';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import {MatMenuModule} from '@angular/material/menu';
+import { ThemeService } from './core/services/core/theme.service';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet,
     MatSidenavModule,
     MatTreeModule,
@@ -23,4 +25,6 @@ import {MatMenuModule} from '@angular/material/menu';
 })
 export class AppComponent {
   title = 'Data_app';
+
+  constructor(private themeService: ThemeService) { }
 }

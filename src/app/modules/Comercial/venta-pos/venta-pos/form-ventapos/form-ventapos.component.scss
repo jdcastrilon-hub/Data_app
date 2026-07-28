@@ -1,0 +1,369 @@
+:host {
+  // 1. Fondo gris fuera de la tarjeta
+  display: block;
+  background-color: #e2e2e2;
+
+  // 2. Padding de 8px en todos los ángulos
+  padding: 8px;
+
+}
+
+
+.bloque {
+  border: 1px solid #c5c5c5; // gris claro
+  //border-radius: 8px; // opcional: bordes redondeados
+  padding: 16px 16px 0px 16px;
+  background-color: #fcfcfc;
+}
+
+.btn-add-compacto {
+  color: #28a745;
+  /* Un verde de éxito, por ejemplo */
+}
+
+::ng-deep .mat-mdc-form-field {
+  --mat-form-field-container-text-font: 'Titillium Web', sans-serif !important; // change Input placeholder & value font-family
+  --mat-form-field-container-text-size: 16px; // change input lable font-size
+  --mat-form-field-container-text-tracking: 0.03125em; // change lable letter-spacing
+  --mat-form-field-container-text-weight: 400; // change lable font-weight
+  --mat-form-field-container-text-line-height: 24px; // change lable line-height
+
+  --mat-form-field-subscript-text-font: 'Titillium Web', sans-serif !important; // change Input hint font-family
+  --mat-form-field-subscript-text-size: 12px; // change input hint font-size
+  --mat-form-field-subscript-text-tracking: 0.033333333em; // change hint letter-spacing
+  --mat-form-field-subscript-text-weight: 400; // change hint font-weight
+  --mat-form-field-subscript-text-line-height: 20px; // change hint line-height
+
+}
+
+/* Estilos en tu archivo .component.css o styles.css */
+::ng-deep .mat-mdc-checkbox {
+  --mat-checkbox-label-text-font: 'Titillium Web', sans-serif !important;
+  --mat-checkbox-label-text-size: 16px;
+}
+
+/*
+ css para select de tabla
+*/
+
+.input-tabla-select {
+  /* Tamaño y forma */
+  width: 100%;
+  height: 38px;
+  /* Ajusta este valor para que iguale a tus inputs de 'Costo' */
+  padding: 0 12px;
+
+  /* Estilo visual */
+  background-color: #fff;
+  border: 1px solid #ccc;
+  /* Gris suave igual al borde de tus inputs */
+  border-radius: 5px;
+
+  /* Tipografía */
+  font-family: inherit;
+  font-size: 14px;
+  color: #333;
+
+  /* Quitar estilos por defecto del navegador */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Añadir una flechita simple a la derecha */
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="grey" d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 20px;
+
+  cursor: pointer;
+  outline: none;
+}
+
+.input-tabla-select:focus {
+  border: 2px solid #3f51b5;
+  /* Azul de Material al hacer clic */
+  padding: 0 11px;
+  /* Ajuste por el grosor del borde */
+}
+
+/*
+  FIN css para select de tabla
+*/
+
+/* Contenedor principal en 2 columnas (proporción 2:1) */
+.main-container {
+  display: grid;
+  grid-template-columns: 4fr 1fr;
+  gap: 32px;
+  padding: 1px;
+}
+
+/* Grid interna para los inputs de Facturación */
+.grid-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Grid interna para los inputs de Facturación */
+.grid-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+  padding-top: 15px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+
+/* Estilo para la sección de totales */
+.totals-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  /* Concepto a la izquierda, Valor a la derecha */
+  padding: 5px 0;
+  font-size: 16px;
+  color: #555;
+}
+
+.total-label {
+  font-weight: 500;
+}
+
+.total-value {
+  font-family: 'Courier New', Courier, monospace;
+  /* Fuente monoespaciada para números */
+  text-align: right;
+}
+
+.grand-total {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #ccc;
+
+  display: flex;
+  justify-content: space-between;
+  /* Concepto a la izquierda, Valor a la derecha */
+  padding: 5px 0;
+  font-size: 20px;
+  color: #000000;
+}
+
+.grand-vuelto {
+  display: flex;
+  justify-content: space-between;
+  /* Concepto a la izquierda, Valor a la derecha */
+  padding: 5px 0;
+  font-size: 20px;
+  color: #000000;
+}
+
+.small-input {
+  width: 80px;
+  border: 1px solid #ccc;
+  text-align: right;
+}
+
+.section {
+  border: 1px solid #ccc;
+  /* Para imitar el estilo de tu dibujo */
+}
+
+.footer-resaltado {
+  background-color: #f5f5f5;
+  /* Un gris claro para diferenciarlo */
+  font-weight: bold;
+}
+
+.mat-column-neto {
+  text-align: right;
+  /* Alinea los números a la derecha, se ve más profesional */
+}
+
+/* Busca la columna del artículo por su nombre de clase de Material.
+   matColumnDef="id" -> Angular Material genera la clase .mat-column-id, no
+   .mat-column-articulo (regla vieja mas abajo que nunca aplicaba, por eso esta
+   columna no tenia ancho minimo real y se encogia en pantallas mas chicas -
+   mismo bug ya corregido en form-venta-directa). */
+.mat-column-id {
+  vertical-align: middle;
+  /* Alineación base de tabla */
+  width: auto;
+  min-width: 220px;
+}
+
+/* El contenedor interno de la celda */
+.celda-articulo-container {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  /* Centra verticalmente el input y el botón */
+  gap: 8px;
+  /* Espacio entre el buscador y el botón */
+  width: 100%;
+}
+
+.proveedor-container {
+  display: flex !important;
+  flex-direction: row;
+  align-items: flex-start;
+  /* Alineamos arriba */
+  gap: 4px;
+  /* Espacio entre el buscador y el botón */
+  width: 100%;
+}
+
+
+/* Forzamos al autocompletar a ceder espacio al botón */
+articulo-autocomplet {
+  flex: 1;
+  min-width: 0;
+  /* Evita que el flexbox se desborde */
+}
+
+/* Opcional: Haz el botón un poco más compacto */
+.btn-eliminar-compacto {
+  flex-shrink: 0;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.titulo-con-boton {
+  display: flex;
+  /* Activa el modo Flexbox */
+  align-items: center;
+  /* Alinea verticalmente el icono y el texto al centro */
+  gap: 8px;
+  /* Espacio uniforme entre el botón y el texto */
+}
+
+/* Opcional: Si quieres que el texto tenga un peso específico */
+.titulo-con-boton span {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.container-tabla {
+  min-height: 200px;
+  max-height: 550px;
+  /* Ajusta según el espacio de tu pantalla */
+  overflow: auto;
+  border: 1px solid #ccc;
+
+  input {
+    width: 100%;
+    height: 35px; // Puedes ajustar aquí la altura
+    padding: 4px 8px;
+    font-size: 13px;
+    border: 1px solid #c0c0c0; // Borde gris claro (cuando no está enfocado)
+    border-radius: 6px; // Bordes redondeados
+    outline: none;
+    box-sizing: border-box;
+    background-color: white;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      border-color: #1976d2; // Azul (color de Angular Material primario)
+    }
+
+    &::placeholder {
+      font-size: 12px;
+      color: #999;
+    }
+  }
+
+  // Opcional: reducir padding de celdas si deseas más compactación
+  .mat-cell,
+  .mat-header-cell {
+    padding: 4px 8px;
+  }
+
+}
+
+/* Estilo para que el header resalte cuando queda fijo */
+.mat-mdc-header-row {
+  background-color: #f5f5f5 !important;
+}
+
+/* Opcional: Estilo para la fila de totales */
+.mat-mdc-footer-row {
+  font-weight: bold;
+  background-color: #fafafa !important;
+}
+
+.mat-column-position {
+  width: 50px;
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+  padding-right: 25px;
+}
+
+.suffix {
+  font-size: 12px;
+  color: #666;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 80px;
+  /* Simula el look de Material */
+}
+
+/* Estilo general para la tabla */
+.mat-column-index {
+  width: 40px;
+  text-align: center;
+}
+
+/* Columna # */
+.mat-column-articulo {
+  width: auto;
+  min-width: 200px;
+}
+
+/* La columna que debe ser ancha */
+/* Columnas numéricas compactas */
+.mat-column-stock,
+.mat-column-precio,
+.mat-column-cantidad,
+.mat-column-porc_dcto,
+.mat-column-impuesto1,
+/* Ajusta al nombre real de tu columna de combo */
+.mat-column-neto,
+.mat-column-imp1,
+.mat-column-imp_dcto,
+.mat-column-total {
+  width: 130px;
+  /* Unifica el ancho para evitar el efecto de 'agrupamiento' */
+  padding: 0 8px !important;
+  text-align: center;
+}
+
+/* Alineación de los inputs y textos */
+.text-right {
+  text-align: center;
+}
+
+/* Para que los inputs no ocupen demasiado espacio vertical */
+mat-cell input {
+  width: 100%;
+  box-sizing: border-box;
+}

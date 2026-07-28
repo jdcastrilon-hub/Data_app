@@ -1,0 +1,25 @@
+:host {
+  // 1. Fondo gris fuera de la tarjeta
+  display: block;
+  background-color: #e9e9e9;
+
+  // 2. Padding de 8px en todos los ángulos
+  padding: 8px;
+
+}
+
+.bloque {
+  border: 1px solid #c4c2c2; // gris claro
+  border-radius: 8px; // opcional: bordes redondeados
+  padding: 16px 16px 0px 16px;
+}
+
+.celda-articulo-container {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  /* Centra verticalmente el input y el botón */
+  gap: 8px;
+  /* Espacio entre el buscador y el botón */
+  width: 100%;
+}

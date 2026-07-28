@@ -1,7 +1,21 @@
-<form [formGroup]="formulario">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
-            <mat-card-title>TRASLADO ENTRE BODEGAS</mat-card-title>
+            <mat-card-title class="titulo-con-boton">
+                <div class="titulo-izquierda">
+                    <a mat-icon-button color="primary" routerLink="/trasladobodega">
+                        <mat-icon>list</mat-icon>
+                    </a>
+                    <span>{{titulo_form}}</span>
+                </div>
+                @if (isEditMode) {
+                <button mat-icon-button color="primary" type="button" (click)="verHistorialAuditoria()"
+                    title="Ver historial de auditoría">
+                    <mat-icon>info</mat-icon>
+                </button>
+                }
+            </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
         <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
@@ -9,9 +23,28 @@
             <mat-tab label="Datos Generales">
 
                 <div class="bloque">
-                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
-                        fxLayoutGap="10px">
-                        <div fxFlex="15" fxFlex.lt-md="100%">
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="start stretch" fxLayoutGap="5px">
+                        <div [fxFlex]="colWidth" fxFlex.lt-md="100%">
+                            <combo-bodega [editMode]="isEditMode" [input_objeto]="objetoBodegaOrigen"
+                                [opcionview]="isReadOnly" (bodegaSeleccionada)="recibirBodegaOrigen($event)">
+                            </combo-bodega>
+                        </div>
+                        <div [fxFlex]="colWidth" fxFlex.lt-md="100%">
+                            <combo-estadostock [editMode]="isEditMode" [input_objeto]="objetoEstadoOrigen"
+                                [opcionview]="isReadOnly" (estadoSeleccionado)="recibirEstadoOrigen($event)">
+                            </combo-estadostock>
+                        </div>
+                        <div [fxFlex]="colWidth" fxFlex.lt-md="100%">
+                            <combo-bodega [editMode]="isEditMode" [input_objeto]="objetoBodegaDestino"
+                                [opcionview]="isReadOnly" (bodegaSeleccionada)="recibirBodegaDestino($event)">
+                            </combo-bodega>
+                        </div>
+                        <div [fxFlex]="colWidth" fxFlex.lt-md="100%">
+                            <combo-estadostock [editMode]="isEditMode" [input_objeto]="objetoEstadoDestino"
+                                [opcionview]="isReadOnly" (estadoSeleccionado)="recibirEstadoDestino($event)">
+                            </combo-estadostock>
+                        </div>
+                        <div [fxFlex]="colWidth" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
                                 <mat-label>Fecha Movimiento</mat-label>
                                 <input matInput [matDatepicker]="picker" placeholder="dd/mm/yyyy"
@@ -20,124 +53,44 @@
                                 <mat-datepicker #picker></mat-datepicker>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="15" fxFlex.lt-md="100%">
+                        @if (isEditMode) {
+                        <div [fxFlex]="colWidth" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>No. Transaccion</mat-label>
-                                <input matInput formControlName="nroDocum">
-                                <mat-error>Codigo requerido</mat-error>
+                                <mat-label>No.</mat-label>
+                                <input matInput formControlName="nroDocum" readonly>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="70" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Observaciones</mat-label>
-                                <input matInput>
-                                <mat-error>Codigo requerido</mat-error>
+                        }
+                    </div>
+
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="start stretch" fxLayoutGap="5px">
+                        <div fxFlex="100" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto form-field-compacto mat-form-field"
+                                appearance="outline">
+                                <mat-label>Observacion</mat-label>
+                                <input matInput formControlName="observacion">
+                                <mat-error>Observacion requerida</mat-error>
                             </mat-form-field>
                         </div>
                     </div>
 
-
-                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
-                        fxLayoutGap="10px">
-                        <div fxFlex="25" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                @if (!isEditMode){
-                                <mat-label>Bodega Origen</mat-label>
-                                }
-                                <mat-select [formControl]="SelectBodegasOrigenControl" required>
-                                    @for (obj_bodega of list_bodegas_Origen; track obj_bodega) {
-                                    <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
-                                    }
-                                </mat-select>
-                                @if (SelectBodegasOrigenControl.hasError('required')) {
-                                <mat-error>Debe seleccionar una Bodega</mat-error>
-                                }
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="25" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                @if (!isEditMode){
-                                <mat-label>Estado Origen</mat-label>
-                                }
-                                <mat-select [formControl]="SelecEstadoOrigenControl" required>
-                                    @for (obj_estado of list_estados_Origen; track obj_estado) {
-                                    <mat-option [value]="obj_estado">{{obj_estado.nomEstado}}</mat-option>
-                                    }
-                                </mat-select>
-                                @if (SelecEstadoOrigenControl.hasError('required')) {
-                                <mat-error>Debe seleccionar un estado</mat-error>
-                                }
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="25" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                @if (!isEditMode){
-                                <mat-label>Bodega Destino</mat-label>
-                                }
-                                <mat-select [formControl]="SelectBodegasDestinoControl" required>
-                                    @for (obj_bodega of list_bodegas_Destino; track obj_bodega) {
-                                    <mat-option [value]="obj_bodega">{{obj_bodega.nomBodega}}</mat-option>
-                                    }
-                                </mat-select>
-                                @if (SelectBodegasDestinoControl.hasError('required')) {
-                                <mat-error>Debe seleccionar una Bodega</mat-error>
-                                }
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="25" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                @if (!isEditMode){
-                                <mat-label>Estado Destgino</mat-label>
-                                }
-                                <mat-select [formControl]="SelecEstadoDestinoControl" required>
-                                    @for (obj_estado of list_estados_Destino; track obj_estado) {
-                                    <mat-option [value]="obj_estado">{{obj_estado.nomEstado}}</mat-option>
-                                    }
-                                </mat-select>
-                                @if (SelecEstadoDestinoControl.hasError('required')) {
-                                <mat-error>Debe seleccionar un estado</mat-error>
-                                }
-                            </mat-form-field>
-                        </div>
-                    </div>
-                    <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
-                    <p></p>
-                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between center" fxLayoutGap="10px">
-
-                        <div fxFlex="50" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Filtro Articulo</mat-label>
-                                <input type="text" placeholder="Código o Nombre" matInput [formControl]="searchControl"
-                                    [matAutocomplete]="autoArticulo"> </mat-form-field>
-
-                            <mat-autocomplete #autoArticulo="matAutocomplete" [displayWith]="mascaraSalida"
-                                (optionSelected)="onArticuloSelected($event)">
-
-                                <mat-option *ngFor="let articulo of (filteredArticulos | async)" [value]="articulo">
-                                    {{ mascaraSalida(articulo) }} </mat-option>
-                            </mat-autocomplete>
-                        </div>
-
-                    </div>
 
                     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 tabla-compacta"
                         formArrayName="detalles">
                         <ng-container matColumnDef="id">
-                            <th mat-header-cell *matHeaderCellDef>Articulo</th>
-                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                                <span>
-                                    {{ row.get('codigoArticulo')?.value }}
-                                </span>
-                                <input type="hidden" formControlName="codigoArticulo">
-                            </td>
-                        </ng-container>
-                        <ng-container matColumnDef="name">
-                            <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                                <span>
-                                    {{ row.get('nombreArticulo')?.value }}
-                                </span>
-                                <input type="hidden" formControlName="nombreArticulo">
+                            <th mat-header-cell *matHeaderCellDef>Artículo</th>
+                            <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i"
+                                class="celda-articulo">
+                                <div class="celda-articulo-container">
+                                    <articulo-autocomplet formControlName="search" [mostrarOpcionCrear]="false"
+                                        (articuloSeleccionado)="onArticuloChange($any($event), i)">
+                                    </articulo-autocomplet>
+
+                                    <button mat-icon-button color="warn" type="button" *ngIf="!isReadOnly"
+                                        (click)="eliminarLineaDetalles(i)">
+                                        <mat-icon>delete_outline</mat-icon>
+                                    </button>
+                                </div>
                             </td>
                         </ng-container>
                         <ng-container matColumnDef="ubicacion">
@@ -177,16 +130,9 @@
                                 <mat-error *ngIf="row.get('cantidad')?.hasError('min')">
                                     La cantidad debe ser mayor a 0.
                                 </mat-error>
-                            </td>
-                        </ng-container>
-                        <ng-container matColumnDef="actions">
-                            <th mat-header-cell *matHeaderCellDef> Acciones </th>
-                            <td mat-cell *matCellDef="let row; let i = index">
-                                <button mat-icon-button color="primary" type="button"
-                                   >
-                                    <mat-icon>remove</mat-icon>
-                                </button>
-
+                                <mat-error *ngIf="row.get('cantidad')?.hasError('stockInsuficiente')">
+                                    No hay stock suficiente en la bodega origen.
+                                </mat-error>
                             </td>
                         </ng-container>
                         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -199,9 +145,9 @@
         <br>
 
         <mat-card-actions class="mat-accion-botones">
-            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button">Salir</button>
+            <button mat-raised-button color="warn" routerLink="/trasladobodega" *ngIf="!isReadOnly">Salir</button>
         </mat-card-actions>
 
     </mat-card>

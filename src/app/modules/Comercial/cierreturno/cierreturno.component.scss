@@ -1,0 +1,31 @@
+:host {
+  display: block;
+  background-color: #e2e2e2;
+  padding: 8px;
+}
+
+.table-scroll-container {
+    max-height: 450px;
+    overflow-y: auto;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.abierto {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+
+  &.cerrado {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+  }
+}

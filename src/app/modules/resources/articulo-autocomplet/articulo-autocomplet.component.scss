@@ -30,4 +30,14 @@
     width: 100%;
     height: 30px;
 }
+
+// El panel de mat-autocomplete se renderiza en un overlay del CDK (fuera de este
+// componente), por eso el ancho se controla con [panelWidth] en el HTML en vez de
+// una regla normal aca - esto solo evita que cada opcion se parta en 2-3 lineas
+// ahora que el panel es mas ancho que el input.
+::ng-deep .articulo-autocomplet-panel .mat-mdc-option {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
  

@@ -1,0 +1,68 @@
+<main class="contenido">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>GESTION MOVIMIENTOS DE CAJA</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            <button mat-raised-button color="primary" routerLink="/movimientocaja/new">Nuevo</button>
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por concepto</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: Vale Trabajador">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
+        </mat-card-actions>
+        <mat-card-content class="mat-content">
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+                    <ng-container matColumnDef="id">
+                        <th mat-header-cell *matHeaderCellDef>Nro.</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Id }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Fecha }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="concepto">
+                        <th mat-header-cell *matHeaderCellDef>Concepto</th>
+                        <td mat-cell *matCellDef="let element">{{ element.concepto?.nomConcepto }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="tipo">
+                        <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                        <td mat-cell *matCellDef="let element">
+                            <span class="status-badge" [ngClass]="element.Signo === 1 ? 'abierto' : 'cerrado'">
+                                {{ etiquetaSigno(element.Signo) }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="importe">
+                        <th mat-header-cell *matHeaderCellDef>Importe</th>
+                        <td mat-cell *matCellDef="let element">{{ element.Importe | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarMovimiento(element.Id)"
+                                matTooltip="Visualizar" matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+        </mat-card-content>
+    </mat-card>
+</main>

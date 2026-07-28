@@ -1,0 +1,190 @@
+<form [formGroup]="formulario">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <div class="titulo-izquierda">
+                    <a mat-icon-button color="primary" routerLink="/cargastock">
+                        <mat-icon>list</mat-icon>
+                    </a>
+                    <span>{{titulo_form}}</span>
+                </div>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <div class="bloque">
+            <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="start stretch" fxLayoutGap="5px">
+                <div fxFlex="25" fxFlex.lt-md="100%">
+                    <combo-bodega [editMode]="false" [input_objeto]="objeto" [opcionview]="false"
+                        (bodegaSeleccionada)="recibirBodega($event)"></combo-bodega>
+                </div>
+                <div fxFlex="25" fxFlex.lt-md="100%">
+                    <combo-estadostock [editMode]="false" [input_objeto]="objeto" [opcionview]="false"
+                        (estadoSeleccionado)="recibirEstado($event)"></combo-estadostock>
+                </div>
+                <div fxFlex="25" fxFlex.lt-md="100%">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Negocio</mat-label>
+                        <mat-select [formControl]="SelectNegocioControl" required>
+                            @for (obj_negocio of list_negocios; track obj_negocio) {
+                            <mat-option [value]="obj_negocio">{{obj_negocio.NomNegocio}}</mat-option>
+                            }
+                        </mat-select>
+                        @if (SelectNegocioControl.hasError('required')) {
+                        <mat-error>Debe seleccionar un negocio</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+                <div fxFlex="25" fxFlex.lt-md="100%">
+                    <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+                        <mat-label>Fecha Movimiento</mat-label>
+                        <input matInput [matDatepicker]="picker" placeholder="dd/mm/yyyy"
+                            formControlName="fechaMovimiento">
+                        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="start stretch" fxLayoutGap="5px">
+                <div fxFlex="60" fxFlex.lt-md="100%">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Observacion</mat-label>
+                        <input matInput formControlName="observacion" placeholder="Ej: Inventario inicial cliente">
+                    </mat-form-field>
+                </div>
+                <div fxFlex="none" class="boton-plantilla-contenedor">
+                    <button mat-stroked-button color="primary" type="button" [disabled]="descargandoPlantilla"
+                        (click)="descargarPlantilla()" matTooltip="Descarga un Excel en blanco con las columnas requeridas">
+                        <mat-icon>file_download</mat-icon>
+                        Descargar plantilla
+                    </button>
+                </div>
+            </div>
+
+            <div class="zona-archivo">
+                <div class="zona-archivo-titulo">
+                    <mat-icon>upload_file</mat-icon>
+                    <span>Archivo de inventario (Excel)</span>
+                </div>
+
+                @if (!archivoSeleccionado) {
+                <button mat-stroked-button color="primary" type="button" (click)="inputArchivo.click()">
+                    Seleccionar archivo
+                </button>
+                <input #inputArchivo type="file" accept=".xlsx,.xls" hidden (change)="onArchivoSeleccionado($event)">
+                <p class="zona-archivo-ayuda">
+                    Columnas requeridas: categoria, subcategoria, codigo, nombre, costo, cantidad, precio_venta.
+                    Opcionales: unidad, tipo_servicio, grupo_contable, lote, fecha_vencimiento.
+                </p>
+                } @else {
+                <div class="archivo-elegido">
+                    <mat-icon>description</mat-icon>
+                    <span>{{nombreArchivo}}</span>
+                    <button mat-icon-button color="warn" type="button" (click)="quitarArchivo()"
+                        matTooltip="Quitar archivo">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </div>
+                }
+            </div>
+        </div>
+
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="button" [disabled]="procesando"
+                (click)="validarArchivo()">Validar archivo</button>
+            <button mat-raised-button color="accent" type="button"
+                [disabled]="procesando || resultado?.status === 'success'"
+                (click)="confirmarGuardado()">Confirmar y Guardar</button>
+            <button mat-raised-button type="button" (click)="limpiarFormulario()">Quitar archivo</button>
+            <button mat-raised-button color="warn" routerLink="/cargastock">Salir</button>
+        </mat-card-actions>
+
+        @if (procesando) {
+        <div class="zona-procesando">
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        </div>
+        }
+
+        @if (resultado) {
+        <div class="zona-resultado">
+
+            <div class="resultado-mensaje" [class.resultado-error]="resultado.status === 'error'"
+                [class.resultado-success]="resultado.status === 'success'">
+                <mat-icon>{{ resultado.status === 'error' ? 'error_outline' : 'check_circle_outline' }}</mat-icon>
+                <span>{{ resultado.message }}</span>
+            </div>
+
+            @if (resultado.errores.length > 0) {
+            <div class="resultado-bloque">
+                <h3>Errores encontrados ({{resultado.errores.length}})</h3>
+                <table mat-table [dataSource]="resultado.errores" class="mat-elevation-z1 tabla-compacta">
+                    <ng-container matColumnDef="fila">
+                        <th mat-header-cell *matHeaderCellDef>Fila</th>
+                        <td mat-cell *matCellDef="let error">{{error.fila}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="mensaje">
+                        <th mat-header-cell *matHeaderCellDef>Detalle</th>
+                        <td mat-cell *matCellDef="let error">{{error.mensaje}}</td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="['fila', 'mensaje']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['fila', 'mensaje'];"></tr>
+                </table>
+            </div>
+            }
+
+            @if (resultado.resumen) {
+            <div class="resultado-bloque">
+                <h3>Resumen</h3>
+                <div class="resumen-tarjetas">
+                    <div class="resumen-tarjeta">
+                        <span class="resumen-numero">{{resultado.resumen.totalFilas}}</span>
+                        <span class="resumen-etiqueta">Filas leidas</span>
+                    </div>
+                    <div class="resumen-tarjeta">
+                        <span class="resumen-numero">{{resultado.resumen.articulosNuevos}}</span>
+                        <span class="resumen-etiqueta">Articulos nuevos</span>
+                    </div>
+                    <div class="resumen-tarjeta">
+                        <span class="resumen-numero">{{resultado.resumen.articulosExistentes}}</span>
+                        <span class="resumen-etiqueta">Articulos existentes</span>
+                    </div>
+                    <div class="resumen-tarjeta">
+                        <span class="resumen-numero">{{resultado.resumen.cantidadTotal}}</span>
+                        <span class="resumen-etiqueta">Cantidad total</span>
+                    </div>
+                </div>
+
+                @if (resultado.resumen.articulosNuevosDetalle.length > 0) {
+                <table mat-table [dataSource]="resultado.resumen.articulosNuevosDetalle"
+                    class="mat-elevation-z1 tabla-compacta">
+                    <ng-container matColumnDef="codigo">
+                        <th mat-header-cell *matHeaderCellDef>Codigo (barra)</th>
+                        <td mat-cell *matCellDef="let art">{{art.codigo}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="nombre">
+                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <td mat-cell *matCellDef="let art">{{art.nombre}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="categoria">
+                        <th mat-header-cell *matHeaderCellDef>Categoria</th>
+                        <td mat-cell *matCellDef="let art">{{art.categoria}}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="subcategoria">
+                        <th mat-header-cell *matHeaderCellDef>Subcategoria</th>
+                        <td mat-cell *matCellDef="let art">{{art.subcategoria}}</td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="['codigo', 'nombre', 'categoria', 'subcategoria']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['codigo', 'nombre', 'categoria', 'subcategoria'];"></tr>
+                </table>
+                }
+            </div>
+            }
+
+        </div>
+        }
+
+    </mat-card>
+</form>

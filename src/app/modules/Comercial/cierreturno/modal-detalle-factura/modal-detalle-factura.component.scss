@@ -1,0 +1,51 @@
+.contenedor-cargando {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.mensaje-error {
+  color: #f44336;
+  text-align: center;
+  padding: 16px;
+}
+
+.cabecera-factura {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 8px 0 16px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.tabla-articulos {
+  width: 100%;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.medios-pago {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip-pago {
+  background-color: #eef1f8;
+  border-radius: 12px;
+  padding: 2px 10px;
+}
