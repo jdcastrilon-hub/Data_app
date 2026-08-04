@@ -1,3 +1,5 @@
+import { Auditoria } from "./Auditoria";
+
 export class Empresas{
     id_emp!: number;
     nomEmp! : string;
@@ -9,4 +11,5 @@ export class Empresas{
     telefono! : string;
     correo! : string;
     fecha_mod! : Date;
+    logs?: Auditoria[];
 }

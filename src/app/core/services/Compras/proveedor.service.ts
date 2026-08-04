@@ -1,7 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { Ciudades } from '../../models/core/Ciudades';
 import { PersonaSearch } from '../../interfaces/Compras/PersonaSearch';
 import { Proveedores } from '../../models/Compras/Proveedores';
 import { ProveedorSearch } from '../../interfaces/Compras/ProveedorSearch';
@@ -25,16 +24,10 @@ export class ProveedorService {
 
   constructor(private http: HttpClient) { }
 
-  //List Ciudades
-  ciudades(): Observable<Ciudades[]> {
-    return this.http.get<Ciudades[]>(this.url + "Ciudades");
-  }
-
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<ProveedorView>> {
     let params = new HttpParams()
-      .set('page', page.toString())//Pagina
-      .set('size', size.toString())//Cantidad de registros a validar
-      .set('idempresa', 1)//Cantidad de registros a validar
+      .set('page', page.toString())
+      .set('size', size.toString())
 
     if (texto) {
       params = params.set('texto', texto);

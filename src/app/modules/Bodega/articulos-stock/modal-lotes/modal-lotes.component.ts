@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
-import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
+import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
 
 export interface ModalLotesData {
   idArticulo: number;
@@ -27,7 +27,7 @@ export class ModalLotesComponent {
   cargando = false;
 
   constructor(
-    private service: ArticuloServiceService,
+    private service: ArticuloService,
     @Inject(MAT_DIALOG_DATA) public data: ModalLotesData
   ) { }
 

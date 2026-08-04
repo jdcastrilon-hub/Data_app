@@ -38,6 +38,7 @@ export class VistaInventarioComponent {
   columnasConfigurables: { clave: string, label: string }[] = [
     { clave: 'negocio', label: 'Negocio' },
     { clave: 'bodega', label: 'Bodega' },
+    { clave: 'estado', label: 'Estado' },
     { clave: 'categoria', label: 'Categoria' },
     { clave: 'subcategoria', label: 'Sub Categoria' },
     { clave: 'articulo', label: 'Articulo' },

@@ -7,7 +7,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subscription } from 'rxjs';
-import { CategoriaService } from '../../../core/services/Bodega/categoria-service.service';
+import { CategoriaService } from '../../../core/services/Bodega/categoria.service';
 import { CategoriaListStateService } from '../../../core/services/Bodega/categoria-list-state.service';
 import { CategoriaListView } from '../../../core/models/Bodega/CategoriaListView';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';

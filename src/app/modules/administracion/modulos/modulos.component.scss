@@ -1,0 +1,32 @@
+.descripcion {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0 0 16px 0;
+}
+
+.sin-seleccion {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+    padding: 24px 0;
+    text-align: center;
+}
+
+.lista-modulos {
+    display: flex;
+    flex-direction: column;
+}
+
+.fila-modulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 4px;
+    border-bottom: 1px solid #e0e0e0;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.nombre-modulo {
+    font-weight: 500;
+}

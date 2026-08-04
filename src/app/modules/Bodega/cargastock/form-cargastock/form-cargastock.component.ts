@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -31,6 +31,7 @@ export class FormCargastockComponent {
   formulario!: FormGroup;
   objeto!: CargaStock;
   titulo_form: string = 'CARGA MASIVA DE INVENTARIO';
+  isReadOnly: boolean = false;
 
   //Negocios
   list_negocios: NegocioCombo[] = [];
@@ -52,7 +53,8 @@ export class FormCargastockComponent {
     private negocioService: NegocioServiceService,
     private notificacion: NotificacionesService,
     private cargastockService: CargastockService,
-    private router: Router) {
+    private router: Router,
+    private route: ActivatedRoute) {
     this.objeto = new CargaStock();
   }
 
@@ -64,7 +66,41 @@ export class FormCargastockComponent {
       observacion: ['']
     });
 
-    this.cargarNegocios();
+    this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+    if (this.isReadOnly) {
+      this.formulario.disable();
+    }
+
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (id) {
+        this.titulo_form = 'DETALLE CARGA MASIVA DE INVENTARIO';
+        this.ModoVer(Number(id));
+      } else {
+        this.cargarNegocios();
+      }
+    });
+  }
+
+  //Carga una carga masiva ya procesada, en modo solo lectura.
+  ModoVer(id: number): void {
+    this.cargastockService.getCargaById(id).subscribe({
+      next: (data: CargaStock) => {
+        this.objeto = data;
+        this.formulario.patchValue({
+          idBodega: data.idBodega,
+          idEstado: data.idEstado,
+          fechaMovimiento: data.fechaMovimiento,
+          observacion: data.observacion
+        });
+        this.nombreArchivo = data.nombreArchivo || '';
+        this.cargarNegocios();
+      },
+      error: (err) => {
+        console.error('Error al cargar la carga:', err);
+        this.router.navigate(['/cargastock']);
+      }
+    });
   }
 
   //Metodo para cargar lista de negocios (mismo patron que form-articulo)
@@ -73,7 +109,13 @@ export class FormCargastockComponent {
       next: (data: EmpresaByNegocioCategorias) => {
         this.list_negocios = data.listnegocio!;
 
-        if (this.list_negocios.length === 1) {
+        if (this.isReadOnly) {
+          const negocioActual = this.list_negocios.find(n => n.idNegocio === this.objeto.idNegocio);
+          if (negocioActual) {
+            this.SelectNegocioControl.setValue(negocioActual);
+          }
+          this.SelectNegocioControl.disable();
+        } else if (this.list_negocios.length === 1) {
           this.SelectNegocioControl.setValue(this.list_negocios[0]);
         }
       },
@@ -188,9 +230,9 @@ export class FormCargastockComponent {
     this.procesando = true;
     this.cargastockService.procesar(this.archivoSeleccionado!, this.construirCabezal(), true).subscribe({
       next: (data) => {
-        this.resultado = data;
         this.procesando = false;
         this.notificacion.showSuccess('¡Carga procesada con éxito!');
+        this.prepararNuevaCarga();
       },
       error: (err) => {
         console.error('Error guardando la carga', err);
@@ -198,6 +240,24 @@ export class FormCargastockComponent {
         this.procesando = false;
       }
     });
+  }
+
+  // Al grabar con exito: se conservan bodega/estado/negocio (lo usual es seguir cargando
+  // archivos para la misma bodega), pero se limpian archivo, observacion, resultado y la
+  // fecha vuelve a hoy, dejando el formulario listo para una carga nueva.
+  private prepararNuevaCarga(): void {
+    const idBodega = this.formulario.value.idBodega;
+    const idEstado = this.formulario.value.idEstado;
+    const negocioActual = this.SelectNegocioControl.value;
+
+    this.formulario.reset({
+      idBodega,
+      idEstado,
+      fechaMovimiento: new Date(),
+      observacion: ''
+    });
+    this.SelectNegocioControl.setValue(negocioActual);
+    this.quitarArchivo();
   }
 
   // Solo limpia el archivo cargado (para volver a subirlo); el cabezal se conserva.

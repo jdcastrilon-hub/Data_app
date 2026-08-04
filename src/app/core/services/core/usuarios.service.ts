@@ -4,6 +4,7 @@ import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { UsuarioSearch } from '../../interfaces/Core/UsuarioSearch';
 import { UsuarioView } from '../../interfaces/Core/UsuarioView';
+import { MiPerfil } from '../../interfaces/Core/MiPerfil';
 import { Usuario } from '../../models/core/Usuario';
 import { PageResponse } from '../../models/core/PageResponse';
 import { LoginService } from './login.service';
@@ -72,6 +73,24 @@ export class UsuariosService {
       map((response: ApiResponse) => {
         if (response.status !== 'success') {
           throw new Error(response.message || 'Error desconocido al editar el usuario.');
+        }
+        return response.data;
+      })
+    );
+  }
+
+  // "Mi Perfil" (modal del toolbar): el propio usuario logueado, sin id/id_emp
+  // en la url - el backend lo resuelve del token, no se puede pedir el de otro.
+  getMiPerfil(): Observable<MiPerfil> {
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.get<MiPerfil>(this.url + "mi-perfil", { params });
+  }
+
+  updateMiPerfil(objecto: any): Observable<any> {
+    return this.http.put<ApiResponse>(this.url + "mi-perfil", objecto).pipe(
+      map((response: ApiResponse) => {
+        if (response.status !== 'success') {
+          throw new Error(response.message || 'Error desconocido al actualizar el perfil.');
         }
         return response.data;
       })

@@ -3,7 +3,7 @@ export class BodegaListView {
     codBodega!: string;
     nomBodega!: string;
     bodegaPrincipal!: string;
-    activo!: string;
+    activo!: boolean;
     fechaMod! :Date;
 
 }

@@ -7,7 +7,6 @@ import { PageResponse } from '../../models/core/PageResponse';
 import { BodegaListView } from '../../interfaces/Bodega/BodegaListView';
 import { environment } from 'src/environments/environment';
 import { BodegaCombo } from '../../interfaces/Bodega/BodegaCombo';
-import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -22,7 +21,7 @@ export class BodegaService {
 
   private url: string = `${environment.baseUrl}/bodega/bodegas/`;
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private http: HttpClient) { }
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<BodegaListView>> {
     let params = new HttpParams()
@@ -57,10 +56,21 @@ export class BodegaService {
     return this.http.get<StockDisponible[]>(this.url + "stockDisponiblexBodega", { params });
   }
 
+  // Recalcula el stock de varios codigos de barra en una sola consulta, contra una
+  // bodega/estado puntual. Usado al cambiar de bodega/estado en una grilla que ya
+  // tiene articulos cargados (ajustestock/traslado), en vez de una consulta por fila.
+  stockDisponibleMasivo(idBodega: number, idEstado: number, idsCodBarra: number[]): Observable<{ idcodbarra: number, stock: number }[]> {
+    const cadena = idsCodBarra.join('-');
+    const params = new HttpParams()
+      .set('idBodega', idBodega)
+      .set('idEstado', idEstado)
+      .set('cadena', cadena);
+    return this.http.get<{ idcodbarra: number, stock: number }[]>(this.url + "stockDisponibleMasivo", { params });
+  }
+
   //Guardar Bodega
   save(objecto: any): Observable<any> {
-    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
-    return this.http.post<ApiResponse>(this.url + "save", objecto, { params }).pipe(
+    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
 
         if (response.status !== 'success') {
@@ -76,7 +86,6 @@ export class BodegaService {
   edit(objecto: any, id_bodega: number): Observable<any> {
     const params = new HttpParams()
       .set('bodega_id', String(id_bodega))
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()))
 
     return this.http.put<ApiResponse>(this.url + "edit", objecto, { params }).pipe(
       map((response: ApiResponse) => {
@@ -94,8 +103,7 @@ export class BodegaService {
   delete(id: number): Observable<void> {
     // Configuramos el query parameter: /delete?bodega_id=ID
     const params = new HttpParams()
-      .set('bodega_id', id.toString())
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+      .set('bodega_id', id.toString());
 
     return this.http.delete<void>(this.url+"delete", { params });
   }
@@ -108,14 +116,5 @@ export class BodegaService {
     const params = new HttpParams()
       .set('bodega_id', id);
     return this.http.get<Bodega>(this.url + "search", { params });
-  }
-
-
-  //No estan en uso
-  list(): Observable<Bodega[]> {
-    //const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqdWFuIiwiaWF0IjoxNzQ5OTI2NDQ3LCJleHAiOjE3NDk5MzAwNDd9.FO-f63ntqva-gAKTHnIFHHJQDgolbZUVABk1ed3XOx0'; // o donde tengas guardado el token
-    //const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    return this.http.get<Bodega[]>(this.url + "list");
   }
 }

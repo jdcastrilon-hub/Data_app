@@ -6,7 +6,6 @@ import { MotivoDevolucionView } from '../../models/Compras/MotivoDevolucionView'
 import { PageResponse } from '../../models/core/PageResponse';
 import { environment } from 'src/environments/environment';
 import { MotivoDevolucionCombo } from '../../interfaces/Compras/MotivoDevolucionCombo';
-import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error';
@@ -21,18 +20,16 @@ export class MotivosDevolucionService {
 
   private url: string = `${environment.baseUrl}/compras/motivosdevolucion/`;
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private http: HttpClient) { }
 
   listSelection(): Observable<MotivoDevolucionCombo[]> {
-    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
-    return this.http.get<MotivoDevolucionCombo[]>(this.url + "listCombo", { params });
+    return this.http.get<MotivoDevolucionCombo[]>(this.url + "listCombo");
   }
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<MotivoDevolucionView>> {
     let params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString())
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+      .set('size', size.toString());
 
     if (texto) {
       params = params.set('texto', texto);

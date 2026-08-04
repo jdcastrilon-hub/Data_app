@@ -20,7 +20,7 @@ import { CompraDisponible } from '../../../../core/interfaces/Compras/CompraDisp
 import { SucursalServiceService } from '../../../../core/services/General/sucursal-service.service';
 import { ProveedorSearch } from '../../../../core/interfaces/Compras/ProveedorSearch';
 import { TasasCombo } from '../../../../core/interfaces/Impuestos/TasasCombo';
-import { TasaImpuestoServiceService } from '../../../../core/services/impuestos/tasa-impuesto-service.service';
+import { TasaImpuestoService } from '../../../../core/services/impuestos/tasa-impuesto.service';
 import { ComprasService } from '../../../../core/services/Compras/compras.service';
 import { ServiciosiniService } from 'src/app/core/services/core/serviciosini.service';
 import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
@@ -105,7 +105,7 @@ export class FormCompraDirectaComponent {
     private compraService: ComprasService,
     private serviceIni: ServiciosiniService,
     private sucursalService: SucursalServiceService,
-    private tasaService: TasaImpuestoServiceService,
+    private tasaService: TasaImpuestoService,
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
     private dialog: MatDialog,
@@ -776,6 +776,11 @@ export class FormCompraDirectaComponent {
   get totalCantidad(): number {
     const filas = this.detalles.getRawValue();
     return filas.reduce((acc, fila) => acc + (Number(fila.cantidad) || 0), 0);
+  }
+
+  get totalDcto(): number {
+    const filas = this.detalles.getRawValue();
+    return filas.reduce((acc, fila) => acc + (Number(fila.imp_dcto) || 0), 0);
   }
 
   get totalImpuesto1(): number {

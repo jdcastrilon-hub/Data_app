@@ -3,7 +3,33 @@
 }
 
 .mat-sidenav{
-    width: 200px;
+    width: 230px;
+}
+
+// El contenedor que realmente hace scroll es el interno de mat-sidenav
+// (mat-drawer-inner-container), no menutree - por eso el estilo va aca y no
+// en menutree.component.scss. ::ng-deep porque esa clase la genera Angular
+// Material, no es local a este componente.
+::ng-deep .mat-sidenav .mat-drawer-inner-container{
+    scrollbar-width: thin;
+    scrollbar-color: #dcdce2 transparent;
+}
+
+::ng-deep .mat-sidenav .mat-drawer-inner-container::-webkit-scrollbar{
+    width: 4px;
+}
+
+::ng-deep .mat-sidenav .mat-drawer-inner-container::-webkit-scrollbar-track{
+    background: transparent;
+}
+
+::ng-deep .mat-sidenav .mat-drawer-inner-container::-webkit-scrollbar-thumb{
+    background-color: #dcdce2;
+    border-radius: 10px;
+}
+
+::ng-deep .mat-sidenav .mat-drawer-inner-container::-webkit-scrollbar-thumb:hover{
+    background-color: #b8b8c2;
 }
 
 .contenido{

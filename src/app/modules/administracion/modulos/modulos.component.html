@@ -1,0 +1,26 @@
+<mat-card-content class="mat-content">
+
+    <p class="descripcion">
+        Activa o desactiva módulos completos del sistema para tu empresa. Un
+        módulo desactivado deja de estar disponible para todos los usuarios,
+        sin importar su rol.
+    </p>
+
+    @if (cargando) {
+    <p class="sin-seleccion">Cargando módulos...</p>
+    } @else {
+    <div class="lista-modulos">
+        @for (modulo of modulos; track modulo.idModulo) {
+        <div class="fila-modulo">
+            <span class="nombre-modulo">{{modulo.nombre}}</span>
+            <mat-slide-toggle
+                [checked]="modulo.activo"
+                (change)="onToggle(modulo, $event.checked)"
+                color="primary">
+            </mat-slide-toggle>
+        </div>
+        }
+    </div>
+    }
+
+</mat-card-content>

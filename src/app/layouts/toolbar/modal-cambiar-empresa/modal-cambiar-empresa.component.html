@@ -10,9 +10,16 @@
         @for (empresa of empresas; track empresa.idEmp) {
         <mat-radio-button [value]="empresa.idEmp">
             {{ empresa.nomEmpresa }}
+            @if (empresa.esPrincipal) {
+            <mat-icon class="icono-principal" inline="true" title="Empresa principal">star</mat-icon>
+            }
         </mat-radio-button>
         }
     </mat-radio-group>
+
+    <mat-checkbox [(ngModel)]="marcarComoPrincipal" class="checkbox-principal">
+        Usar la empresa seleccionada como principal (con la que inicio sesión por defecto)
+    </mat-checkbox>
     }
 </mat-dialog-content>
 

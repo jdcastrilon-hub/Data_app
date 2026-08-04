@@ -1,7 +1,8 @@
 import { Auditoria } from "../core/Auditoria";
 
 export class Unidad{
-    id?: number; 
+    id?: number;
+    idEmp!: number;
     codUnidad!: string;
     nomUnidad!: string;
     esPaquete! :string;

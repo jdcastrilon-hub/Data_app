@@ -25,9 +25,8 @@ export class ComprasService {
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<CompraListView>> {
     let params = new HttpParams()
-      .set('page', page.toString())//Pagina
-      .set('size', size.toString())//Cantidad de registros a validar
-      .set('idempresa', 1)//Cantidad de registros a validar
+      .set('page', page.toString())
+      .set('size', size.toString())
 
     if (texto) {
       params = params.set('texto', texto);

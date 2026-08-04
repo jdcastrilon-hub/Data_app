@@ -6,7 +6,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { UnidadServiceService } from '../../../core/services/Bodega/unidad-service.service';
+import { UnidadService } from '../../../core/services/Bodega/unidad.service';
 import { UnidadListStateService } from '../../../core/services/Bodega/unidad-list-state.service';
 import { UnidadListView } from '../../../core/interfaces/Bodega/UnidadListView';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
@@ -45,7 +45,7 @@ export class UnidadesStockComponent {
   puedeEliminar = false;
 
   constructor(
-    private service: UnidadServiceService,
+    private service: UnidadService,
     private notificacion: NotificacionesService,
     private router: Router,
     private listState: UnidadListStateService,

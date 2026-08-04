@@ -12,6 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { LoginService } from 'src/app/core/services/core/login.service';
 
 @Component({
   selector: 'form-motivo',
@@ -40,7 +41,8 @@ export class FormMotivoComponent {
     private notificacion: NotificacionesService,
     private router: Router,
     private route: ActivatedRoute,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private loginService: LoginService
   ) {
     this.objeto = new MotivosAjuste();
   }
@@ -56,6 +58,8 @@ export class FormMotivoComponent {
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({
       idMotivo: [this.objeto.idMotivo],
+      // No se selecciona: siempre es la empresa de la sesion actual.
+      idEmp: [this.objeto.idEmp],
       codMotivo: [this.objeto.codMotivo, Validators.required],
       nomMotivo: [this.objeto.nomMotivo, Validators.required],
       signo: [this.objeto.signo, Validators.required],
@@ -91,6 +95,7 @@ export class FormMotivoComponent {
         this.titulo_form = "REGISTRO DE MOTIVOS DE AJUSTE";
         this.objeto = new MotivosAjuste();
         this.formulario.get('activo')?.patchValue(true);
+        this.formulario.get('idEmp')?.patchValue(this.loginService.getIdEmpresaActual());
       }
     });
   }
@@ -103,6 +108,7 @@ export class FormMotivoComponent {
       (data: MotivosAjuste) => {
         this.objeto = data;
         this.formulario.get('idMotivo')?.patchValue(data.idMotivo);
+        this.formulario.get('idEmp')?.patchValue(data.idEmp);
         this.formulario.get('codMotivo')?.patchValue(data.codMotivo);
         this.formulario.get('nomMotivo')?.patchValue(data.nomMotivo);
         this.formulario.get('signo')?.patchValue(data.signo);
@@ -201,6 +207,7 @@ export class FormMotivoComponent {
     this.objeto = new MotivosAjuste();
     this.formDirective.resetForm(); // limpia valores + estado submitted/touched
     this.formulario.get('activo')?.patchValue(true);
+    this.formulario.get('idEmp')?.patchValue(this.loginService.getIdEmpresaActual());
 
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.clear();

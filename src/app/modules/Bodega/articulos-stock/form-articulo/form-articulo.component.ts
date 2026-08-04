@@ -14,12 +14,12 @@ import { TipoServicios } from 'src/app/core/models/Bodega/TipoServicios';
 import { Unidad } from 'src/app/core/models/Bodega/Unidad';
 import { TasaImpuesto } from 'src/app/core/models/Impuestos/TasaImpuesto';
 import { Auditoria } from 'src/app/core/models/core/Auditoria';
-import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
-import { UnidadServiceService } from 'src/app/core/services/Bodega/unidad-service.service';
+import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
+import { UnidadService } from 'src/app/core/services/Bodega/unidad.service';
 import { AuditoriaService } from 'src/app/core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { NegocioServiceService } from 'src/app/core/services/General/negocio-service.service';
-import { TasaImpuestoServiceService } from 'src/app/core/services/impuestos/tasa-impuesto-service.service';
+import { TasaImpuestoService } from 'src/app/core/services/impuestos/tasa-impuesto.service';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialog } from '@angular/material/dialog';
@@ -76,10 +76,10 @@ export class FormArticuloComponent {
   //constructor
   constructor(
     private fb: FormBuilder,
-    private articuloService: ArticuloServiceService,
+    private articuloService: ArticuloService,
     private negocioService: NegocioServiceService,
-    private unidadSercice: UnidadServiceService,
-    private tasaImpuestoService: TasaImpuestoServiceService,
+    private unidadSercice: UnidadService,
+    private tasaImpuestoService: TasaImpuestoService,
     private notificacion: NotificacionesService,
     private logAuditoria: AuditoriaService,
     private router: Router,
@@ -241,7 +241,7 @@ export class FormArticuloComponent {
         data.codigosBarra.forEach((det: any) => {
           console.log(det)
           let codigobarra: CodigosBarra = {
-            idCodBarra: det.idcodbarra,
+            idCodBarra: det.idCodBarra,
             idArticulo: det.idArticulo,
             codBarra: det.codBarra,
             nomBarra: det.nomBarra,
@@ -250,9 +250,9 @@ export class FormArticuloComponent {
             movimientos: 0,
             registro_nuevo: false //ya esta cargado en la base de datos
           }
-          if (det.id) {
+          if (det.idCodBarra) {
             //Añadir id al arreglo
-            idsTemporales.push(det.id.toString());
+            idsTemporales.push(det.idCodBarra.toString());
           }
           this.agregarCodigoBarra(codigobarra);
         })
@@ -362,6 +362,12 @@ export class FormArticuloComponent {
 
           const primeroproducto = this.list_productos[0];
           this.SelecProductoControl.setValue(primeroproducto);
+        }
+
+        // Si la empresa solo maneja un negocio, se deja visible pero bloqueado
+        // (el usuario sabe que existe, pero no hay nada que decidir ahi).
+        if (this.list_negocios.length === 1) {
+          this.SelectNegocioControl.disable();
         }
       },
       error: (err) => {

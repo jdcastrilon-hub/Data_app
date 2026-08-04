@@ -8,7 +8,6 @@ import { MonitorStockValoracion } from '../../interfaces/Bodega/MonitorStockValo
 import { MonitorStockMinimo } from '../../interfaces/Bodega/MonitorStockMinimo';
 import { MonitorVencimientos } from '../../interfaces/Bodega/MonitorVencimientos';
 import { MovimientoStock } from '../../interfaces/Bodega/MovimientoStock';
-import { LoginService } from '../core/login.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,19 +16,16 @@ export class MonitorstockService {
 
   private url: string = `${environment.baseUrl}/bodega/monitor/`;
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private http: HttpClient) { }
 
   filtrosvistainventrio(): Observable<MonitorStockFiltroInventario> {
-    const params = new HttpParams()
-      .set('id_empresa', String(this.loginService.getIdEmpresaActual()))
-    return this.http.get<MonitorStockFiltroInventario>(this.url + "filtrovista1", { params });
+    return this.http.get<MonitorStockFiltroInventario>(this.url + "filtrovista1");
   }
 
 
 
   private construirParamsFiltros(filtros: any): HttpParams {
-    let params = new HttpParams()
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    let params = new HttpParams();
 
     if (filtros.bodega) {
       const valorBodega = filtros.bodega === 'TODOS' ? 0 : filtros.bodega;
@@ -49,6 +45,11 @@ export class MonitorstockService {
     if (filtros.subcategoria) {
       const valorsubcategoria = filtros.subcategoria === 'TODOS' ? 0 : filtros.subcategoria;
       params = params.set('subcategoria', valorsubcategoria.toString());
+    }
+
+    if (filtros.estado) {
+      const valorestado = filtros.estado === 'TODOS' ? 0 : filtros.estado;
+      params = params.set('estado', valorestado.toString());
     }
 
     if (filtros.articulos && filtros.articulos.length) {

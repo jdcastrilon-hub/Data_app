@@ -6,7 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { debounceTime, startWith } from 'rxjs';
 import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
-import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
+import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
 import { ModalCrearLoteComponent } from 'src/app/modules/resources/modal-crear-lote/modal-crear-lote.component';
 
 // Opcion especial usada para representar "crear nuevo lote" dentro del autocompletar.
@@ -34,7 +34,7 @@ export class ComboLoteComponent implements OnChanges {
   textoActual = '';
   readonly OPCION_CREAR = OPCION_CREAR;
 
-  constructor(private articuloService: ArticuloServiceService, private dialog: MatDialog) { }
+  constructor(private articuloService: ArticuloService, private dialog: MatDialog) { }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['idArticulo'] && this.idArticulo) {

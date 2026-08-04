@@ -95,6 +95,15 @@ export class LoginService {
   }
 
   /**
+   * Marca la empresa indicada como la que el login usara por defecto la
+   * proxima vez que este usuario inicie sesion (ver modal-cambiar-empresa).
+   * No afecta la sesion actual - no requiere token nuevo ni recarga.
+   */
+  marcarEmpresaPrincipal(idEmp: number): Observable<any> {
+    return this.http.put(`${this.urlAuth}/empresa-principal`, { idEmp });
+  }
+
+  /**
    * Cierra la sesión limpiando el almacenamiento
    */
   logout(): void {

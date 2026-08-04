@@ -54,9 +54,7 @@ export class CargastockService {
     return this.http.post<ResultadoCargaStock>(this.url + "procesar", formData);
   }
 
-  delete(id: number): Observable<void> {
-    const params = new HttpParams().set('id_trans', id.toString());
-    return this.http.delete<void>(this.url + "delete", { params });
-  }
+  // No hay delete() a proposito: este modulo es solo para la carga inicial de
+  // inventario, no una operacion recurrente (ver nota en controller_cargastock.py).
 
 }

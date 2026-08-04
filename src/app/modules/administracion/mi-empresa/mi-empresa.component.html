@@ -1,0 +1,109 @@
+<form [formGroup]="formulario" (ngSubmit)="guardar()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <div class="titulo-izquierda">
+                    <span>DATOS DE LA EMPRESA</span>
+                </div>
+                <div class="titulo-derecha">
+                    <button mat-icon-button color="primary" type="button" (click)="verHistorialAuditoria()"
+                        title="Ver historial de auditoría">
+                        <mat-icon>info</mat-icon>
+                    </button>
+                    @if (puedeEditar && isReadOnly) {
+                    <button mat-icon-button color="primary" type="button" (click)="activarEdicion()"
+                        title="Editar">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                    }
+                </div>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <div class="bloque">
+            @if (cargando) {
+            <p class="cargando">Cargando información de la empresa...</p>
+            } @else {
+            <div class="bloque_interno">
+                <h4>Datos generales</h4>
+                <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="3px grid">
+                    <div fxFlex="30">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Nombre Empresa</mat-label>
+                            <input matInput formControlName="nomEmp">
+                            <mat-error>Nombre requerido</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="30">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Razón Social</mat-label>
+                            <input matInput formControlName="razonSocial">
+                            <mat-error>Razón social requerida</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="20">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>NIT</mat-label>
+                            <input matInput formControlName="nit">
+                            <mat-error>NIT requerido</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="20">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Tipo Documento</mat-label>
+                            <input matInput formControlName="codDoc">
+                            <mat-error>Tipo requerido</mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+
+                <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="3px grid">
+                    <div fxFlex="35">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Dirección</mat-label>
+                            <input matInput formControlName="direccion">
+                            <mat-error>Dirección requerida</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="25">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Ciudad</mat-label>
+                            <mat-select [formControl]="SelecCiudadControl">
+                                @for (obj_ciudad of list_ciudades; track obj_ciudad) {
+                                <mat-option [value]="obj_ciudad">{{obj_ciudad.nomCiudad}}</mat-option>
+                                }
+                            </mat-select>
+                            <mat-error>Ciudad requerida</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="20">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Teléfono</mat-label>
+                            <input matInput formControlName="telefono">
+                            <mat-error>Teléfono requerido</mat-error>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="20">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Correo</mat-label>
+                            <input matInput formControlName="correo">
+                            <mat-error>Correo requerido</mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+            <br />
+
+            @if (!isReadOnly) {
+            <mat-card-actions class="mat-accion-botones">
+                <button mat-raised-button color="primary" type="submit">Guardar</button>
+                <br>
+                <button mat-raised-button color="warn" type="button" (click)="cancelarEdicion()">Cancelar</button>
+            </mat-card-actions>
+            }
+            }
+        </div>
+
+    </mat-card>
+</form>

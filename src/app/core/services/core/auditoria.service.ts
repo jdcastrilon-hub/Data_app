@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Auditoria } from '../../models/core/Auditoria';
+import { LoginService } from './login.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuditoriaService {
 
-  private readonly usuarioActual = 'juan123'; 
 
-  constructor() { }
+  constructor(private loginService: LoginService) { }
 
   /**
    * Formatea la fecha y hora actual en el formato YYYY-MM-DD HH:mm:ss
@@ -37,7 +37,7 @@ export class AuditoriaService {
 
     return {
       operacion: operacion,
-      usuario_mod: this.usuarioActual, // Usuario hardcodeado o traído de un servicio de autenticación
+      usuario_mod: this.loginService.getUsuarioActual()?.usuario ?? 'Sistema',
       fecha_mod: fecha
     };
   }

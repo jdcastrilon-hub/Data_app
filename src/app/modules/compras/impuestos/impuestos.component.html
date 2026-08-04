@@ -1,0 +1,76 @@
+<main class="contenido">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>GESTION DE IMPUESTOS</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            <button mat-raised-button color="primary" routerLink="/impuestos/new">Nuevo</button>
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por tasa o nombre</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: IVA, 19">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
+        </mat-card-actions>
+        <mat-card-content class="mat-content">
+
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+
+                    <ng-container matColumnDef="tipo">
+                        <th mat-header-cell *matHeaderCellDef>Tipo</th>
+                        <td mat-cell *matCellDef="let element">{{ element.tipo_impuesto?.nombreTipo }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="tasa">
+                        <th mat-header-cell *matHeaderCellDef>Tasa</th>
+                        <td mat-cell *matCellDef="let element">{{ element.tasaImpuesto }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="nombre">
+                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                        <td mat-cell *matCellDef="let element">{{ element.nombreTasa }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="porcentaje">
+                        <th mat-header-cell *matHeaderCellDef class="text-right">Porcentaje</th>
+                        <td mat-cell *matCellDef="let element" class="text-right">{{ element.porcentaje }}%</td>
+                    </ng-container>
+                    <ng-container matColumnDef="exenta">
+                        <th mat-header-cell *matHeaderCellDef>Exenta</th>
+                        <td mat-cell *matCellDef="let element">
+                            <span class="status-badge" [ngClass]="element.exenta === 'S' ? 'active' : 'inactive'">
+                                {{ element.exenta === 'S' ? 'Sí' : 'No' }}
+                            </span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecha">
+                        <th mat-header-cell *matHeaderCellDef>Ult. Modificacion</th>
+                        <td mat-cell *matCellDef="let element">{{ element.fechaMod | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarImpuesto(element.id)" matTooltip="Visualizar"
+                                matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                            <button mat-icon-button (click)="editarImpuesto(element.id)">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button matSuffix (click)="eliminarImpuesto(element.id)">
+                                <mat-icon>close</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="Columnas"></tr>
+                    <tr mat-row *matRowDef="let row; columns: Columnas;"></tr>
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+
+        </mat-card-content>
+    </mat-card>
+</main>

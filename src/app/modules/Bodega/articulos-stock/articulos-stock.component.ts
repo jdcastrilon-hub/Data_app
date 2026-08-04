@@ -6,7 +6,7 @@ import { Router, RouterModule } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ArticuloListView } from 'src/app/core/interfaces/Bodega/ArticuloListView';
-import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
+import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
 import { ArticuloListStateService } from 'src/app/core/services/Bodega/articulo-list-state.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { modules_depencias } from '../../dependencias/modules_depencias.module';
@@ -47,7 +47,7 @@ export class ArticulosStockComponent {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
-    private service: ArticuloServiceService,
+    private service: ArticuloService,
     private notificacion: NotificacionesService,
     private router: Router,
     private listState: ArticuloListStateService,

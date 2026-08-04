@@ -17,6 +17,7 @@ import { PersonaComponent, PersonaResumen } from 'src/app/modules/Comercial/reso
 import { PersonaService } from 'src/app/core/services/Compras/persona.service';
 import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { LoginService } from 'src/app/core/services/core/login.service';
 
 // Estados posibles del sub-formulario de persona dentro del proveedor:
 // - pendiente: aun no se decide si es una persona nueva o existente (bloqueado)
@@ -53,6 +54,7 @@ export class FormProveedorComponent {
     private route: ActivatedRoute,
     private notificacion: NotificacionesService,
     private dialog: MatDialog,
+    private loginService: LoginService,
     private router: Router) {
     this.objeto = new Proveedores();
   }
@@ -289,7 +291,7 @@ export class FormProveedorComponent {
     this.formulario.patchValue({
       fechaMod: new Date().toISOString(),
       activo: !!estadoActivo,
-      idEmp: 1
+      idEmp: this.loginService.getIdEmpresaActual()
     });
 
     if (this.estadoPersona === 'pendiente') {

@@ -26,27 +26,12 @@
                         fxLayoutGap="10px">
                         <div fxFlex="20" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                @if (!isEditMode){
-                                <mat-label>Empresa</mat-label>
-                                }
-                                <mat-select [formControl]="SelectEmpresaControl" required>
-                                    @for (obj_empresa of list_empresas; track obj_empresa) {
-                                    <mat-option [value]="obj_empresa">{{obj_empresa.nomEmp}}</mat-option>
-                                    }
-                                </mat-select>
-                                @if (SelectEmpresaControl.hasError('required')) {
-                                <mat-error>Debe seleccionar una empresa</mat-error>
-                                }
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="20" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Codigo Categoria</mat-label>
                                 <input matInput formControlName="codCategoria" [readonly]="isReadOnly">
                                 <mat-error>Codigo requerido</mat-error>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="40" fxFlex.lt-md="100%">
+                        <div fxFlex="60" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Nombre Categoria</mat-label>
                                 <input matInput formControlName="nomCategoria" [readonly]="isReadOnly">

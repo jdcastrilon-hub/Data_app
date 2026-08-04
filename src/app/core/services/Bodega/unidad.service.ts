@@ -5,7 +5,6 @@ import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { PageResponse } from '../../models/core/PageResponse';
 import { UnidadListView } from '../../interfaces/Bodega/UnidadListView';
-import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error';
@@ -16,10 +15,10 @@ interface ApiResponse<T = void> {
 @Injectable({
   providedIn: 'root'
 })
-export class UnidadServiceService {
+export class UnidadService {
 
   private url: string = `${environment.baseUrl}/bodega/unidades/`;
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private http: HttpClient) { }
 
   list(): Observable<Unidad[]> {
     return this.http.get<Unidad[]>(this.url + "list");
@@ -42,10 +41,9 @@ export class UnidadServiceService {
     return this.http.get<Unidad>(this.url + "search", { params });
   }
 
-  //Guardar Unidad
+  //Guardar Unidad (idEmp va dentro del objecto, ya se persiste en la tabla)
   save(objecto: any): Observable<any> {
-    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
-    return this.http.post<ApiResponse>(this.url + "save", objecto, { params }).pipe(
+    return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(
       map((response: ApiResponse) => {
         if (response.status !== 'success') {
           throw new Error(response.message || 'Error desconocido al guardar la unidad.');
@@ -57,9 +55,7 @@ export class UnidadServiceService {
 
   //Editar Unidad
   edit(objecto: any, id_unidad: number): Observable<any> {
-    const params = new HttpParams()
-      .set('unidad_id', String(id_unidad))
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    const params = new HttpParams().set('unidad_id', String(id_unidad));
 
     return this.http.put<ApiResponse>(this.url + "edit", objecto, { params }).pipe(
       map((response: ApiResponse) => {
@@ -72,9 +68,7 @@ export class UnidadServiceService {
   }
 
   delete(id: number): Observable<void> {
-    const params = new HttpParams()
-      .set('unidad_id', id.toString())
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    const params = new HttpParams().set('unidad_id', id.toString());
     return this.http.delete<void>(this.url + "delete", { params });
   }
 }

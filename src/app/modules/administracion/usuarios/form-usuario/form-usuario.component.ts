@@ -141,10 +141,15 @@ export class FormUsuarioComponent {
           nombreCompleto: data.persona.nombreCompleto
         } as PersonaSearch);
         this.formulario.get('searchPersona')?.disable();
+        // emitEvent:false: esto es una carga inicial, no una edicion real del
+        // usuario sobre los campos de la persona - sin esto, el patchValue de
+        // nombres/apellidos dispara PersonaComponent.actualizarResumen() ->
+        // onPersonaSubformChange(), que pisa el nomUsuario recien cargado
+        // (linea de arriba) con el nombre completo de la persona.
         this.personaGroup.patchValue({
           ...data.persona,
           fechaNacimiento: data.persona.fechaNacimiento ? new Date(data.persona.fechaNacimiento) : null,
-        });
+        }, { emitEvent: false });
 
         this.cargarLogsExistentes(data.logs);
       },

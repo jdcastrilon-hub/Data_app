@@ -297,7 +297,7 @@ export class FormTrasladoComponent {
           //Se asignan los valores a la fila de la tabla.
           fila.patchValue({
             idTrans: null,
-            idArticulo: stockData.idArticulo,
+            idArticulo: articulo.idArticulo,
             idCodBarra: articulo.idCodBarra,
             linea: index + 1,
             idUbicacion: 0,
@@ -456,7 +456,7 @@ export class FormTrasladoComponent {
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       if (this.formulario.hasError('bodegasIguales')) {
-        this.notificacion.showError('La bodega origen y destino , deben ser diferentes');
+        this.notificacion.showError('El origen y el destino no pueden ser exactamente iguales (misma bodega y mismo estado)');
       }
       return; // Detenemos la ejecución aquí
     }
@@ -531,13 +531,18 @@ export class FormTrasladoComponent {
     });
   }
 
-  // Validacion
+  // Validacion: se permite trasladar dentro de la misma bodega (cambio de estado),
+  // solo se rechaza cuando origen y destino son EXACTAMENTE iguales (misma bodega
+  // y mismo estado), ya que ese caso no tendria ningun efecto.
   validarBodegas(control: AbstractControl): ValidationErrors | null {
-    const origen = control.get('idBodegaOrigen')?.value;
-    const destino = control.get('idBodegaDestino')?.value;
+    const bodegaOrigen = control.get('idBodegaOrigen')?.value;
+    const bodegaDestino = control.get('idBodegaDestino')?.value;
+    const estadoOrigen = control.get('idEstadoOrigen')?.value;
+    const estadoDestino = control.get('idEstadoDestino')?.value;
 
-    // Solo validamos si ambos tienen un valor seleccionado
-    if (origen && destino && origen === destino) {
+    // Solo validamos si los 4 valores ya fueron seleccionados
+    if (bodegaOrigen && bodegaDestino && estadoOrigen && estadoDestino
+      && bodegaOrigen === bodegaDestino && estadoOrigen === estadoDestino) {
       return { bodegasIguales: true };
     }
 

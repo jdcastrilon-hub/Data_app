@@ -1,20 +1,19 @@
 import { Component, ViewChild } from '@angular/core';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { Categoria } from '../../../../core/models/Bodega/Categoria';
 import { MatTableDataSource } from '@angular/material/table';
-import { EmpresaServiceService } from '../../../../core/services/core/empresa-service.service';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
-import { Empresas } from '../../../../core/models/core/Empresas';
 import { Auditoria } from '../../../../core/models/core/Auditoria';
 import { SubCategorias } from '../../../../core/models/Bodega/SubCategorias';
-import { CategoriaService } from '../../../../core/services/Bodega/categoria-service.service';
+import { CategoriaService } from '../../../../core/services/Bodega/categoria.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { LoginService } from 'src/app/core/services/core/login.service';
 
 @Component({
   selector: 'form-categoria',
@@ -42,13 +41,13 @@ export class FormCategoriaComponent {
   //constructor
   constructor(
     private fb: FormBuilder,
-    private empresaService: EmpresaServiceService,
     private logAuditoria: AuditoriaService,
     private categoriaService: CategoriaService,
     private router: Router,
     private route: ActivatedRoute,
     private notificacion: NotificacionesService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private loginService: LoginService
   ) {
     this.objeto = new Categoria();
   }
@@ -60,18 +59,14 @@ export class FormCategoriaComponent {
     this.router.navigate(['/categorias']);
   }
 
-  //Empresas
-  list_empresas: Empresas[] = [];
-  SelectEmpresaControl = new FormControl<Empresas | null>(null, Validators.required);
-
-
   ngOnInit(): void {
 
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({
       codCategoria: [this.objeto.codCategoria, Validators.required],
       nomCategoria: [this.objeto.nomCategoria, Validators.required],
-      idEmpresa: [this.objeto.idEmpresa, Validators.required],
+      // No se selecciona: siempre es la empresa de la sesion actual.
+      idEmpresa: [this.objeto.idEmpresa],
       estado: [this.objeto.estado, { nonNullable: true }],
       fechaMod: [this.objeto.fechaMod],
       subCategorias: this.fb.array([]),
@@ -80,13 +75,12 @@ export class FormCategoriaComponent {
     });
 
     // No se usa formulario.disable(): los inputs de texto usan [readonly] en la
-    // plantilla (se ven normales, no apagados/grises). El select de empresa y el
-    // checkbox "estado" son la excepción: HTML no tiene un "readonly" real para
-    // ellos, así que esos controles sí se deshabilitan individualmente.
+    // plantilla (se ven normales, no apagados/grises). El checkbox "estado" es la
+    // excepción: HTML no tiene un "readonly" real para el, así que ese control si
+    // se deshabilita individualmente.
     this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
     if (this.isReadOnly) {
       this.formulario.get('estado')?.disable();
-      this.SelectEmpresaControl.disable();
     }
 
     //Validacion si es modo edicion o nuevo
@@ -107,10 +101,9 @@ export class FormCategoriaComponent {
         this.objeto = new Categoria();
         this.titulo_form = "REGISTRO DE CATEGORIAS";
         this.formulario.get('estado')?.setValue(true);
+        this.formulario.get('idEmpresa')?.patchValue(this.loginService.getIdEmpresaActual());
         // Si es nuevo, agrega una fila vacía
         this.agregarSubCategoria();
-        //Carga empresas
-        this.cargarEmpresas();
       }
     });
 
@@ -142,11 +135,6 @@ export class FormCategoriaComponent {
           });
         }
         this.formulario.setControl('logs', logsFormArray);
-
-        //Cargo Empresa
-        console.log("empresa");
-        console.log(this.objeto)
-        this.cargarEmpresas();
 
         // Cargo SubCategorias de la categoria
         this.objeto.subCategorias.forEach((sub) => {
@@ -230,54 +218,11 @@ export class FormCategoriaComponent {
     return this.formulario.get('subCategorias') as FormArray;
   }
 
-  //Metodo para cargar lista de empresa.
-  cargarEmpresas(): void {
-    this.empresaService.list().subscribe({
-      next: (data) => {
-        this.list_empresas = data;
-
-        // Si es metodo edicion y tengo una empresa cargada.
-        //La busco en la lista que me retorno el API
-        if (this.isEditMode && this.objeto.idEmpresa) {
-          //busco la empresa por ID
-          const empresaSeleccionada = this.list_empresas.find(
-            emp => emp.id_emp === this.objeto.idEmpresa
-          );
-
-          if (empresaSeleccionada) {
-            // [CLAVE]: Asigna el OBJETO completo al FormControl
-            this.SelectEmpresaControl.setValue(empresaSeleccionada);
-          }
-          // Opcional: Si quieres que el usuario NO pueda cambiarla, deshabilita el control
-          if (this.list_empresas.length === 1) {
-            this.SelectEmpresaControl.disable();
-          }
-        } else if (!this.isEditMode && this.list_empresas.length === 1) {
-          // Condición: Si estamos en modo Nuevo (this.isEditMode es false)
-          // Y la lista de empresas tiene exactamente 1 elemento.
-
-          const unicaEmpresa = this.list_empresas[0];
-
-          // Asigna automáticamente el único objeto de empresa al FormControl
-          this.SelectEmpresaControl.setValue(unicaEmpresa);
-
-          // Opcional: Si quieres que el usuario NO pueda cambiarla, deshabilita el control
-          this.SelectEmpresaControl.disable();
-        }
-      },
-      error: (err) => {
-        console.error('Error cargando empresas', err);
-      }
-    });
-  }
-
-
   //Enviar Datos al formulario prinicipal para consumir el API
   enviarFormulario() {
     console.log("enviarFormulario");
     //Asignacion de campos en cabezal
     this.formulario.patchValue({
-      idEmpresa: this.SelectEmpresaControl.value?.id_emp,
       estado: this.formulario.get('estado')?.value ?? false,
       fechaMod: new Date().toISOString()
     });
@@ -323,6 +268,7 @@ export class FormCategoriaComponent {
           const logsArray = this.formulario.get('logs') as FormArray;
           logsArray.clear();
           this.formulario.get('estado')?.setValue(true);
+          this.formulario.get('idEmpresa')?.patchValue(this.loginService.getIdEmpresaActual());
 
         },
         error: (err) => {

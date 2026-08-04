@@ -1,0 +1,57 @@
+<form [formGroup]="formulario" (ngSubmit)="guardar()">
+
+    <h2 mat-dialog-title class="titulo-con-boton">
+        <span>Mi Perfil</span>
+        @if (isReadOnly) {
+        <button mat-icon-button color="primary" type="button" (click)="activarEdicion()" title="Editar">
+            <mat-icon>edit</mat-icon>
+        </button>
+        }
+    </h2>
+
+    <mat-dialog-content>
+        @if (cargando) {
+        <p class="cargando">Cargando tu perfil...</p>
+        } @else {
+
+        @if (roles.length) {
+        <div class="roles">
+            <span class="roles-label">Rol{{ roles.length > 1 ? 'es' : '' }}:</span>
+            <mat-chip-set>
+                @for (rol of roles; track rol.idRol) {
+                <mat-chip>{{ rol.nombre }}</mat-chip>
+                }
+            </mat-chip-set>
+        </div>
+        }
+
+        <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="3px grid">
+            <div fxFlex="50">
+                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                    <mat-label>Usuario</mat-label>
+                    <input matInput formControlName="usuario">
+                </mat-form-field>
+            </div>
+            <div fxFlex="50">
+                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput formControlName="nomUsuario">
+                </mat-form-field>
+            </div>
+        </div>
+
+        <app-persona [group]="personaGroup" [disabled]="isReadOnly"></app-persona>
+
+        }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        @if (isReadOnly) {
+        <button mat-raised-button color="primary" type="button" mat-dialog-close>Cerrar</button>
+        } @else {
+        <button mat-raised-button color="warn" type="button" (click)="cancelarEdicion()">Cancelar</button>
+        <button mat-raised-button color="primary" type="submit">Guardar</button>
+        }
+    </mat-dialog-actions>
+
+</form>

@@ -5,7 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { registroarticuloCompra } from 'src/app/core/interfaces/Compras/registroarticuloCompra';
 import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
 import { CodigosBarra } from 'src/app/core/models/Bodega/CodigosBarra';
-import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
+import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 import { ComboArticuloComponent } from 'src/app/modules/resources/combo-articulo/combo-articulo.component';
@@ -35,7 +35,7 @@ export class ModalCodigobarraComponent {
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<ModalCodigobarraComponent>,
-    private articuloService: ArticuloServiceService,
+    private articuloService: ArticuloService,
     private notificacion: NotificacionesService,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {

@@ -9,6 +9,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PreferenciasDialogComponent } from 'src/app/modules/resources/preferencias-dialog/preferencias-dialog.component';
+import { MiPerfilDialogComponent } from 'src/app/modules/resources/mi-perfil-dialog/mi-perfil-dialog.component';
 import { ModalCambiarEmpresaComponent } from './modal-cambiar-empresa/modal-cambiar-empresa.component';
 import { PermisosStateService } from 'src/app/core/services/core/permisos-state.service';
 import { DetalleUser } from 'src/app/core/interfaces/Core/DetalleUserLogin';
@@ -59,6 +60,15 @@ export class ToolbarComponent {
 
     this.dialog.open(ModalCambiarEmpresaComponent, {
       width: '350px'
+    });
+
+  }
+
+  abrirMiPerfil() {
+
+    this.dialog.open(MiPerfilDialogComponent, {
+      width: '750px',
+      maxWidth: '90vw'
     });
 
   }

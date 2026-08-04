@@ -9,6 +9,10 @@
     <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start"
         [(selectedIndex)]="tabState.activeIndex">
 
+        <mat-tab label="Mi Empresa">
+            <app-mi-empresa></app-mi-empresa>
+        </mat-tab>
+
         <mat-tab label="Usuarios">
             <app-usuarios></app-usuarios>
         </mat-tab>
@@ -28,6 +32,12 @@
         <mat-tab label="Permisos">
             <app-permisos></app-permisos>
         </mat-tab>
+
+        @if (puedeVerModulos) {
+        <mat-tab label="Módulos">
+            <app-modulos></app-modulos>
+        </mat-tab>
+        }
 
     </mat-tab-group>
 </mat-card>

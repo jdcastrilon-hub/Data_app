@@ -20,7 +20,7 @@ import { ServiciosiniService } from 'src/app/core/services/core/serviciosini.ser
 import { NumeradorService } from 'src/app/core/services/core/numerador.service';
 import { LoginService } from 'src/app/core/services/core/login.service';
 import { SucursalServiceService } from 'src/app/core/services/General/sucursal-service.service';
-import { TasaImpuestoServiceService } from 'src/app/core/services/impuestos/tasa-impuesto-service.service';
+import { TasaImpuestoService } from 'src/app/core/services/impuestos/tasa-impuesto.service';
 import { VentaServiceService } from 'src/app/core/services/Ventas/venta-service.service';
 import { AbrirturnoService } from 'src/app/core/services/Ventas/abrirturno.service';
 import { CajasService } from 'src/app/core/services/Ventas/cajas.service';
@@ -152,7 +152,7 @@ export class FormVentaDirectaComponent {
     private turnoService: AbrirturnoService,
     private cajasService: CajasService,
     private sucursalService: SucursalServiceService,
-    private tasaService: TasaImpuestoServiceService,
+    private tasaService: TasaImpuestoService,
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
     private router: Router) {

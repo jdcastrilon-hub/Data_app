@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
+import { EstadoCombo } from 'src/app/core/interfaces/Bodega/EstadoCombo';
 import { MonitorStockFiltroInventario } from 'src/app/core/interfaces/Bodega/MonitorStockFiltroInventario';
 import { NegocioCombo } from 'src/app/core/interfaces/Core/NegocioCombo';
 import { SucursalCombo } from 'src/app/core/interfaces/Core/SucursalCombo';
@@ -43,6 +44,14 @@ export class FiltrostockComponent {
   //Negocios
   list_negocios: NegocioCombo[] = [];
   SelectNegocioControl = new FormControl<NegocioCombo | null | "TODOS">("TODOS", Validators.required);
+  // Si la empresa solo maneja un negocio, el filtro no aporta nada: se oculta y queda fijo en "TODOS".
+  mostrarNegocio = true;
+
+  //Estados
+  list_estados: EstadoCombo[] = [];
+  SelectEstadoControl = new FormControl<EstadoCombo | null | "TODOS">("TODOS", Validators.required);
+  // Misma logica que negocio: si solo hay un estado, no vale la pena mostrar el filtro.
+  mostrarEstado = true;
 
   // Categorias
   lista_categorias: Categoria[] = [];
@@ -63,6 +72,7 @@ export class FiltrostockComponent {
     bodega: string | number;
     categoria: string | number;
     subcategoria: string | number;
+    estado: string | number;
     soloAlzas: boolean;
     articulos: number[];
   } = {
@@ -70,6 +80,7 @@ export class FiltrostockComponent {
       bodega: 'TODOS',
       categoria: 'TODOS',
       subcategoria: 'TODOS',
+      estado: 'TODOS',
       soloAlzas: false,
       articulos: []
     };
@@ -145,6 +156,15 @@ export class FiltrostockComponent {
       }
     });
 
+    //Subcribir los cambios al selecionar estado
+    this.SelectEstadoControl.valueChanges.subscribe(valor => {
+      if (valor === 'TODOS') {
+        this.filtro.estado = 'TODOS';
+      } else if (valor && typeof valor === 'object') {
+        this.filtro.estado = valor.id ?? 0;
+      }
+    });
+
 
   }
 
@@ -165,6 +185,12 @@ export class FiltrostockComponent {
     this.list_negocios = this.obj_filtros.listnegocio || [];
     this.lista_categorias = this.obj_filtros.listCategorias || [];
     this.list_sucursal = this.obj_filtros.listsucursales || [];
+    this.list_estados = this.obj_filtros.listestados || [];
+
+    // Si la empresa solo maneja un negocio (o un estado), el select no aporta nada:
+    // se oculta y el filtro queda fijo en "TODOS" (equivalente, ya que no hay nada mas para elegir).
+    this.mostrarNegocio = this.list_negocios.length !== 1;
+    this.mostrarEstado = this.list_estados.length !== 1;
 
     console.log("carga datos")
     // El negocio inicia en "TODOS" (a diferencia de la sucursal, que si requiere un valor puntual)

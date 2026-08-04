@@ -3,15 +3,12 @@ import { modules_depencias } from '../../dependencias/modules_depencias.module';
 import { Router, RouterModule } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { CargastockService } from '../../../core/services/Bodega/cargastock.service';
 import { CargastockListStateService } from '../../../core/services/Bodega/cargastock-list-state.service';
 import { CargaStockListView } from '../../../core/interfaces/Bodega/CargaStockListView';
-import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
-import { ConfirmDialogComponent } from 'src/app/modules/resources/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'cargastock',
@@ -39,10 +36,8 @@ export class CargastockComponent {
 
   constructor(
     private service: CargastockService,
-    private notificacion: NotificacionesService,
     private router: Router,
-    private listState: CargastockListStateService,
-    private dialog: MatDialog
+    private listState: CargastockListStateService
   ) { }
 
   ngOnInit() {
@@ -88,26 +83,7 @@ export class CargastockComponent {
     this.router.navigate(['/cargastock/view', id]);
   }
 
-  //Eliminar registro (previa confirmación del usuario) - no tiene edicion, solo ver/eliminar
-  eliminarCarga(id: number): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '350px',
-      data: {
-        titulo: 'Eliminar carga masiva',
-        mensaje: '¿Seguro que deseas eliminar esta carga? Se revertirá su impacto en el stock y los costos, y no se puede deshacer.'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(confirmado => {
-      if (!confirmado) {
-        return;
-      }
-      this.service.delete(id).subscribe(() => {
-        this.lista_cargas = this.lista_cargas.filter(c => c.idTrans !== id);
-        this.dataSource = new MatTableDataSource<CargaStockListView>(this.lista_cargas);
-        this.notificacion.showSuccess('Carga eliminada con exito!');
-      });
-    });
-  }
+  // No hay eliminarCarga a proposito: este modulo es solo para la carga inicial de
+  // inventario, no una operacion recurrente (ver nota en controller_cargastock.py).
 
 }

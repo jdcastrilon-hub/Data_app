@@ -20,3 +20,9 @@ export class FormularioMatriz {
     nombre!: string;
     acciones!: AccionMatriz[];
 }
+
+export class ModuloEmpresa {
+    idModulo!: number;
+    nombre!: string;
+    activo!: boolean;
+}

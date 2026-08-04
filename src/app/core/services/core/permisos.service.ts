@@ -2,9 +2,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ModuloCombo, RolCombo, FormularioMatriz } from '../../interfaces/Core/PermisosMatriz';
+import { ModuloCombo, RolCombo, FormularioMatriz, ModuloEmpresa } from '../../interfaces/Core/PermisosMatriz';
 import { MisPermisos } from '../../interfaces/Core/MisPermisos';
-import { LoginService } from './login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error';
@@ -14,7 +13,6 @@ interface ApiResponse<T = void> {
 
 export interface GuardarMatrizPayload {
   idRol: number;
-  idEmp: number;
   idModulo: number;
   otorgados: number[];
 }
@@ -26,21 +24,19 @@ export class PermisosService {
 
   private url: string = `${environment.baseUrl}/core/permisos/`;
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private http: HttpClient) { }
 
   modulosCombo(): Observable<ModuloCombo[]> {
     return this.http.get<ModuloCombo[]>(this.url + "modulos");
   }
 
   rolesCombo(): Observable<RolCombo[]> {
-    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
-    return this.http.get<RolCombo[]>(this.url + "roles", { params });
+    return this.http.get<RolCombo[]>(this.url + "roles");
   }
 
   getMatriz(idRol: number, idModulo: number): Observable<FormularioMatriz[]> {
     const params = new HttpParams()
       .set('id_rol', idRol)
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()))
       .set('id_modulo', idModulo);
     return this.http.get<FormularioMatriz[]>(this.url + "matriz", { params });
   }
@@ -48,7 +44,6 @@ export class PermisosService {
   guardarMatriz(idRol: number, idModulo: number, otorgados: number[]): Observable<any> {
     const body: GuardarMatrizPayload = {
       idRol,
-      idEmp: this.loginService.getIdEmpresaActual()!,
       idModulo,
       otorgados
     };
@@ -57,9 +52,19 @@ export class PermisosService {
 
   // Todos mis permisos (todas las acciones) en la empresa activa - lo consume
   // PermisosStateService para cachear y que el guard de rutas no tenga que
-  // consultar al backend en cada navegacion.
+  // consultar al backend en cada navegacion. La empresa se deriva del JWT en
+  // el backend, no se envia desde aqui.
   misPermisos(): Observable<MisPermisos> {
-    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
-    return this.http.get<MisPermisos>(this.url + "mis-permisos", { params });
+    return this.http.get<MisPermisos>(this.url + "mis-permisos");
+  }
+
+  // Habilitacion de modulos por empresa (autoservicio del superadmin) - ver
+  // docs/tecnica/specs/core/delegacion-permisos-menu-exclusivo.md, Pieza 1.
+  modulosEmpresa(): Observable<ModuloEmpresa[]> {
+    return this.http.get<ModuloEmpresa[]>(this.url + "modulos-empresa");
+  }
+
+  actualizarModuloEmpresa(idModulo: number, activo: boolean): Observable<any> {
+    return this.http.put<ApiResponse>(this.url + "modulos-empresa", { idModulo, activo });
   }
 }

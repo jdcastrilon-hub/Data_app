@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Categoria } from '../../models/Bodega/Categoria';
-import { Subject, Observable, tap, map } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { PageResponse } from '../../models/core/PageResponse';
 import { CategoriaListView } from '../../models/Bodega/CategoriaListView';
 import { environment } from 'src/environments/environment';
@@ -28,21 +28,6 @@ export class CategoriaService {
 
 
   constructor(private http: HttpClient) { }
-
-  list(): Observable<Categoria[]> {
-    //const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqdWFuIiwiaWF0IjoxNzQ5OTI2NDQ3LCJleHAiOjE3NDk5MzAwNDd9.FO-f63ntqva-gAKTHnIFHHJQDgolbZUVABk1ed3XOx0'; // o donde tengas guardado el token
-    //const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    return this.http.get<Categoria[]>(this.url + "list");
-  }
-
-  listxEmpresa(codEmp: string): Observable<Categoria[]> {
-    //const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqdWFuIiwiaWF0IjoxNzQ5OTI2NDQ3LCJleHAiOjE3NDk5MzAwNDd9.FO-f63ntqva-gAKTHnIFHHJQDgolbZUVABk1ed3XOx0'; // o donde tengas guardado el token
-    //const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    const params = new HttpParams()
-      .set('codEmp', String(codEmp));
-    return this.http.get<Categoria[]>(this.url + "listxEmpresa", { params });
-  }
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<CategoriaListView>> {
     let params = new HttpParams()
@@ -73,9 +58,5 @@ export class CategoriaService {
     const params = new HttpParams()
       .set('categoria_id', id);
     return this.http.get<Categoria>(this.url + "search", { params });
-  }
-
-  buscarArticuloLike(valor: string): Observable<Categoria[]> {
-    return this.http.get<Categoria[]>(this.url + "buscar?valor=" + valor);
   }
 }

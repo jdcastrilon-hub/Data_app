@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import { AjusteStock } from '../../models/Bodega/AjusteStock';
 import { map, Observable } from 'rxjs';
 import { AjusteStockListView } from '../../models/Bodega/AjusteStockListView';
-import { AjusteStockInfoArticulos } from '../../interfaces/Bodega/AjusteStockInfoArticulos';
 import { environment } from 'src/environments/environment';
 import { PageResponse } from '../../models/core/PageResponse';
 
@@ -72,14 +71,6 @@ export class AjusteStockService {
   delete(id: number): Observable<void> {
     const params = new HttpParams().set('id_trans', id.toString());
     return this.http.delete<void>(this.url + "delete", { params });
-  }
-
-  //Consulta Articulos de un registros de ajuste de Stock
-  getArticulosById(id: number): Observable<AjusteStockInfoArticulos[]> {
-    const params = new HttpParams()
-      .set('id', id);
-
-    return this.http.get<AjusteStockInfoArticulos[]>(this.url + "getArticulosById", { params });
   }
 
 }

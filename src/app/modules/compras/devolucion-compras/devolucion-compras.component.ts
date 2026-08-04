@@ -12,7 +12,6 @@ import { DevolucionListStateService } from 'src/app/core/services/Compras/devolu
 import { DevolucionListView } from 'src/app/core/interfaces/Compras/DevolucionListView';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { ConfirmDialogComponent } from 'src/app/modules/resources/confirm-dialog/confirm-dialog.component';
-import { LoginService } from 'src/app/core/services/core/login.service';
 
 @Component({
   selector: 'app-devolucion-compras',
@@ -42,7 +41,6 @@ export class DevolucionComprasComponent {
     private notificacion: NotificacionesService,
     private router: Router,
     private listState: DevolucionListStateService,
-    private loginService: LoginService,
     private dialog: MatDialog
   ) {}
 
@@ -66,14 +64,13 @@ export class DevolucionComprasComponent {
 
   cargarDevolucionesPaginadas() {
     const texto = this.buscadorControl.value?.trim() || undefined;
-    const idEmp = this.loginService.getIdEmpresaActual() ?? 0;
 
     // Recuerda el estado actual para cuando se vuelva a esta lista mas adelante.
     this.listState.texto = texto || '';
     this.listState.page = this.paginaActual;
     this.listState.size = this.pageSize;
 
-    this.service.listPaginacion(this.paginaActual, this.pageSize, idEmp, texto).subscribe(data => {
+    this.service.listPaginacion(this.paginaActual, this.pageSize, texto).subscribe(data => {
       this.lista_devoluciones = data.content;
       this.totalRegistros = data.totalElements;
       this.dataSource = new MatTableDataSource<DevolucionListView>(this.lista_devoluciones);

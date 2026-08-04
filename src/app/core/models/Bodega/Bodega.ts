@@ -7,7 +7,7 @@ export class Bodega {
     nomBodega!: string;
     bodegaPrincipal!: string;
     manejaUbicaciones!: string;
-    activo!: string;
+    activo!: boolean;
     fechaMod!: Date;
     logs!: Auditoria[];
 

@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
-import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
+import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
 
 @Component({
   selector: 'combo-articulo',
@@ -30,7 +30,7 @@ export class ComboArticuloComponent implements OnInit, ControlValueAccessor {
   onTouched: any = () => { };
 
   constructor(private fb: FormBuilder,
-    private articuloService: ArticuloServiceService) {
+    private articuloService: ArticuloService) {
   }
 
   ngOnInit() {

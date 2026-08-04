@@ -5,12 +5,13 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Unidad } from '../../../../core/models/Bodega/Unidad';
 import { Auditoria } from '../../../../core/models/core/Auditoria';
-import { UnidadServiceService } from '../../../../core/services/Bodega/unidad-service.service';
+import { UnidadService } from '../../../../core/services/Bodega/unidad.service';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { LoginService } from 'src/app/core/services/core/login.service';
 
 @Component({
   selector: 'form-unidad',
@@ -35,12 +36,13 @@ export class FormUnidadComponent {
   //constructor
   constructor(
     private fb: FormBuilder,
-    private unidadService: UnidadServiceService,
+    private unidadService: UnidadService,
     private logAuditoria: AuditoriaService,
     private notificacion: NotificacionesService,
     private router: Router,
     private route: ActivatedRoute,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private loginService: LoginService
   ) {
     this.objeto = new Unidad();
   }
@@ -55,6 +57,8 @@ export class FormUnidadComponent {
   ngOnInit(): void {
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({
+      // No se selecciona: siempre es la empresa de la sesion actual.
+      idEmp: [this.objeto.idEmp],
       codUnidad: [this.objeto.codUnidad, Validators.required],
       nomUnidad: [this.objeto.nomUnidad, Validators.required],
       esPaquete: [this.objeto.esPaquete],
@@ -93,6 +97,7 @@ export class FormUnidadComponent {
         this.titulo_form = "REGISTRO DE UNIDAD";
         this.objeto = new Unidad();
         this.formulario.get('esPaquete')?.patchValue(false);
+        this.formulario.get('idEmp')?.patchValue(this.loginService.getIdEmpresaActual());
       }
     });
   }
@@ -105,6 +110,7 @@ export class FormUnidadComponent {
       (data: Unidad) => {
         this.objeto = data;
         this.formulario.get('id')?.patchValue(data.id);
+        this.formulario.get('idEmp')?.patchValue(data.idEmp);
         this.formulario.get('codUnidad')?.patchValue(data.codUnidad);
         this.formulario.get('nomUnidad')?.patchValue(data.nomUnidad);
         this.formulario.get('esPaquete')?.patchValue(data.esPaquete === 'S');
@@ -185,6 +191,7 @@ export class FormUnidadComponent {
     this.objeto = new Unidad();
     this.formDirective.resetForm(); // limpia valores + estado submitted/touched
     this.formulario.get('esPaquete')?.patchValue(false);
+    this.formulario.get('idEmp')?.patchValue(this.loginService.getIdEmpresaActual());
 
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.clear();

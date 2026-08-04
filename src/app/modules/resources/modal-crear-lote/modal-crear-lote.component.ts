@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
-import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
+import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 
 export interface ModalCrearLoteData {
@@ -30,7 +30,7 @@ export class ModalCrearLoteComponent {
 
   constructor(
     private fb: FormBuilder,
-    private articuloService: ArticuloServiceService,
+    private articuloService: ArticuloService,
     private notificacion: NotificacionesService,
     public dialogRef: MatDialogRef<ModalCrearLoteComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ModalCrearLoteData

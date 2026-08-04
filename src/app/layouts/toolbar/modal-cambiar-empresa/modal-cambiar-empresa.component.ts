@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 import { DetalleUserEmpresa } from 'src/app/core/interfaces/Core/DetalleUserEmpresa';
 import { LoginService } from 'src/app/core/services/core/login.service';
@@ -10,7 +11,7 @@ import { NotificacionesService } from 'src/app/core/services/core/notificaciones
 
 @Component({
   selector: 'modal-cambiar-empresa',
-  imports: [modules_depencias, MatDialogModule, MatRadioModule, FormsModule],
+  imports: [modules_depencias, MatDialogModule, MatRadioModule, MatCheckboxModule, FormsModule],
   templateUrl: './modal-cambiar-empresa.component.html',
   styleUrl: './modal-cambiar-empresa.component.scss'
 })
@@ -20,6 +21,9 @@ export class ModalCambiarEmpresaComponent implements OnInit {
   guardando = false;
   empresas: DetalleUserEmpresa[] = [];
   idEmpSeleccionada: number | null = null;
+  // Opt-in siempre en false: no se re-marca la principal en silencio solo por
+  // abrir el modal, el usuario lo decide cada vez.
+  marcarComoPrincipal = false;
 
   constructor(
     public dialogRef: MatDialogRef<ModalCambiarEmpresaComponent>,
@@ -49,27 +53,49 @@ export class ModalCambiarEmpresaComponent implements OnInit {
       return;
     }
 
-    // Ya esta en esa empresa: no hace falta pedir un token nuevo.
-    if (this.idEmpSeleccionada === this.loginService.getIdEmpresaActual()) {
-      this.dialogRef.close();
+    const idEmp = this.idEmpSeleccionada;
+    const requiereCambio = idEmp !== this.loginService.getIdEmpresaActual();
+    this.guardando = true;
+
+    if (requiereCambio) {
+      this.loginService.cambiarEmpresa(idEmp).subscribe({
+        next: () => this.marcarPrincipalSiAplica(idEmp, true),
+        error: (err) => this.manejarError('No se pudo cambiar de empresa. Intenta de nuevo.', err)
+      });
+    } else {
+      // Ya esta en esa empresa: no hace falta pedir un token nuevo, pero igual
+      // puede querer marcarla como principal.
+      this.marcarPrincipalSiAplica(idEmp, false);
+    }
+  }
+
+  private marcarPrincipalSiAplica(idEmp: number, huboCambioDeEmpresa: boolean): void {
+    if (!this.marcarComoPrincipal) {
+      this.finalizar(huboCambioDeEmpresa);
       return;
     }
-
-    this.guardando = true;
-    this.loginService.cambiarEmpresa(this.idEmpSeleccionada).subscribe({
-      next: () => {
-        // El cache de permisos es de la empresa saliente - se invalida antes
-        // de recargar para que la app vuelva a pedirlos ya con la nueva.
-        this.permisosState.invalidar();
-        this.dialogRef.close();
-        window.location.reload();
-      },
-      error: (err) => {
-        console.error('Error cambiando de empresa', err);
-        this.notificacion.showError('No se pudo cambiar de empresa. Intenta de nuevo.');
-        this.guardando = false;
-      }
+    this.loginService.marcarEmpresaPrincipal(idEmp).subscribe({
+      next: () => this.finalizar(huboCambioDeEmpresa),
+      error: (err) => this.manejarError('No se pudo marcar la empresa como principal.', err)
     });
+  }
+
+  private finalizar(huboCambioDeEmpresa: boolean): void {
+    if (huboCambioDeEmpresa) {
+      // El cache de permisos es de la empresa saliente - se invalida antes
+      // de recargar para que la app vuelva a pedirlos ya con la nueva.
+      this.permisosState.invalidar();
+      this.dialogRef.close();
+      window.location.reload();
+    } else {
+      this.dialogRef.close();
+    }
+  }
+
+  private manejarError(mensaje: string, err: any): void {
+    console.error(mensaje, err);
+    this.notificacion.showError(mensaje);
+    this.guardando = false;
   }
 
   cancelar(): void {

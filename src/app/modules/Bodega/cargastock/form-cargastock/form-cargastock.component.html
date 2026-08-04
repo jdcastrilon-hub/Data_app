@@ -15,11 +15,11 @@
         <div class="bloque">
             <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="start stretch" fxLayoutGap="5px">
                 <div fxFlex="25" fxFlex.lt-md="100%">
-                    <combo-bodega [editMode]="false" [input_objeto]="objeto" [opcionview]="false"
+                    <combo-bodega [editMode]="false" [input_objeto]="objeto" [opcionview]="isReadOnly"
                         (bodegaSeleccionada)="recibirBodega($event)"></combo-bodega>
                 </div>
                 <div fxFlex="25" fxFlex.lt-md="100%">
-                    <combo-estadostock [editMode]="false" [input_objeto]="objeto" [opcionview]="false"
+                    <combo-estadostock [editMode]="false" [input_objeto]="objeto" [opcionview]="isReadOnly"
                         (estadoSeleccionado)="recibirEstado($event)"></combo-estadostock>
                 </div>
                 <div fxFlex="25" fxFlex.lt-md="100%">
@@ -62,6 +62,14 @@
                 </div>
             </div>
 
+            @if (isReadOnly) {
+            <div class="zona-archivo">
+                <div class="zona-archivo-titulo">
+                    <mat-icon>description</mat-icon>
+                    <span>Archivo cargado: {{nombreArchivo || 'N/A'}}</span>
+                </div>
+            </div>
+            } @else {
             <div class="zona-archivo">
                 <div class="zona-archivo-titulo">
                     <mat-icon>upload_file</mat-icon>
@@ -74,8 +82,10 @@
                 </button>
                 <input #inputArchivo type="file" accept=".xlsx,.xls" hidden (change)="onArchivoSeleccionado($event)">
                 <p class="zona-archivo-ayuda">
-                    Columnas requeridas: categoria, subcategoria, codigo, nombre, costo, cantidad, precio_venta.
-                    Opcionales: unidad, tipo_servicio, grupo_contable, lote, fecha_vencimiento.
+                    Columnas requeridas: referencia_articulo, categoria, subcategoria, codigo, nombre, costo,
+                    cantidad, precio_venta. Opcionales: unidad, tipo_servicio, grupo_contable, impuesto, lote,
+                    fecha_vencimiento. Use el mismo valor de referencia_articulo en filas que sean el mismo
+                    artículo con distintos códigos de barra.
                 </p>
                 } @else {
                 <div class="archivo-elegido">
@@ -88,18 +98,25 @@
                 </div>
                 }
             </div>
+            }
         </div>
 
         <br>
 
         <mat-card-actions class="mat-accion-botones">
+            @if (!isReadOnly) {
             <button mat-raised-button color="primary" type="button" [disabled]="procesando"
                 (click)="validarArchivo()">Validar archivo</button>
             <button mat-raised-button color="accent" type="button"
-                [disabled]="procesando || resultado?.status === 'success'"
+                [disabled]="procesando || !resultado || resultado.status === 'error' || !!resultado.idTrans"
                 (click)="confirmarGuardado()">Confirmar y Guardar</button>
             <button mat-raised-button type="button" (click)="limpiarFormulario()">Quitar archivo</button>
-            <button mat-raised-button color="warn" routerLink="/cargastock">Salir</button>
+            }
+            <button mat-stroked-button color="primary" type="button" [disabled]="descargandoPlantilla"
+                (click)="descargarPlantilla()" matTooltip="Descarga un Excel en blanco con las columnas requeridas">
+                <mat-icon>file_download</mat-icon>
+                Descargar plantilla
+            </button>
         </mat-card-actions>
 
         @if (procesando) {
@@ -120,18 +137,20 @@
             @if (resultado.errores.length > 0) {
             <div class="resultado-bloque">
                 <h3>Errores encontrados ({{resultado.errores.length}})</h3>
-                <table mat-table [dataSource]="resultado.errores" class="mat-elevation-z1 tabla-compacta">
-                    <ng-container matColumnDef="fila">
-                        <th mat-header-cell *matHeaderCellDef>Fila</th>
-                        <td mat-cell *matCellDef="let error">{{error.fila}}</td>
-                    </ng-container>
-                    <ng-container matColumnDef="mensaje">
-                        <th mat-header-cell *matHeaderCellDef>Detalle</th>
-                        <td mat-cell *matCellDef="let error">{{error.mensaje}}</td>
-                    </ng-container>
-                    <tr mat-header-row *matHeaderRowDef="['fila', 'mensaje']"></tr>
-                    <tr mat-row *matRowDef="let row; columns: ['fila', 'mensaje'];"></tr>
-                </table>
+                <div class="tabla-scroll-errores">
+                    <table mat-table [dataSource]="resultado.errores" class="mat-elevation-z1 tabla-compacta">
+                        <ng-container matColumnDef="fila">
+                            <th mat-header-cell *matHeaderCellDef>Fila</th>
+                            <td mat-cell *matCellDef="let error">{{error.fila}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="mensaje">
+                            <th mat-header-cell *matHeaderCellDef>Detalle</th>
+                            <td mat-cell *matCellDef="let error">{{error.mensaje}}</td>
+                        </ng-container>
+                        <tr mat-header-row *matHeaderRowDef="['fila', 'mensaje']"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ['fila', 'mensaje'];"></tr>
+                    </table>
+                </div>
             </div>
             }
 
@@ -156,33 +175,47 @@
                         <span class="resumen-etiqueta">Cantidad total</span>
                     </div>
                 </div>
-
-                @if (resultado.resumen.articulosNuevosDetalle.length > 0) {
-                <table mat-table [dataSource]="resultado.resumen.articulosNuevosDetalle"
-                    class="mat-elevation-z1 tabla-compacta">
-                    <ng-container matColumnDef="codigo">
-                        <th mat-header-cell *matHeaderCellDef>Codigo (barra)</th>
-                        <td mat-cell *matCellDef="let art">{{art.codigo}}</td>
-                    </ng-container>
-                    <ng-container matColumnDef="nombre">
-                        <th mat-header-cell *matHeaderCellDef>Nombre</th>
-                        <td mat-cell *matCellDef="let art">{{art.nombre}}</td>
-                    </ng-container>
-                    <ng-container matColumnDef="categoria">
-                        <th mat-header-cell *matHeaderCellDef>Categoria</th>
-                        <td mat-cell *matCellDef="let art">{{art.categoria}}</td>
-                    </ng-container>
-                    <ng-container matColumnDef="subcategoria">
-                        <th mat-header-cell *matHeaderCellDef>Subcategoria</th>
-                        <td mat-cell *matCellDef="let art">{{art.subcategoria}}</td>
-                    </ng-container>
-                    <tr mat-header-row *matHeaderRowDef="['codigo', 'nombre', 'categoria', 'subcategoria']"></tr>
-                    <tr mat-row *matRowDef="let row; columns: ['codigo', 'nombre', 'categoria', 'subcategoria'];"></tr>
-                </table>
-                }
             </div>
             }
 
+        </div>
+        }
+
+        @if (isReadOnly && objeto.detalles.length) {
+        <div class="zona-resultado">
+            <div class="resultado-bloque">
+                <h3>Artículos cargados ({{objeto.detalles.length}})</h3>
+                <div class="tabla-scroll-errores">
+                    <table mat-table [dataSource]="objeto.detalles" class="mat-elevation-z1 tabla-compacta">
+                        <ng-container matColumnDef="linea">
+                            <th mat-header-cell *matHeaderCellDef>#</th>
+                            <td mat-cell *matCellDef="let det">{{det.linea}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="codigo">
+                            <th mat-header-cell *matHeaderCellDef>Codigo (barra)</th>
+                            <td mat-cell *matCellDef="let det">{{det.articulo?.codArticulo}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="nombre">
+                            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                            <td mat-cell *matCellDef="let det">{{det.articulo?.nomArticulo}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="costo">
+                            <th mat-header-cell *matHeaderCellDef>Costo</th>
+                            <td mat-cell *matCellDef="let det">{{det.costo | currency}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="cantidad">
+                            <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+                            <td mat-cell *matCellDef="let det">{{det.cantidad}}</td>
+                        </ng-container>
+                        <ng-container matColumnDef="precioVenta">
+                            <th mat-header-cell *matHeaderCellDef>Precio Venta</th>
+                            <td mat-cell *matCellDef="let det">{{det.precioVenta | currency}}</td>
+                        </ng-container>
+                        <tr mat-header-row *matHeaderRowDef="['linea', 'codigo', 'nombre', 'costo', 'cantidad', 'precioVenta']"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ['linea', 'codigo', 'nombre', 'costo', 'cantidad', 'precioVenta'];"></tr>
+                    </table>
+                </div>
+            </div>
         </div>
         }
 

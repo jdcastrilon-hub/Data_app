@@ -17,13 +17,11 @@
 
             </mat-icon>
 
-            <span class="node-text">
+            <span class="node-text" [title]="node.nombre">
 
                 {{ node.nombre }}
 
             </span>
-
-            <span class="spacer"></span>
 
             <mat-icon class="new-tab-icon" (click)="abrirNuevaPestana(node, $event)">
                 open_in_new

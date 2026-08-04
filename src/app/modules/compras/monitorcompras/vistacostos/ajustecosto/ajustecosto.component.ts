@@ -5,7 +5,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MonitorCompraReporteCostosDetalle } from 'src/app/core/interfaces/Compras/MonitorCompraReporteCostosDetalle';
 import { AjusteCostos } from 'src/app/core/models/Compras/AjusteCostos';
-import { ArticuloServiceService } from 'src/app/core/services/Bodega/articulo-service.service';
+import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
 import { AjustecostoService } from 'src/app/core/services/Compras/ajustecosto.service';
 import { AuditoriaService } from 'src/app/core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';

@@ -44,11 +44,10 @@ export class DevolucionComprasService {
     return this.http.get<LineaDisponibleDevolucion[]>(this.url + "lineasdisponibles", { params });
   }
 
-  listPaginacion(page: number, size: number, idEmp: number, texto?: string): Observable<PageResponse<DevolucionListView>> {
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<DevolucionListView>> {
     let params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString())
-      .set('id_emp', String(idEmp));
+      .set('size', size.toString());
 
     if (texto) {
       params = params.set('texto', texto);

@@ -7,7 +7,7 @@ import { TipoCosteo } from '../../models/Bodega/TipoCosteo';
 @Injectable({
   providedIn: 'root'
 })
-export class TipoCosteoServiceService {
+export class TipoCosteoService {
 
   private url: string = `${environment.baseUrl}/bodega/tipocosteo/`;
   constructor(private http: HttpClient) { }

@@ -107,9 +107,9 @@ export class FormBodegaComponent {
         this.isEditMode = false;
         this.titulo_form = "REGISTRO DE BODEGA"
         this.objeto = new Bodega();
-        this.formulario.get('bodegaPrincipal')?.patchValue(false);
+        this.formulario.get('bodegaPrincipal')?.patchValue(true);
         this.formulario.get('manejaUbicaciones')?.patchValue(false);
-        this.formulario.get('activo')?.patchValue(false);
+        this.formulario.get('activo')?.patchValue(true);
         //Carga sucursales
         this.cargarSucursales();
       }
@@ -162,7 +162,7 @@ export class FormBodegaComponent {
         this.formulario.get('nomBodega')?.patchValue(data.nomBodega);
         this.formulario.get('bodegaPrincipal')?.patchValue(data.bodegaPrincipal === 'S');
         this.formulario.get('manejaUbicaciones')?.patchValue(data.manejaUbicaciones === 'S');
-        this.formulario.get('activo')?.patchValue(data.activo === 'S');
+        this.formulario.get('activo')?.patchValue(data.activo);
         this.cargarLogsExistentes(data.logs);
 
         this.cargarSucursales();
@@ -194,15 +194,14 @@ export class FormBodegaComponent {
     //Asignacion de campos en cabezal
     console.log("enviarFormulario");
     const estadoBodegaPrincipal = this.formulario.get('bodegaPrincipal')?.value;
-    const estadoUbucaciones = this.formulario.get('manejaUbicaciones')?.value;
     const estadoActivo = this.formulario.get('activo')?.value;
     console.log(estadoBodegaPrincipal);
     this.formulario.patchValue({
       idSucursal: this.SelectSucursalControl.value?.id,
       fechaMod: new Date().toISOString(),
-      bodegaPrincipal: estadoBodegaPrincipal ? 'S' : 'N',
-      manejaUbicaciones: estadoUbucaciones ? 'S' : 'N',
-      activo: estadoActivo ? 'S' : 'N',
+      bodegaPrincipal: estadoBodegaPrincipal ? 'SI' : 'NO',
+      manejaUbicaciones: 'N',
+      activo: estadoActivo,
     });
 
     console.log("OBJECTO");

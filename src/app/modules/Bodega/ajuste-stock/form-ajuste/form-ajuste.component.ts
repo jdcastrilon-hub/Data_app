@@ -14,7 +14,6 @@ import { MotivosAjusteService } from '../../../../core/services/Bodega/motivos-a
 import { StockDisponible } from '../../../../core/models/Bodega/StockDisponible';
 import { AjusteStockDetalle } from '../../../../core/models/Bodega/AjusteStockDetalle';
 import { Auditoria } from '../../../../core/models/core/Auditoria';
-import { AjusteStockInfoArticulos } from '../../../../core/interfaces/Bodega/AjusteStockInfoArticulos';
 import { ArticuloAutocompletComponent } from '../../../resources/articulo-autocomplet/articulo-autocomplet.component';
 import { ComboBodegaComponent } from '../../../resources/combo-bodega/combo-bodega.component';
 import { ComboEstadostockComponent } from '../../../resources/combo-estadostock/combo-estadostock.component';
@@ -53,9 +52,6 @@ export class FormAjusteComponent {
   dataSource = new MatTableDataSource<FormGroup>();
   Columnas: string[] = ['position', 'articulo', 'ubicacion', 'Lote', 'stock', 'cantidad'];
   displayedColumns: string[] = [];
-
-  //Informacion general de articulos
-  list_info_Articulos: AjusteStockInfoArticulos[] = [];
 
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
@@ -154,12 +150,49 @@ export class FormAjusteComponent {
       manejaUbicaciones: bodega.manejaUbicaciones
     });
     this.ValidarColumnas();
+    this.recalcularStockGrilla();
   }
 
   recibirEstado(estado: any) {
     console.log('El padre recibió el estado:', estado);
     this.formulario.patchValue({
       idEstado: estado.id
+    });
+    this.recalcularStockGrilla();
+  }
+
+  /**
+   * Al cambiar de bodega o de estado, el stock disponible que ya se cargó en la
+   * grilla queda desactualizado (pertenece a la bodega/estado anterior). Se vuelve
+   * a consultar en una sola llamada (no una por fila) para todas las filas que ya
+   * tengan un artículo seleccionado, y se revalida la cantidad de cada una (por si
+   * ya no alcanza contra el nuevo stock disponible).
+   */
+  recalcularStockGrilla(): void {
+    const idBodega = this.formulario.value.idBodega;
+    const idEstado = this.formulario.value.idEstado;
+    if (!idBodega || !idEstado) {
+      return;
+    }
+
+    const filasConArticulo = this.detalles.controls.filter(fila => !!fila.get('idArticulo')?.value);
+    if (filasConArticulo.length === 0) {
+      return;
+    }
+    const idsCodBarra = filasConArticulo.map(fila => fila.get('idCodBarra')?.value);
+
+    this.bodegaService.stockDisponibleMasivo(idBodega, idEstado, idsCodBarra).subscribe({
+      next: (data) => {
+        filasConArticulo.forEach(fila => {
+          const idCodBarra = fila.get('idCodBarra')?.value;
+          const info = data.find(d => d.idcodbarra === idCodBarra);
+          fila.patchValue({ cantDisp: info ? info.stock : 0 }, { emitEvent: false });
+          fila.get('cantidad')?.updateValueAndValidity();
+        });
+      },
+      error: (err) => {
+        console.error('Error recalculando stock de la grilla', err);
+      }
     });
   }
 
@@ -202,8 +235,6 @@ export class FormAjusteComponent {
 
         //Carga Motivos
         this.cargarMotivosStock();
-        //Carga Detalle de articulos parte 1.
-        //this.cargarInformacionArticulos(data);
 
         const detallesArray = this.detalles;
         detallesArray.clear();
@@ -507,62 +538,6 @@ export class FormAjusteComponent {
     }
   }
   /******************** FIN Metodos de la tabla ********************/
-
-
-
-  /**
-  * Metodo para cargar el detalle de la transaccion
-  * @objecto : el objecto ya trae cargado los articulos , este metodo se encarga 
-  * de traer la informacion del articulo (id , codigo y nombre) para mostrarlos en la pantalla
-  * @returns No tiene return
-  */
-  cargarInformacionArticulos(objecto: AjusteStock): void {
-    this.ajusteService.getArticulosById(objecto.idTrans!).subscribe({
-      next: (data) => {
-        console.log("Data Articulos");
-        console.log(data);
-        this.list_info_Articulos = data;
-
-        const detalleArray = new FormArray<FormGroup>([]);
-        objecto.detalles.forEach((detalle: AjusteStockDetalle) => {
-
-          const infoArticulo = this.list_info_Articulos.find(
-            (articulo) => articulo.id === detalle.id.idArticulo
-          );
-
-          const nombreArticulo = infoArticulo ? infoArticulo.nomArticulo : 'Artículo no encontrado';
-          const codigoArticulo = infoArticulo ? infoArticulo.codArticulo : 'N/A';
-
-          //Se carga un metodo para la creacion de ArticuloSearch
-          let search: ArticuloSearch = {
-            idArticulo: detalle.id.idArticulo,
-            //idCodBarra : detalle.id.
-            codArticulo: codigoArticulo,
-            nomArticulo: nombreArticulo
-          }
-
-          detalleArray.push(this.fb.group({
-            id: detalle.id,
-            idUbicacion: [{ value: detalle.idUbicacion, disabled: true }],
-            idLote: [{ value: detalle.idLote, disabled: true }],
-            cantDisp: [{ value: detalle.cantDisp, disabled: true }],
-            nombreArticulo: [{ value: nombreArticulo, disabled: true }],
-            codigoArticulo: [{ value: codigoArticulo, disabled: true }],
-            cantidad: [detalle.cantidad, [Validators.required, Validators.min(1)]],
-            search: search
-          }));
-        });
-
-        this.formulario.setControl('detalles', detalleArray);
-        this.dataSource.data = this.detalles.controls as FormGroup[];
-        this.ValidarColumnas();
-
-      },
-      error: (err) => {
-        console.error('Error cargando bodegas', err);
-      }
-    });
-  }
 
   enviarFormulario() {
     //Asignacion de campos en cabezal

@@ -13,10 +13,6 @@ export class TipoDocumentoService {
 
   constructor(private http: HttpClient) { }
 
-  list(): Observable<TipoDocumento[]> {
-    return this.http.get<TipoDocumento[]>(this.url + "list");
-  }
-
   listSelection(): Observable<TipoDocumento[]> {
     return this.http.get<TipoDocumento[]>(this.url + "listCombo");
   }

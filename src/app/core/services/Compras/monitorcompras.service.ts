@@ -8,7 +8,6 @@ import { MonitorComprasFiltros } from '../../interfaces/Compras/MonitorComprasFi
 import { MonitorCompraReporteCostos } from '../../interfaces/Compras/MonitorCompraReporteCostos';
 import { DetalleCompraLinea } from '../../interfaces/Compras/DetalleCompraLinea';
 import { DevolucionCompraLinea } from '../../interfaces/Compras/DevolucionCompraLinea';
-import { LoginService } from '../core/login.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,17 +16,14 @@ export class MonitorcomprasService {
 
   private url: string = `${environment.baseUrl}/compras/monitor/`;
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private http: HttpClient) { }
 
   filtrosgenerales(): Observable<MonitorComprasFiltros> {
-    const params = new HttpParams()
-      .set('id_empresa', String(this.loginService.getIdEmpresaActual()))
-    return this.http.get<MonitorComprasFiltros>(this.url + "filtros", { params });
+    return this.http.get<MonitorComprasFiltros>(this.url + "filtros");
   }
 
   private construirParamsCostos(filtros: any): HttpParams {
-    let params = new HttpParams()
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    let params = new HttpParams();
 
     if (filtros.bodega) {
       const valorBodega = filtros.bodega === 'TODOS' ? 0 : filtros.bodega;
@@ -72,8 +68,7 @@ export class MonitorcomprasService {
   }
 
   private construirParamsComprasRealizadas(filtros: any): HttpParams {
-    let params = new HttpParams()
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    let params = new HttpParams();
 
     if (filtros.fechaInicio) {
       params = params.set('fechainicial', this.formatDate(filtros.fechaInicio));

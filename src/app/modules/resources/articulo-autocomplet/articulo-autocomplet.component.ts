@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, forwardRef, Input, OnInit, Output, output, signal, ViewChild } from '@angular/core';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { ArticuloSearch } from '../../../core/models/Bodega/ArticuloSearch';
-import { ArticuloServiceService } from '../../../core/services/Bodega/articulo-service.service';
+import { ArticuloService } from '../../../core/services/Bodega/articulo.service';
 import { ControlValueAccessor, FormBuilder, FormControl, FormGroup, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
@@ -45,7 +45,7 @@ export class ArticuloAutocompletComponent implements OnInit, ControlValueAccesso
   //Para referenciar el autoCompletar
   @ViewChild(MatAutocompleteTrigger) trigger!: MatAutocompleteTrigger;
 
-  constructor(private articuloService: ArticuloServiceService,
+  constructor(private articuloService: ArticuloService,
     private fb: FormBuilder
   ) { }
   writeValue(obj: any): void {

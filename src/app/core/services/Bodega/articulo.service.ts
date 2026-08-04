@@ -9,7 +9,6 @@ import { PageResponse } from '../../models/core/PageResponse';
 import { ArticuloListView } from '../../interfaces/Bodega/ArticuloListView';
 import { LoteDisponible } from '../../interfaces/Bodega/LoteDisponible';
 import { LoteReservado } from '../../interfaces/Bodega/LoteReservado';
-import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error'; // Uso de literales para mejor tipado
@@ -20,11 +19,11 @@ interface ApiResponse<T = void> {
 @Injectable({
   providedIn: 'root'
 })
-export class ArticuloServiceService {
+export class ArticuloService {
 
   private url: string = `${environment.baseUrl}/bodega/articulos/`;
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private http: HttpClient) { }
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<ArticuloListView>> {
     let params = new HttpParams()
@@ -56,19 +55,16 @@ export class ArticuloServiceService {
 
   //Guardar Articulo
   save(objecto: any): Observable<any> {
-    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
-    return this.http.post<ApiResponse>(this.url + "save", objecto, { params });
+    return this.http.post<ApiResponse>(this.url + "save", objecto);
   }
 
 
   update(objecto: Articulo): Observable<ApiResponse> {
-    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
-    return this.http.put<ApiResponse>(this.url + "edit/" + objecto.id_articulo, objecto, { params });
+    return this.http.put<ApiResponse>(this.url + "edit/" + objecto.id_articulo, objecto);
   }
 
   delete(id: number): Observable<void> {
-    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
-    return this.http.delete<void>(this.url + "delete/" + id, { params });
+    return this.http.delete<void>(this.url + "delete/" + id);
   }
 
   //Servicios adicionales
@@ -95,8 +91,7 @@ export class ArticuloServiceService {
 
   lotesArticulo(idArticulo: number): Observable<LoteDisponible[]> {
     const params = new HttpParams()
-      .set('id_articulo', idArticulo.toString())
-      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+      .set('id_articulo', idArticulo.toString());
 
     return this.http.get<LoteDisponible[]>(this.url + "lotes", { params });
   }
