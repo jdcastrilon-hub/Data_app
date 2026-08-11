@@ -24,14 +24,15 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
+                        @if (isEditMode) {
                         <div fxFlex="20" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Codigo Categoria</mat-label>
-                                <input matInput formControlName="codCategoria" [readonly]="isReadOnly">
-                                <mat-error>Codigo requerido</mat-error>
+                                <input matInput formControlName="codCategoria" readonly>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="60" fxFlex.lt-md="100%">
+                        }
+                        <div [fxFlex]="isEditMode ? 60 : 80" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Nombre Categoria</mat-label>
                                 <input matInput formControlName="nomCategoria" [readonly]="isReadOnly">

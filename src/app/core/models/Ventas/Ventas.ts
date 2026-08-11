@@ -44,6 +44,7 @@ export class Ventas {
     impTotal !: number;
     idTurno?: number;
     idCaja?: number;
+    idLista?: number;
     nomCaja !: string;
     impuesto1 !: string;
     valorImpuesto1 !: number;

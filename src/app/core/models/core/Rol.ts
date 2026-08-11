@@ -15,4 +15,7 @@ export class Rol {
     fechaMod!: Date;
     logs!: Auditoria[];
     usuarios!: RolUsuario[];
+    // Solo lectura: true en el rol "Admin" base que crea el provisioning de
+    // empresa - no se puede eliminar (ver roles.component.ts::eliminarRol).
+    esProtegido?: boolean;
 }

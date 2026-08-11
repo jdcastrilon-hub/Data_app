@@ -15,6 +15,12 @@
   background-color: #fcfcfc;
 }
 
+.bloque_interno {
+  border: 1px solid #ccc; // gris claro
+  border-radius: 8px; // opcional: bordes redondeados
+  padding: 0px 16px 0px 16px;
+}
+
 .example-section {
   display: flex;
   align-content: center;

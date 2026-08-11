@@ -24,7 +24,7 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
-                        <div fxFlex="30" fxFlex.lt-md="100%">
+                        <div fxFlex="20" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Tipo de Impuesto</mat-label>
                                 <mat-select formControlName="idTipo">
@@ -35,60 +35,33 @@
                                 <mat-error>Debe seleccionar un tipo</mat-error>
                             </mat-form-field>
                         </div>
+                        @if (isEditMode) {
                         <div fxFlex="20" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Tasa</mat-label>
-                                <input matInput formControlName="tasaImpuesto" [readonly]="isReadOnly">
-                                <mat-error>Tasa requerida</mat-error>
+                                <input matInput formControlName="tasaImpuesto" readonly>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="30" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Nombre / Descripción</mat-label>
-                                <input matInput formControlName="nombreTasa" [readonly]="isReadOnly">
-                                <mat-error>Nombre requerido</mat-error>
-                            </mat-form-field>
-                        </div>
+                        }
                         <div fxFlex="20" fxFlex.lt-md="100%">
-                            <section class="example-section">
-                                <mat-checkbox formControlName="exenta" color="primary">
-                                    Exenta
-                                </mat-checkbox>
-                            </section>
-                        </div>
-                    </div>
-
-                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
-                        fxLayoutGap="10px">
-                        <div fxFlex="25" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Porcentaje</mat-label>
                                 <input matInput type="number" formControlName="porcentaje" [readonly]="isReadOnly">
                                 <span matTextSuffix>%</span>
-                                <mat-error>Porcentaje requerido</mat-error>
+                                <mat-error *ngIf="formulario.get('porcentaje')?.hasError('required')">Porcentaje requerido</mat-error>
+                                <mat-error *ngIf="formulario.get('porcentaje')?.hasError('min')">No puede ser negativo</mat-error>
+                                <mat-error *ngIf="formulario.get('porcentaje')?.hasError('max')">No puede superar 100%</mat-error>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="25" fxFlex.lt-md="100%">
+                        <div [fxFlex]="isEditMode ? 40 : 60" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Importe Mínimo</mat-label>
-                                <input matInput type="number" formControlName="impMinimo" [readonly]="isReadOnly">
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="25" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Cuenta Venta</mat-label>
-                                <input matInput formControlName="cuentaVenta" [readonly]="isReadOnly">
-                                <mat-error>Cuenta requerida</mat-error>
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="25" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Cuenta Compra</mat-label>
-                                <input matInput formControlName="cuentaCompra" [readonly]="isReadOnly">
-                                <mat-error>Cuenta requerida</mat-error>
+                                <mat-label>Nombre / Descripción</mat-label>
+                                <input matInput formControlName="nombreTasa" readonly>
                             </mat-form-field>
                         </div>
                     </div>
+
+                    
                 </div>
             </mat-tab>
 
@@ -98,7 +71,8 @@
         <mat-card-actions class="mat-accion-botones">
             <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly" (click)="volver()">Cancelar</button>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly"
+                (click)="volver()">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

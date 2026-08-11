@@ -63,7 +63,7 @@ export class FormBodegaComponent {
     console.log("form Bodega")
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({
-      codBodega: [this.objeto.codBodega, Validators.required],
+      codBodega: [this.objeto.codBodega],
       nomBodega: [this.objeto.nomBodega, Validators.required],
       bodegaPrincipal: [this.objeto.bodegaPrincipal, Validators.required],
       manejaUbicaciones: [this.objeto.manejaUbicaciones],

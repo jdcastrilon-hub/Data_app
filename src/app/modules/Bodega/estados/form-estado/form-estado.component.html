@@ -24,36 +24,29 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
-                        <div fxFlex="30" fxFlex.lt-md="100%">
+                        @if (isEditMode) {
+                        <div fxFlex="15" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Codigo Estado</mat-label>
-                                <input matInput formControlName="codEstado" [readonly]="isReadOnly">
-                                <mat-error>Codigo requerido</mat-error>
+                                <input matInput formControlName="codEstado" readonly>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="70" fxFlex.lt-md="100%">
+                        }
+                        <div [fxFlex]="isEditMode ? 30 : 40" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Nombre Estado</mat-label>
                                 <input matInput formControlName="nomEstado" [readonly]="isReadOnly">
                                 <mat-error>Nombre requerido</mat-error>
                             </mat-form-field>
                         </div>
-                    </div>
-
-                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
-                        fxLayoutGap="10px">
-                        <div fxFlex="100" fxFlex.lt-md="100%">
+                        <div [fxFlex]="isEditMode ? 40 : 45" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Observacion</mat-label>
                                 <input matInput formControlName="observacion" [readonly]="isReadOnly">
                                 <mat-error>Observacion requerida</mat-error>
                             </mat-form-field>
                         </div>
-                    </div>
-
-                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
-                        fxLayoutGap="10px">
-                        <div fxFlex="30" fxFlex.lt-md="100%">
+                        <div fxFlex="15" fxFlex.lt-md="100%">
                             <section class="example-section">
                                 <mat-checkbox formControlName="activo" color="primary">
                                     Estado Activo

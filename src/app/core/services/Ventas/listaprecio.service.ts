@@ -5,6 +5,8 @@ import { environment } from 'src/environments/environment';
 import { ListaPrecio } from '../../models/Ventas/ListaPrecio';
 import { PageResponse } from '../../models/core/PageResponse';
 import { ListaPrecioListView } from '../../interfaces/Comercial/ListaPrecioListView';
+import { ListaPrecioCombo } from '../../interfaces/Comercial/ListaPrecioCombo';
+import { ListaPrecioComboTodas } from '../../interfaces/Comercial/ListaPrecioComboTodas';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error';
@@ -20,6 +22,18 @@ export class ListaprecioService {
   private url: string = `${environment.baseUrl}/comercial/listaprecio/`;
 
   constructor(private http: HttpClient) { }
+
+  // Solo listas base activas (nunca de cliente) - para usar como selector en
+  // otros formularios, ej. venta-directa.
+  listCombo(): Observable<ListaPrecioCombo[]> {
+    return this.http.get<ListaPrecioCombo[]>(this.url + "listCombo");
+  }
+
+  // Todas las listas activas (base + de cliente) - usado por la carga masiva de
+  // precios, que puede apuntar a cualquier lista activa.
+  listComboActivas(): Observable<ListaPrecioComboTodas[]> {
+    return this.http.get<ListaPrecioComboTodas[]>(this.url + "listComboActivas");
+  }
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<ListaPrecioListView>> {
     let params = new HttpParams()

@@ -69,6 +69,35 @@
                         </div>
                     </div>
                     <br />
+
+                    <div class="bloque_interno">
+                        <h4>Rol / Sucursal</h4>
+                        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                            <div fxFlex="50">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Rol</mat-label>
+                                    <mat-select formControlName="idRol">
+                                        @for (rol of list_roles; track rol.idRol) {
+                                        <mat-option [value]="rol.idRol">{{ rol.nombre }}</mat-option>
+                                        }
+                                    </mat-select>
+                                    <mat-error>Rol requerido</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Sucursal</mat-label>
+                                    <mat-select formControlName="sucursales" multiple>
+                                        @for (sucursal of list_sucursales; track sucursal.id) {
+                                        <mat-option [value]="sucursal.id">{{ sucursal.nomSucursal }}</mat-option>
+                                        }
+                                    </mat-select>
+                                    <mat-error>Sucursal requerida</mat-error>
+                                </mat-form-field>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
                 </div>
 
             </mat-tab>

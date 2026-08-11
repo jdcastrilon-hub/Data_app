@@ -20,6 +20,21 @@
   color: #3f51b5 !important;
 }
 
+.error-costo-igual {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #c62828;
+  font-size: 13px;
+  margin: -8px 0 8px 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
 /* Espacio entre botones de acción */
 mat-dialog-actions {
   padding: 16px 24px;

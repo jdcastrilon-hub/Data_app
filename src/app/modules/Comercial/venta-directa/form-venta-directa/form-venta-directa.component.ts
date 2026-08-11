@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -32,6 +32,8 @@ import { ComboLoteComponent } from 'src/app/modules/resources/combo-lote/combo-l
 import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
 import { MedioPago } from 'src/app/core/models/Ventas/medioPago';
 import { CajaCombo } from 'src/app/core/interfaces/Comercial/CajaCombo';
+import { ListaPrecioCombo } from 'src/app/core/interfaces/Comercial/ListaPrecioCombo';
+import { ListaprecioService } from 'src/app/core/services/Ventas/listaprecio.service';
 import { FormMediopagoComponent, LineaPago } from 'src/app/modules/Comercial/resources/form-mediopago/form-mediopago.component';
 
 // Sentinel de UI, nunca se manda al backend como id_mediopago real - solo
@@ -53,7 +55,7 @@ export class FormVentaDirectaComponent {
   //Variables Generales
   formulario!: FormGroup;
   objeto!: Ventas;
-  titulo_form: string = 'REGISTRO DE VENTA DIRECTA';
+  titulo_form: string = 'REGISTRO FACTURA';
   isEditMode: boolean = false; //Se define si el modo es nuevo o edicion
   isReadOnly: boolean = false; //Se define si el modo es solo lectura (view)
   // Se activa solo cuando se intento abrir /edit/:id de una venta cuyo turno ya
@@ -66,6 +68,7 @@ export class FormVentaDirectaComponent {
   intentoGuardar: boolean = false;
 
   @ViewChild('formDirective') formDirective!: NgForm;
+  @ViewChild('impIgresoInput') impIgresoInputRef!: ElementRef<HTMLInputElement>;
 
   //tabla de articulos
   //detalle: CompraDetalle[] = [];
@@ -143,6 +146,15 @@ export class FormVentaDirectaComponent {
   // el formulario cuando hay turno.
   SelectCajaUsuarioControl = new FormControl<CajaCombo | null>(null, Validators.required);
 
+  // Lista de precios: resuelve contra que fila de s_precioxarticulo se cotiza
+  // cada linea (ver ventadisponiblexbodega). Siempre visible en el encabezado
+  // (aunque solo haya una opcion), nunca autoseleccionada "en silencio" mas
+  // alla de precargar la lista marcada General por conveniencia - el usuario
+  // sigue pudiendo cambiarla. Alcance actual: solo listas base (sin cliente),
+  // la resolucion por listas propias del cliente no esta construida todavia.
+  list_listaprecio: ListaPrecioCombo[] = [];
+  SelectListaControl = new FormControl<ListaPrecioCombo | null>(null, Validators.required);
+
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
     private VentasService: VentaServiceService,
@@ -153,6 +165,7 @@ export class FormVentaDirectaComponent {
     private cajasService: CajasService,
     private sucursalService: SucursalServiceService,
     private tasaService: TasaImpuestoService,
+    private listaprecioService: ListaprecioService,
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
     private router: Router) {
@@ -194,6 +207,9 @@ export class FormVentaDirectaComponent {
 
       idTurno: this.objeto.idTurno,
       idCaja: null,
+      // min(1): arranca en 0 (sin seleccionar) hasta que se resuelva la lista -
+      // mismo criterio que idCliente (required no rechaza 0, min(1) si).
+      idLista: [this.objeto.idLista ?? 0, [Validators.required, Validators.min(1)]],
       tipoDcto: this.objeto.tipoDcto,
       porcDescuento: [{ value: this.objeto?.porcDescuento ?? 0, disabled: true }],
       fecVenc: [new Date(), Validators.required],
@@ -221,6 +237,20 @@ export class FormVentaDirectaComponent {
     // implementan ControlValueAccessor.setDisabledState, asi que formulario.disable() se
     // propaga correctamente con un solo llamado.
     this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+
+    //Subcribir los cambios al seleccionar la lista de precios
+    this.SelectListaControl.valueChanges.subscribe(objLista => {
+      this.formulario.patchValue({ idLista: objLista?.idLista ?? 0 });
+      this.actualizarStockPreciosMasivo();
+    });
+    this.cargarListasPrecio();
+
+    // Si el usuario cambia la bodega con lineas ya cargadas, se recalcula stock
+    // y precio de todas (mismo criterio que compradirecta.actualizarStocksMasivo,
+    // pero en ventas tambien se recalcula el precio contra la lista elegida).
+    this.SelectBodegasControl.valueChanges.subscribe(() => {
+      this.actualizarStockPreciosMasivo();
+    });
 
     //Subcribir los cambios al selecionar la sucursal (aplica en modo Nuevo y Edicion)
     this.SelectSucursalControl.valueChanges.subscribe(objectoSucusal => {
@@ -420,12 +450,24 @@ export class FormVentaDirectaComponent {
           secuencia: data.secuencia,
           idTurno: data.idTurno,
           idCaja: data.idCaja,
+          idLista: data.idLista ?? 0,
           fecVenc: data.fecVenc,
           impIgreso: data.impIgreso,
           impVuelto: data.impVuelto,
           porcDescuento: data.porcDescuento
         });
         this.formulario.get('nroDocum')?.patchValue(data.nroDocum);
+        this.formatearImpIgresoVisible(data.impIgreso);
+
+        // Si cargarListasPrecio() ya resolvio antes que esta llamada, el intento
+        // de match que hace alla no encontro nada porque this.objeto.idLista
+        // todavia no existia - se reintenta aca ahora que si.
+        if (data.idLista && this.list_listaprecio.length) {
+          const listaExistente = this.list_listaprecio.find(l => l.idLista === data.idLista);
+          if (listaExistente) {
+            this.SelectListaControl.setValue(listaExistente);
+          }
+        }
 
         // SelecdctoControl (tipo de descuento) nunca se restauraba en edicion -
         // se quedaba siempre en su valor por defecto ("No Aplica"), lo que ademas
@@ -554,6 +596,7 @@ export class FormVentaDirectaComponent {
     this.SelectdocumentoControl.disable();
     this.SelecmediosControl.disable();
     this.SelecdctoControl.disable();
+    this.SelectListaControl.disable();
   }
 
   /*
@@ -563,6 +606,56 @@ Receptores
     console.log('El padre recibió la estado:', estado);
     this.formulario.patchValue({
       idEstado: estado.id
+    });
+    this.actualizarStockPreciosMasivo();
+  }
+
+  // Recalcula stock y precio de todas las lineas ya cargadas en la grilla en una
+  // sola llamada, cuando cambia bodega/estado/lista de precios - mismo patron
+  // (cadena "idArticulo-idCodBarra;...") que compradirecta.actualizarStocksMasivo,
+  // pero aca tambien se recalcula el precio (ventadisponiblexbodega en lote) ya
+  // que el precio de venta depende de la lista elegida, no solo del articulo.
+  actualizarStockPreciosMasivo(): void {
+    const idBodega = this.SelectBodegasControl.value?.id;
+    const idEstado = this.formulario.get('idEstado')?.value;
+    const idLista = this.SelectListaControl.value?.idLista;
+
+    const cadenaArticulos = this.detalles.controls
+      .map(f => ({ idA: f.get('idArticulo')?.value, idC: f.get('idCodBarra')?.value }))
+      .filter(f => f.idA && f.idC)
+      .map(f => `${f.idA}-${f.idC}`)
+      .join(';');
+
+    if (!cadenaArticulos || !idBodega || !idEstado) return;
+
+    this.VentasService.actualizarStockPrecios(cadenaArticulos, idBodega, idEstado, idLista || 0).subscribe({
+      next: (data: any[]) => {
+        data.forEach(info => {
+          const fila = this.detalles.controls.find(f =>
+            f.get('idArticulo')?.value === info.idarticulo &&
+            f.get('idCodBarra')?.value === info.idcodbarra
+          );
+          if (fila) {
+            // precio/porc_tasa1 SI disparan el recalculo reactivo de
+            // neto/valorImpuesto1/importeTotal (ver combineLatest en agregarLineaVacia).
+            fila.patchValue({
+              stock: info.stock,
+              precio: info.precio,
+              idTasaimp1: info.idimpuesto,
+              porc_tasa1: info.porcentaje
+            });
+            // El validador de stock vive en "cantidad" y lee "stock" de la misma
+            // fila, pero Angular solo re-ejecuta un validador cuando el PROPIO
+            // control cambia, no cuando cambia un campo hermano - si aca solo se
+            // actualizara "stock", una cantidad que quedo sin cobertura (ej. al
+            // cambiar a una bodega con menos existencia) no se marcaria invalida
+            // hasta que el usuario la tocara de nuevo, dejando guardar una venta
+            // sin stock suficiente.
+            fila.get('cantidad')?.updateValueAndValidity();
+          }
+        });
+      },
+      error: (err) => console.error('Error actualizando stock/precios masivo', err)
     });
   }
 
@@ -618,6 +711,35 @@ Receptores
       },
       error: (err) => {
         console.error('Error (cargarCajasUsuario)', err);
+      }
+    });
+  }
+
+  // Carga las listas de precio base (nunca de cliente) disponibles para elegir
+  // en el encabezado. Se llama en paralelo a ModoEdicion() (si aplica) - por
+  // eso el match contra data.idLista tambien se reintenta alla, cubriendo
+  // cualquiera de los dos ordenes posibles en que ambas llamadas resuelvan.
+  cargarListasPrecio(): void {
+    this.listaprecioService.listCombo().subscribe({
+      next: (data) => {
+        this.list_listaprecio = data;
+
+        if (this.isEditMode) {
+          if (this.objeto.idLista) {
+            const listaExistente = this.list_listaprecio.find(l => l.idLista === this.objeto.idLista);
+            if (listaExistente) {
+              this.SelectListaControl.setValue(listaExistente);
+            }
+          }
+        } else {
+          const listaGeneral = this.list_listaprecio.find(l => l.esGeneral) ?? this.list_listaprecio[0];
+          if (listaGeneral) {
+            this.SelectListaControl.setValue(listaGeneral);
+          }
+        }
+      },
+      error: (err) => {
+        console.error('Error cargando listas de precio', err);
       }
     });
   }
@@ -933,11 +1055,33 @@ Receptores
 
     if (articulo != null) {
 
+      // Si el mismo articulo (mismo codigo de barra) ya esta cargado en otra fila,
+      // no se vuelve a consultar la API: se suma 1 a la cantidad de esa fila (el
+      // recalculo de neto/impuesto/total ya es reactivo, ver la suscripcion
+      // combineLatest en agregarLineaVacia) y esta fila (la que disparo el
+      // escaneo/seleccion) se limpia para seguir siendo la fila vacia de captura.
+      const indexExistente = this.detalles.controls.findIndex((fila, i) =>
+        i !== index &&
+        fila.get('idArticulo')?.value === articulo.idArticulo &&
+        fila.get('idCodBarra')?.value === articulo.idCodBarra
+      );
+
+      if (indexExistente >= 0) {
+        const filaExistente = this.detalles.at(indexExistente);
+        const cantidadActual = Number(filaExistente.get('cantidad')?.value) || 0;
+        filaExistente.get('cantidad')?.setValue(cantidadActual + 1);
+
+        this.detalles.at(index).get('search')?.setValue(null);
+        return;
+      }
+
       //Se cargar las variables de bodega y estado , para consultar por el inventario.
       const idBodega = this.formulario.value.idBodega;
       const idEstado = this.formulario.value.idEstado;
-      //Con el articulo seleccionado se consulta por API , el stock.
-      this.serviceIni.stkVentaDisponible(articulo.idArticulo!, articulo.idCodBarra!, idBodega!, idEstado!).subscribe({
+      const idLista = this.formulario.value.idLista;
+      //Con el articulo seleccionado se consulta por API , el stock y el precio
+      //real (resuelto contra la lista de precios elegida en el encabezado).
+      this.serviceIni.stkVentaDisponible(articulo.idArticulo!, articulo.idCodBarra!, idBodega!, idEstado!, idLista).subscribe({
         next: (data) => {
           if (data && data.length > 0) {
             //El api solo debe responder con una sola linea.
@@ -1035,17 +1179,55 @@ Receptores
     }, 0);
   }
 
+  // Solo Efectivo (medio unico, no Pago Mixto) tiene sentido de "vuelto" - una
+  // transferencia o tarjeta siempre es por el monto exacto, no existe cambio.
+  get esEfectivoSimple(): boolean {
+    return !this.esPagoMixto && this.SelecmediosControl.value?.tipo?.toLowerCase() === 'efectivo';
+  }
+
+  // Valor a considerar como "recibido": si es efectivo y el cajero escribio algo,
+  // se respeta (para calcular vuelto real); si lo dejo vacio, o el medio no es
+  // efectivo/es pago mixto (donde el campo ni se muestra), se asume pago exacto -
+  // el cliente entrego el dinero justo, sin necesidad de calcular cambio.
+  get impIngresoEfectivo(): number {
+    if (this.esEfectivoSimple) {
+      const ingreso = Number(this.formulario.get('impIgreso')?.value) || 0;
+      return ingreso > 0 ? ingreso : this.totalFinal;
+    }
+    return this.totalFinal;
+  }
+
+  /**
+   * Formatea "Valor Ingreso" con separador de miles (###.###.###) mientras se
+   * escribe - mismo patron ya usado en "Base" (form-turnos) e "Importe"
+   * (form-movimientocaja). El FormControl (impIgreso) siempre guarda el numero
+   * real sin puntos - el punto solo se aplica al valor mostrado en el input.
+   */
+  onImpIgresoInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const soloDigitos = input.value.replace(/\D/g, '');
+    const valorNumerico = soloDigitos ? Number(soloDigitos) : null;
+    this.formulario.get('impIgreso')?.setValue(valorNumerico);
+    input.value = soloDigitos ? Number(soloDigitos).toLocaleString('es-CO') : '';
+  }
+
+  //Aplica el mismo formato al cargar un valor existente (edicion/vista).
+  formatearImpIgresoVisible(valor: number | null | undefined): void {
+    if (!this.impIgresoInputRef) {
+      return;
+    }
+    this.impIgresoInputRef.nativeElement.value = valor ? Number(valor).toLocaleString('es-CO') : '';
+  }
+
   get vuelto(): number {
-    // 1. Obtenemos el valor que ingresó el cliente (por defecto 0 si está vacío)
-    const ingreso = Number(this.formulario.get('impIgreso')?.value) || 0;
+    const ingreso = this.impIngresoEfectivo;
     const total = this.totalFinal;
 
-    // 2. Si no ha ingresado suficiente dinero, el vuelto es 0
+    // Si no ha ingresado suficiente dinero, el vuelto es 0
     if (ingreso < total) {
       return 0;
     }
 
-    // 3. Retornamos la diferencia
     return ingreso - total;
   }
 
@@ -1115,6 +1297,10 @@ Receptores
       // pero nunca se sumaba hacia la cabecera pese a que el getter totalDcto ya
       // existia para esto.
       impDescuento: this.totalDcto,
+      // Se resuelve aca (no se deja el valor crudo que haya quedado en el control)
+      // para que un "Valor Ingreso" vacio no rompa el guardado - se asume pago
+      // exacto cuando el cajero no lo toca, o cuando el medio no es Efectivo.
+      impIgreso: this.impIngresoEfectivo,
       impVuelto: this.vuelto,
       // "documento" (Contado/Credito) ya lo patchea SelectdocumentoControl.valueChanges
       // al elegir el tipo de documento - antes aca se pisaba con el literal fijo
@@ -1128,6 +1314,10 @@ Receptores
     console.log(this.formulario.getRawValue());
 
     this.formulario.markAllAsTouched(); // Pinta en rojo todos los campos obligatorios vacios (ej. Observacion)
+    // idLista vive dentro de formulario, pero SelectListaControl (el mat-select
+    // que el usuario realmente ve) es un control aparte - markAllAsTouched()
+    // no lo toca, asi que su propio <mat-error> no se pintaria sin esto.
+    this.SelectListaControl.markAsTouched();
 
     // idCliente no tiene un <mat-error> visible propio (combo-cliente es un
     // componente aparte, se pinta via [mostrarError]), asi que ademas se avisa
@@ -1154,6 +1344,15 @@ Receptores
       .some((fila: any) => fila.value.idArticulo !== 0 && fila.value.idArticulo !== null);
     if (!hayArticulos) {
       this.notificacion.showError('Debes agregar al menos un articulo antes de guardar.');
+      return;
+    }
+
+    // Igual que idCliente/caja: mensaje explicito para que quede claro por que
+    // no se pudo guardar (el <mat-error> de la fila puede pasar desapercibido).
+    const hayStockInsuficiente = this.detalles.controls
+      .some((fila: any) => fila.get('cantidad')?.hasError('stockInsuficiente'));
+    if (hayStockInsuficiente) {
+      this.notificacion.showError('Hay articulos con cantidad mayor al stock disponible.');
       return;
     }
 
@@ -1247,6 +1446,10 @@ Receptores
     // no tener que volver a consultar el turno/las cajas del usuario en cada venta.
     const idTurno = this.formulario.value.idTurno;
     const idCaja = this.formulario.value.idCaja;
+    // Misma logica: SelectListaControl (standalone) sobrevive al resetForm(),
+    // pero el campo idLista del formulario si queda en blanco - se repone
+    // desde el control en vez de volver a consultar/re-seleccionar la lista.
+    const idLista = this.formulario.value.idLista;
 
     this.objeto = new Ventas();
     this.formDirective.resetForm();
@@ -1261,7 +1464,7 @@ Receptores
 
     this.formulario.get('idBodega')?.patchValue(idBodega);
     this.formulario.get('idEstado')?.patchValue(idEstado);
-    this.formulario.patchValue({ idTurno, idCaja });
+    this.formulario.patchValue({ idTurno, idCaja, idLista });
 
     // resetForm() sin argumentos deja fecDoc/fecVenc en blanco (no vuelve al valor
     // inicial de la construccion del formulario) - se reponen a la fecha de hoy.

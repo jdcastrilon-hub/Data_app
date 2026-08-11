@@ -19,6 +19,7 @@ import { SubCategorias } from 'src/app/core/models/Bodega/SubCategorias';
 import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ComboArticuloComponent } from 'src/app/modules/resources/combo-articulo/combo-articulo.component';
+import { FiltroReporteState, MonitorstockFiltrosStateService } from 'src/app/core/services/Bodega/monitorstock-filtros-state.service';
 
 // Filtros propios de "Vencimientos Proximos": mismos filtros base que los demas
 // reportes del monitor. El umbral de dias de anticipacion es fijo en el backend
@@ -75,9 +76,13 @@ export class FiltrosvencimientosComponent {
       articulos: []
     };
 
-  ngOnInit(): void {
-    this.cargarFiltros();
-
+  // Las suscripciones se registran aca (no en ngOnInit) para garantizar que
+  // esten activas ANTES de que corra cargarFiltros() - Angular llama
+  // ngOnChanges() antes que ngOnInit() cuando el @Input ya trae un valor no
+  // vacio al montar (pasa siempre que se reingresa a este reporte con
+  // obj_filtros ya resuelto en el padre). Ver filtrostock.component.ts para
+  // el detalle completo de por que esto rompia list_bodegas.
+  constructor(private filtrosState: MonitorstockFiltrosStateService) {
     this.SelectSucursalControl.valueChanges.subscribe(objectoSucusal => {
       if (objectoSucusal) {
         this.list_bodegas = objectoSucusal.list_bodegas!;
@@ -126,6 +131,10 @@ export class FiltrosvencimientosComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.cargarFiltros();
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['obj_filtros'] && changes['obj_filtros'].currentValue) {
       this.cargarFiltros();
@@ -139,14 +148,63 @@ export class FiltrosvencimientosComponent {
     this.lista_categorias = this.obj_filtros.listCategorias || [];
     this.list_sucursal = this.obj_filtros.listsucursales || [];
 
+    // Si ya habia una consulta previa de este reporte (el usuario cambio de
+    // "Tipo de Informe" y volvio), se restaura tal cual quedo en vez del
+    // default. Ver MonitorstockFiltrosStateService para el porque.
+    const guardado = this.filtrosState.vencimientos;
+    if (guardado) {
+      this.restaurarFiltrosGuardados(guardado);
+      return;
+    }
+
     const objsucural = this.list_sucursal[0]
     if (objsucural) {
       this.SelectSucursalControl.setValue(objsucural);
     }
   }
 
+  // Reaplica una seleccion de filtros guardada, respetando el mismo orden de
+  // dependencias que el usuario seguiria a mano: primero Sucursal (dispara la
+  // carga de Bodegas), despues Categoria (dispara la carga de SubCategorias),
+  // y recien ahi Bodega/SubCategoria. Si algo guardado ya no existe en las
+  // listas actuales, cae a "TODOS" en vez de fallar.
+  private restaurarFiltrosGuardados(guardado: FiltroReporteState<typeof this.filtro>) {
+    const sucursal = this.list_sucursal.find(s => s.id === guardado.sucursalId) ?? this.list_sucursal[0];
+    if (sucursal) {
+      this.SelectSucursalControl.setValue(sucursal);
+    }
+
+    const bodega = guardado.filtro.bodega === 'TODOS'
+      ? 'TODOS'
+      : this.list_bodegas.find(b => b.id === guardado.filtro.bodega) ?? 'TODOS';
+    this.SelectBodegasControl.setValue(bodega);
+
+    const negocio = guardado.filtro.negocio === 'TODOS'
+      ? 'TODOS'
+      : this.list_negocios.find(n => n.idNegocio === guardado.filtro.negocio) ?? 'TODOS';
+    this.SelectNegocioControl.setValue(negocio);
+
+    const categoria = guardado.filtro.categoria === 'TODOS'
+      ? 'TODOS'
+      : this.lista_categorias.find(c => c.id === guardado.filtro.categoria) ?? 'TODOS';
+    this.SelectCategoriaControl.setValue(categoria);
+
+    if (categoria !== 'TODOS' && guardado.filtro.subcategoria !== 'TODOS') {
+      const subcategoria = this.lista_Subcategorias.find(s => s.id === guardado.filtro.subcategoria) ?? 'TODOS';
+      this.SelectSubCategoriaControl.setValue(subcategoria);
+    }
+
+    this.articulosSeleccionados = guardado.articulosSeleccionados;
+    this.filtro.articulos = this.articulosSeleccionados.map(a => a.idArticulo!);
+  }
+
   enviarConsulta() {
     this.alConsultar.emit(this.filtro);
+    this.filtrosState.vencimientos = {
+      sucursalId: this.SelectSucursalControl.value?.id ?? null,
+      filtro: { ...this.filtro },
+      articulosSeleccionados: this.articulosSeleccionados
+    };
   }
 
   agregarArticulo(articulo: ArticuloSearch) {

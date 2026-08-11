@@ -30,6 +30,7 @@ import { MonitorcomprasComponent } from './modules/compras/monitorcompras/monito
 import { ArticulosStockComponent } from './modules/Bodega/articulos-stock/articulos-stock.component';
 import { MonitorstockComponent } from './modules/Bodega/monitorstock/monitorstock.component';
 import { FormClienteComponent } from './modules/Comercial/clientes/form-cliente/form-cliente.component';
+import { ClientesComponent } from './modules/Comercial/clientes/clientes.component';
 import { FormVentaDirectaComponent } from './modules/Comercial/venta-directa/form-venta-directa/form-venta-directa.component';
 import { VentaDirectaComponent } from './modules/Comercial/venta-directa/venta-directa.component';
 import { FormVentaposComponent } from './modules/Comercial/venta-pos/venta-pos/form-ventapos/form-ventapos.component';
@@ -49,6 +50,8 @@ import { FormDocumentoVentaComponent } from './modules/Comercial/documentos-vent
 import { MonitoroperacionesComponent } from './modules/Comercial/monitoroperaciones/monitoroperaciones.component';
 import { ListaPreciosComponent } from './modules/Comercial/lista-precios/lista-precios.component';
 import { FormListaPrecioComponent } from './modules/Comercial/lista-precios/form-lista-precio/form-lista-precio.component';
+import { CargaPreciosComponent } from './modules/Comercial/carga-precios/carga-precios.component';
+import { FormCargaPreciosComponent } from './modules/Comercial/carga-precios/form-carga-precios/form-carga-precios.component';
 import { ConceptosComponent } from './modules/tesoreria/conceptos/conceptos.component';
 import { FormConceptoComponent } from './modules/tesoreria/conceptos/form-concepto/form-concepto.component';
 import { AdministracionComponent } from './modules/administracion/administracion.component';
@@ -159,29 +162,68 @@ export const routes: Routes = [
             { path: 'cargastock/new', component: FormCargastockComponent, title: 'Nueva carga de stock' },
             { path: 'cargastock/view/:id', component: FormCargastockComponent, title: 'Carga de stock' },
             { path: 'proveedores', component: ProveedoresComponent, title: 'Proveedores' },
-            { path: 'proveedores/new', component: FormProveedorComponent, title: 'Nuevo proveedor' },
+            {
+                path: 'proveedores/new', component: FormProveedorComponent, title: 'Nuevo proveedor',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_PRO', accion: 'CREAR' }
+            },
             { path: 'proveedores/view/:id', component: FormProveedorComponent, title: 'Proveedor' },
-            { path: 'proveedores/edit/:id', component: FormProveedorComponent, title: 'Editar proveedor' },
+            {
+                path: 'proveedores/edit/:id', component: FormProveedorComponent, title: 'Editar proveedor',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_PRO', accion: 'EDITAR' }
+            },
             { path: 'motivosdevolucion', component: MotivosDevolucionComponent, title: 'Motivos de Devolución' },
-            { path: 'motivosdevolucion/new', component: FormMotivoDevolucionComponent, title: 'Nuevo motivo de devolución' },
+            {
+                path: 'motivosdevolucion/new', component: FormMotivoDevolucionComponent, title: 'Nuevo motivo de devolución',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_MOV', accion: 'CREAR' }
+            },
             { path: 'motivosdevolucion/view/:id', component: FormMotivoDevolucionComponent, title: 'Motivo de devolución' },
-            { path: 'motivosdevolucion/edit/:id', component: FormMotivoDevolucionComponent, title: 'Editar motivo de devolución' },
+            {
+                path: 'motivosdevolucion/edit/:id', component: FormMotivoDevolucionComponent, title: 'Editar motivo de devolución',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_MOV', accion: 'EDITAR' }
+            },
             { path: 'compras', component: CompraDirectaComponent, title: 'Compra Directa' },
-            { path: 'compras/new', component: FormCompraDirectaComponent, title: 'Nueva compra' },
+            {
+                path: 'compras/new', component: FormCompraDirectaComponent, title: 'Nueva compra',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_COMPRA', accion: 'CREAR' }
+            },
             { path: 'compras/view/:id', component: FormCompraDirectaComponent, title: 'Compra' },
-            { path: 'compras/edit/:id', component: FormCompraDirectaComponent, title: 'Editar compra' },
+            {
+                path: 'compras/edit/:id', component: FormCompraDirectaComponent, title: 'Editar compra',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_COMPRA', accion: 'EDITAR' }
+            },
             { path: 'devolucioncompras', component: DevolucionComprasComponent, title: 'Devolución a Proveedor' },
-            { path: 'devolucioncompras/new', component: FormDevolucionComponent, title: 'Nueva devolución' },
+            {
+                path: 'devolucioncompras/new', component: FormDevolucionComponent, title: 'Nueva devolución',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_DEVOL', accion: 'CREAR' }
+            },
             { path: 'devolucioncompras/view/:id', component: FormDevolucionComponent, title: 'Devolución' },
-            { path: 'devolucioncompras/edit/:id', component: FormDevolucionComponent, title: 'Editar devolución' },
+            {
+                path: 'devolucioncompras/edit/:id', component: FormDevolucionComponent, title: 'Editar devolución',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_DEVOL', accion: 'EDITAR' }
+            },
             { path: 'impuestos', component: ImpuestosComponent, title: 'Impuestos' },
-            { path: 'impuestos/new', component: FormImpuestoComponent, title: 'Nuevo impuesto' },
+            {
+                path: 'impuestos/new', component: FormImpuestoComponent, title: 'Nuevo impuesto',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_IMPUESTO', accion: 'CREAR' }
+            },
             { path: 'impuestos/view/:id', component: FormImpuestoComponent, title: 'Impuesto' },
-            { path: 'impuestos/edit/:id', component: FormImpuestoComponent, title: 'Editar impuesto' },
+            {
+                path: 'impuestos/edit/:id', component: FormImpuestoComponent, title: 'Editar impuesto',
+                canActivate: [permisoGuard], data: { menuCodigo: 'COM_IMPUESTO', accion: 'EDITAR' }
+            },
             { path: 'monitorcompras', component: MonitorcomprasComponent, title: 'Monitor de Compras' },
             { path: 'monitorstock', component: MonitorstockComponent, title: 'Monitor de Stock' },
             { path: 'monitoroperaciones', component: MonitoroperacionesComponent, title: 'Monitor de Operaciones' },
-            { path: 'clientes/new', component: FormClienteComponent, title: 'Nuevo cliente' },
+            { path: 'clientes', component: ClientesComponent, title: 'Clientes' },
+            {
+                path: 'clientes/new', component: FormClienteComponent, title: 'Nuevo cliente',
+                canActivate: [permisoGuard], data: { menuCodigo: 'VEN_CLI', accion: 'CREAR' }
+            },
+            { path: 'clientes/view/:id', component: FormClienteComponent, title: 'Cliente' },
+            {
+                path: 'clientes/edit/:id', component: FormClienteComponent, title: 'Editar cliente',
+                canActivate: [permisoGuard], data: { menuCodigo: 'VEN_CLI', accion: 'EDITAR' }
+            },
             { path: 'ventas', component: VentaDirectaComponent, title: 'Venta Directa' },
             { path: 'ventas/new', component: FormVentaDirectaComponent, title: 'Nueva venta' },
             { path: 'ventas/view/:id', component: FormVentaDirectaComponent, title: 'Venta' },
@@ -216,6 +258,9 @@ export const routes: Routes = [
             { path: 'listaprecios/new', component: FormListaPrecioComponent, title: 'Nueva lista de precios' },
             { path: 'listaprecios/view/:id', component: FormListaPrecioComponent, title: 'Lista de precios' },
             { path: 'listaprecios/edit/:id', component: FormListaPrecioComponent, title: 'Editar lista de precios' },
+            { path: 'cargaprecios', component: CargaPreciosComponent, title: 'Carga Masiva de Precios' },
+            { path: 'cargaprecios/new', component: FormCargaPreciosComponent, title: 'Nueva carga de precios' },
+            { path: 'cargaprecios/view/:id', component: FormCargaPreciosComponent, title: 'Carga de precios' },
             { path: 'conceptos', component: ConceptosComponent, title: 'Conceptos' },
             { path: 'conceptos/new', component: FormConceptoComponent, title: 'Nuevo concepto' },
             { path: 'conceptos/view/:id', component: FormConceptoComponent, title: 'Concepto' },

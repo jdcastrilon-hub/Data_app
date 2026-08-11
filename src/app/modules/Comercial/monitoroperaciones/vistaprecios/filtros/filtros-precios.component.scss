@@ -1,0 +1,36 @@
+:host {
+    display: block;
+    background-color: #e2e2e2;
+    padding: 1px;
+}
+
+.bloque {
+    border: 1px solid #c5c5c5;
+    padding: 16px 16px 0px 16px;
+    background-color: #fcfcfc;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    button[mat-flat-button] {
+        padding: 0 20px;
+        height: 48px;
+        display: flex;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    button[mat-icon-button] {
+        color: #666;
+        margin-top: 2px;
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+    }
+}

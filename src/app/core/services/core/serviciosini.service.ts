@@ -32,12 +32,13 @@ export class ServiciosiniService {
     return this.http.get<stkDisponibleCompra[]>(this.url + "compraDisponiblexBodega", { params });
   }
 
-  stkVentaDisponible(idArticulo: number, idCodBarra: number, idBodega: number, idEstado: number): Observable<stkDisponibleVenta[]> {
+  stkVentaDisponible(idArticulo: number, idCodBarra: number, idBodega: number, idEstado: number, idLista: number = 0): Observable<stkDisponibleVenta[]> {
     const params = new HttpParams()
       .set('idArticulo', idArticulo)
       .set('idACodBarra', idCodBarra)
       .set('idBodega', idBodega)
-      .set('idEstado', idEstado);
+      .set('idEstado', idEstado)
+      .set('idLista', idLista);
     return this.http.get<stkDisponibleVenta[]>(this.url + "ventaDisponiblexBodega", { params });
   }
 

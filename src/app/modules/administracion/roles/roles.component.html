@@ -48,10 +48,12 @@
                         matTooltip="Editar" matTooltipPosition="above">
                         <mat-icon>edit</mat-icon>
                     </button>
+                    @if (!element.esProtegido) {
                     <button mat-icon-button matSuffix (click)="eliminarRol(element.idRol)"
                         matTooltip="Eliminar" matTooltipPosition="above">
                         <mat-icon>close</mat-icon>
                     </button>
+                    }
                 </td>
             </ng-container>
 

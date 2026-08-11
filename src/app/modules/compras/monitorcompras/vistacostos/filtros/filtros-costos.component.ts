@@ -19,6 +19,7 @@ import { Categoria } from 'src/app/core/models/Bodega/Categoria';
 import { SubCategorias } from 'src/app/core/models/Bodega/SubCategorias';
 import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
 import { ComboArticuloComponent } from 'src/app/modules/resources/combo-articulo/combo-articulo.component';
+import { FiltroReporteState, FiltroCostosValores, MonitorcomprasFiltrosStateService } from 'src/app/core/services/Compras/monitorcompras-filtros-state.service';
 
 @Component({
   selector: 'filtros-costos',
@@ -56,35 +57,26 @@ export class FiltrosCostosComponent {
   list_bodegas: BodegaCombo[] = [];
   SelectBodegasControl = new FormControl<BodegaCombo | null | "TODOS">("TODOS", Validators.required);
 
-  filtro: {
-    negocio: string | number; // <--- Permitimos ambos tipos
-    bodega: string | number;
-    categoria: string | number;
-    subcategoria: string | number;
-    soloAlzas: boolean;
-    articulos: number[];
-  } = {
-      negocio: 'TODOS',
-      bodega: 'TODOS',
-      categoria: 'TODOS',
-      subcategoria: 'TODOS',
-      soloAlzas: false,
-      articulos: []
-    };
+  filtro: FiltroCostosValores = {
+    negocio: 'TODOS',
+    bodega: 'TODOS',
+    categoria: 'TODOS',
+    subcategoria: 'TODOS',
+    soloAlzas: false,
+    articulos: []
+  };
 
-  ngOnInit(): void {
-    console.log("Carga Inicial");
-    this.cargarFiltros();
-
+  // Las suscripciones se registran aca (no en ngOnInit) para garantizar que
+  // esten activas ANTES de que corra cargarFiltros() - Angular llama
+  // ngOnChanges() antes que ngOnInit() cuando el @Input ya trae un valor no
+  // vacio al montar (pasa siempre que se reingresa a este reporte con
+  // obj_filtros ya resuelto en el padre). Ver filtrostock.component.ts para
+  // el detalle completo de por que esto rompia list_bodegas.
+  constructor(private filtrosState: MonitorcomprasFiltrosStateService) {
     //Subcribir los cambios al selecionar la sucursal
     this.SelectSucursalControl.valueChanges.subscribe(objectoSucusal => {
-      console.log("evento sucursal");
       if (objectoSucusal) {
         this.list_bodegas = objectoSucusal.list_bodegas!;
-        console.log("tamaño lista")
-        console.log(this.list_bodegas.length)
-
-
       } else {
         this.list_bodegas = []; // Limpiar si no hay categoría seleccionada
       }
@@ -92,7 +84,6 @@ export class FiltrosCostosComponent {
 
     //Subcribir los cambios al selecionar la categoria
     this.SelectCategoriaControl.valueChanges.subscribe(categoria => {
-      console.log("evento categoria");
       // 1. Verificamos que no sea null y que no sea el string "TODOS"
       if (categoria && typeof categoria === 'object') {
         // Aquí TS ya sabe que es un objeto tipo Categoria
@@ -111,8 +102,6 @@ export class FiltrosCostosComponent {
         // Aquí TS ya sabe que 'valor' es de tipo NegocioCombo
         this.filtro.categoria = categoria.id ?? 0;
       }
-
-
     });
 
     //Subcribir los cambios al selecionar negocio
@@ -144,8 +133,10 @@ export class FiltrosCostosComponent {
         this.filtro.bodega = valor.id ?? 0;
       }
     });
+  }
 
-
+  ngOnInit(): void {
+    this.cargarFiltros();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -156,31 +147,71 @@ export class FiltrosCostosComponent {
 
   cargarFiltros() {
     if (!this.obj_filtros) return;
-    console.log("carga filtros")
-    console.log(this.obj_filtros);
-
-    //if (!this.obj_filtros) return;
 
     // 1. Asignación directa de las listas
     this.list_negocios = this.obj_filtros.listnegocio || [];
     this.lista_categorias = this.obj_filtros.listCategorias || [];
     this.list_sucursal = this.obj_filtros.listsucursales || [];
 
-    console.log("carga datos")
-    const objnegocio = this.list_negocios[0]
-   /* if (objnegocio) {
-      this.SelectNegocioControl.setValue(objnegocio);
-    }*/
+    // Si ya habia una consulta previa de este reporte (el usuario cambio de
+    // "Tipo de Informe" y volvio), se restaura tal cual quedo en vez del
+    // default. Ver MonitorcomprasFiltrosStateService para el porque.
+    const guardado = this.filtrosState.costos;
+    if (guardado) {
+      this.restaurarFiltrosGuardados(guardado);
+      return;
+    }
+
     const objsucural = this.list_sucursal[0]
     if (objsucural) {
       this.SelectSucursalControl.setValue(objsucural);
       this.list_bodegas = objsucural.list_bodegas || [];
-
     }
+  }
+
+  // Reaplica una seleccion de filtros guardada, respetando el mismo orden de
+  // dependencias que el usuario seguiria a mano: primero Sucursal (dispara la
+  // carga de Bodegas), despues Categoria (dispara la carga de SubCategorias),
+  // y recien ahi Bodega/SubCategoria. Si algo guardado ya no existe en las
+  // listas actuales, cae a "TODOS" en vez de fallar.
+  private restaurarFiltrosGuardados(guardado: FiltroReporteState<FiltroCostosValores>) {
+    const sucursal = this.list_sucursal.find(s => s.id === guardado.sucursalId) ?? this.list_sucursal[0];
+    if (sucursal) {
+      this.SelectSucursalControl.setValue(sucursal);
+    }
+
+    const bodega = guardado.filtro.bodega === 'TODOS'
+      ? 'TODOS'
+      : this.list_bodegas.find(b => b.id === guardado.filtro.bodega) ?? 'TODOS';
+    this.SelectBodegasControl.setValue(bodega);
+
+    const negocio = guardado.filtro.negocio === 'TODOS'
+      ? 'TODOS'
+      : this.list_negocios.find(n => n.idNegocio === guardado.filtro.negocio) ?? 'TODOS';
+    this.SelectNegocioControl.setValue(negocio);
+
+    const categoria = guardado.filtro.categoria === 'TODOS'
+      ? 'TODOS'
+      : this.lista_categorias.find(c => c.id === guardado.filtro.categoria) ?? 'TODOS';
+    this.SelectCategoriaControl.setValue(categoria);
+
+    if (categoria !== 'TODOS' && guardado.filtro.subcategoria !== 'TODOS') {
+      const subcategoria = this.lista_Subcategorias.find(s => s.id === guardado.filtro.subcategoria) ?? 'TODOS';
+      this.SelectSubCategoriaControl.setValue(subcategoria);
+    }
+
+    this.filtro.soloAlzas = guardado.filtro.soloAlzas;
+    this.articulosSeleccionados = guardado.articulosSeleccionados;
+    this.filtro.articulos = this.articulosSeleccionados.map(a => a.idArticulo!);
   }
 
   enviarConsulta() {
     this.alConsultar.emit(this.filtro);
+    this.filtrosState.costos = {
+      sucursalId: this.SelectSucursalControl.value?.id ?? null,
+      filtro: { ...this.filtro },
+      articulosSeleccionados: this.articulosSeleccionados
+    };
   }
 
   agregarArticulo(articulo: ArticuloSearch) {
@@ -201,4 +232,3 @@ export class FiltrosCostosComponent {
   }
 
 }
-

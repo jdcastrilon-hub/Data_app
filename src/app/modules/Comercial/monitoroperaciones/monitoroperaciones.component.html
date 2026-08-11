@@ -8,6 +8,7 @@
         <mat-label>Tipo de Informe</mat-label>
         <mat-select [(value)]="reporteSeleccionado" (selectionChange)="reporteSeleccionado = $event.value">
           <mat-option value="ventas">🧾 Ventas Realizadas</mat-option>
+          <mat-option value="precios">🏷️ Precios</mat-option>
         </mat-select>
       </mat-form-field>
     </mat-card-header>
@@ -24,6 +25,11 @@
       <filtrosventas [obj_filtros]="obj_filtros" (alConsultar)="ReporteVentas($event)"></filtrosventas>
       <vistaventasrealizadas [datos]="lista_ventasrealizadas" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
         [filtrosActuales]="filtrosActuales" (paginacion)="PaginacionReporteVentas($event)"></vistaventasrealizadas>
+      }
+      @if (reporteSeleccionado==='precios') {
+      <filtros-precios [obj_filtros]="obj_filtros" (alConsultar)="ReportePrecios($event)"></filtros-precios>
+      <reporteprecios [datos]="lista_precios" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
+        [filtrosActuales]="filtrosActuales" (paginacion)="PaginacionReportePrecios($event)"></reporteprecios>
       }
 
     </mat-card-content>

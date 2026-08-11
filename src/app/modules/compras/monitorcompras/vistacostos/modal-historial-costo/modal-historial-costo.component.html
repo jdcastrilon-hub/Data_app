@@ -1,8 +1,13 @@
 <h2 mat-dialog-title class="dialog-header">
-  <mat-icon>history</mat-icon> Historial de Ajustes — {{ data.codArticulo }} - {{ data.nomArticulo }}
+  <mat-icon>history</mat-icon> Kardex de Costos — {{ data.codArticulo }} - {{ data.nomArticulo }}
 </h2>
 
 <mat-dialog-content class="mat-typography">
+
+  <p class="nota-formula">
+    El Costo Promedio se recalcula solo en las entradas, ponderando el stock existente con el costo del movimiento nuevo. En salidas (ventas, devoluciones) el promedio no cambia.
+    <span class="formula">Costo Promedio = (Stock Actual × Costo Anterior + Cantidad × Costo Movimiento) / (Stock Actual + Cantidad)</span>
+  </p>
 
   @if (cargando) {
   <div fxLayout="row" fxLayoutAlign="center center" class="cargando-container">
@@ -11,51 +16,73 @@
   }
 
   @if (!cargando) {
-  <table mat-table [dataSource]="ajustes" class="mat-elevation-z1">
-    <ng-container matColumnDef="fecha">
-      <th mat-header-cell *matHeaderCellDef>Fecha</th>
-      <td mat-cell *matCellDef="let a">{{ a.fecha | date:'dd/MM/yyyy' }}</td>
-    </ng-container>
+  <div class="table-scroll-container">
+    <table mat-table [dataSource]="movimientos" class="mat-elevation-z1">
+      <ng-container matColumnDef="fecha">
+        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+        <td mat-cell *matCellDef="let m">{{ m.fec_doc | date:'dd/MM/yyyy' }}</td>
+      </ng-container>
 
-    <ng-container matColumnDef="costoActual">
-      <th mat-header-cell *matHeaderCellDef>Costo Actual</th>
-      <td mat-cell *matCellDef="let a">{{ a.costo_actual | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
-    </ng-container>
+      <ng-container matColumnDef="documento">
+        <th mat-header-cell *matHeaderCellDef>Documento</th>
+        <td mat-cell *matCellDef="let m">{{ m.documento }} #{{ m.nro_docum }}</td>
+      </ng-container>
 
-    <ng-container matColumnDef="costoNuevo">
-      <th mat-header-cell *matHeaderCellDef>Costo Nuevo</th>
-      <td mat-cell *matCellDef="let a">{{ a.costo_nuevo | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
-    </ng-container>
+      <ng-container matColumnDef="origen">
+        <th mat-header-cell *matHeaderCellDef>Origen</th>
+        <td mat-cell *matCellDef="let m">{{ m.vista }}</td>
+      </ng-container>
 
-    <ng-container matColumnDef="variacion">
-      <th mat-header-cell *matHeaderCellDef>Variación</th>
-      <td mat-cell *matCellDef="let a">
-        @if (variacion(a) !== null) {
-        <span [class.variacion-positiva]="variacion(a)! > 0" [class.variacion-negativa]="variacion(a)! < 0">
-          {{ variacion(a) | number:'1.0-2' }}%
-        </span>
-        } @else {
-        -
-        }
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="cantidad">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Cantidad</th>
+        <td mat-cell *matCellDef="let m" class="text-right">{{ m.cantidad }}</td>
+      </ng-container>
 
-    <ng-container matColumnDef="observaciones">
-      <th mat-header-cell *matHeaderCellDef>Observación</th>
-      <td mat-cell *matCellDef="let a">{{ a.observaciones || '-' }}</td>
-    </ng-container>
+      <ng-container matColumnDef="stockAnterior">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Stock Anterior</th>
+        <td mat-cell *matCellDef="let m" class="text-right">{{ m.stock_anterior }}</td>
+      </ng-container>
 
-    <ng-container matColumnDef="usuario">
-      <th mat-header-cell *matHeaderCellDef>Usuario</th>
-      <td mat-cell *matCellDef="let a">{{ a.usuario || '-' }}</td>
-    </ng-container>
+      <ng-container matColumnDef="costoAnterior">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Costo Anterior</th>
+        <td mat-cell *matCellDef="let m" class="text-right">{{ m.costo_anterior | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+      </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="columnasHistorial"></tr>
-    <tr mat-row *matRowDef="let row; columns: columnasHistorial;"></tr>
-  </table>
+      <ng-container matColumnDef="costoMovimiento">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Costo Movimiento</th>
+        <td mat-cell *matCellDef="let m" class="text-right">{{ m.costo_movimiento | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+      </ng-container>
 
-  @if (ajustes.length === 0) {
-  <p>Este artículo no tiene ajustes de costo registrados en esta bodega.</p>
+      <ng-container matColumnDef="costoPromedio">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Costo Promedio</th>
+        <td mat-cell *matCellDef="let m" class="text-right">{{ m.costo_nuevo_promedio | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="variacion">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Variación</th>
+        <td mat-cell *matCellDef="let m" class="text-right">
+          @if (variacion(m) !== null) {
+          <span [class.variacion-positiva]="variacion(m)! > 0" [class.variacion-negativa]="variacion(m)! < 0">
+            {{ variacion(m) | number:'1.0-2' }}%
+          </span>
+          } @else {
+          -
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="usuario">
+        <th mat-header-cell *matHeaderCellDef>Usuario</th>
+        <td mat-cell *matCellDef="let m">{{ m.usuario_mod || '-' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnasHistorial"></tr>
+      <tr mat-row *matRowDef="let row; columns: columnasHistorial;"></tr>
+    </table>
+  </div>
+
+  @if (movimientos.length === 0) {
+  <p>Este artículo no tiene cambios de costo registrados en esta bodega.</p>
   }
   }
 

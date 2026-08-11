@@ -101,9 +101,14 @@ export class RolesComponent {
       if (!confirmado) {
         return;
       }
-      this.service.delete(id).subscribe(() => {
-        this.notificacion.showSuccess('Rol eliminado con exito!');
-        this.cargarRolesPaginados();
+      this.service.delete(id).subscribe({
+        next: () => {
+          this.notificacion.showSuccess('Rol eliminado con exito!');
+          this.cargarRolesPaginados();
+        },
+        error: (err) => {
+          this.notificacion.showError(err.error?.detail || 'No se pudo eliminar el rol.');
+        }
       });
     });
   }

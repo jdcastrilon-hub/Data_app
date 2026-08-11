@@ -4,6 +4,7 @@ import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Rol } from '../../models/core/Rol';
 import { RolView } from '../../interfaces/Core/RolView';
+import { RolCombo } from '../../interfaces/Core/PermisosMatriz';
 import { PageResponse } from '../../models/core/PageResponse';
 import { LoginService } from './login.service';
 
@@ -21,6 +22,13 @@ export class RolService {
   private url: string = `${environment.baseUrl}/core/roles/`;
 
   constructor(private http: HttpClient, private loginService: LoginService) { }
+
+  // Combo liviano (sin superadmin) para el picker de rol dentro del
+  // formulario de Usuario.
+  listCombo(): Observable<RolCombo[]> {
+    const params = new HttpParams().set('id_emp', String(this.loginService.getIdEmpresaActual()));
+    return this.http.get<RolCombo[]>(this.url + "listCombo", { params });
+  }
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<RolView>> {
     let params = new HttpParams()

@@ -6,7 +6,7 @@ export class MotivosAjuste {
     codMotivo!: string;
     nomMotivo!: string;
     signo!: number;
-    activo!: string;
+    activo!: boolean;
     ctaInventario!: string;
     fechaMod!: Date;
     logs!: Auditoria[];

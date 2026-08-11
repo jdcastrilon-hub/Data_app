@@ -3,7 +3,7 @@
     <div fxLayout="row" fxLayoutAlign="start stretch" fxLayoutGap="16px" class="filtros">
         <div fxFlex="30">
             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                <mat-label>Rol</mat-label>
+                <mat-label>Seleccione Rol</mat-label>
                 <mat-select [formControl]="rolControl">
                     @for (rol of list_roles; track rol.idRol) {
                     <mat-option [value]="rol.idRol">{{rol.nombre}}</mat-option>
@@ -13,7 +13,7 @@
         </div>
         <div fxFlex="30">
             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                <mat-label>Módulo</mat-label>
+                <mat-label>Seleccione Módulo</mat-label>
                 <mat-select [formControl]="moduloControl">
                     @for (modulo of list_modulos; track modulo.idModulo) {
                     <mat-option [value]="modulo.idModulo">{{modulo.nombre}}</mat-option>

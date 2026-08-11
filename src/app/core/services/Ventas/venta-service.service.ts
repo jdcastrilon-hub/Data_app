@@ -48,6 +48,18 @@ export class VentaServiceService {
     return this.http.get<Ventas>(this.url + "search", { params });
   }
 
+  // Recalcula stock+precio de varias lineas en una sola llamada - usado cuando
+  // el usuario cambia bodega/estado/lista de precios con lineas ya cargadas.
+  actualizarStockPrecios(cadena: string, idBodega: number, idEstado: number, idLista: number): Observable<any> {
+    const params = new HttpParams()
+      .set('cadena', cadena)
+      .set('id_bodega', idBodega)
+      .set('id_estado', idEstado)
+      .set('id_lista', idLista);
+
+    return this.http.get<any>(this.url + "stock-precio-masivo", { params });
+  }
+
   //Guardar venta directa
   save(objecto: any): Observable<any> {
     return this.http.post<ApiResponse>(this.url + "save", objecto).pipe(

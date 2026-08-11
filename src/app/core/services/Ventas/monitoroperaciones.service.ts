@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MonitorOperacionesFiltros } from '../../interfaces/Comercial/MonitorOperacionesFiltros';
 import { MonitorVentasvista1 } from '../../interfaces/Comercial/MonitorVentasvista1';
+import { MonitorVentaReportePrecios } from '../../interfaces/Comercial/MonitorVentaReportePrecios';
+import { PrecioHistorialLinea } from '../../interfaces/Comercial/PrecioHistorialLinea';
 import { LoginService } from '../core/login.service';
 
 @Injectable({
@@ -65,6 +67,53 @@ export class MonitoroperacionesService {
     params = params.set('size', size);
 
     return this.http.get<MonitorVentasvista1>(this.url + "ventasrealizadas", { params });
+  }
+
+  private construirParamsPrecios(filtros: any): HttpParams {
+    let params = new HttpParams()
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()));
+
+    const valorLista = filtros.lista === 'TODOS' || !filtros.lista ? 0 : filtros.lista;
+    params = params.set('lista', valorLista.toString());
+
+    const valorNegocio = filtros.negocio === 'TODOS' || !filtros.negocio ? 0 : filtros.negocio;
+    params = params.set('negocio', valorNegocio.toString());
+
+    const valorCategoria = filtros.categoria === 'TODOS' || !filtros.categoria ? 0 : filtros.categoria;
+    params = params.set('categoria', valorCategoria.toString());
+
+    const valorSubcategoria = filtros.subcategoria === 'TODOS' || !filtros.subcategoria ? 0 : filtros.subcategoria;
+    params = params.set('subcategoria', valorSubcategoria.toString());
+
+    if (filtros.articulos && filtros.articulos.length) {
+      filtros.articulos.forEach((idArticulo: number) => {
+        params = params.append('articulos', idArticulo.toString());
+      });
+    }
+
+    return params;
+  }
+
+  reporteprecios(page: number, size: number, filtros: any): Observable<MonitorVentaReportePrecios> {
+    let params = this.construirParamsPrecios(filtros);
+    params = params.set('page', page);
+    params = params.set('size', size);
+
+    return this.http.get<MonitorVentaReportePrecios>(this.url + "precios", { params });
+  }
+
+  exportarPrecios(filtros: any): Observable<Blob> {
+    const params = this.construirParamsPrecios(filtros);
+    return this.http.get(this.url + "precios/export", { params, responseType: 'blob' });
+  }
+
+  precioHistorial(idArticulo: number, idLista: number): Observable<PrecioHistorialLinea[]> {
+    const params = new HttpParams()
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()))
+      .set('id_articulo', idArticulo.toString())
+      .set('id_lista', idLista.toString());
+
+    return this.http.get<PrecioHistorialLinea[]>(this.url + "precios/historial", { params });
   }
 
   private formatDate(date: any): string {

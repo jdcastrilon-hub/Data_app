@@ -58,7 +58,7 @@ export class FormMotivoDevolucionComponent {
       idMotivo: [this.objeto.idMotivo],
       // No se selecciona: siempre es la empresa de la sesion actual.
       idEmp: [this.objeto.idEmp],
-      codMotivo: [this.objeto.codMotivo, Validators.required],
+      codMotivo: [this.objeto.codMotivo],
       nomMotivo: [this.objeto.nomMotivo, Validators.required],
       activo: [this.objeto.activo],
       fechaMod: [this.objeto.fechaMod],

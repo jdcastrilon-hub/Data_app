@@ -61,7 +61,7 @@ export class FormEstadoComponent {
       // La empresa no se selecciona: siempre es la de la sesion actual
       // (LoginService.getIdEmpresaActual()), asignada al enviar el formulario.
       idEmpresa: [this.objeto.idEmpresa],
-      codEstado: [this.objeto.codEstado, Validators.required],
+      codEstado: [this.objeto.codEstado],
       nomEstado: [this.objeto.nomEstado, Validators.required],
       activo: [this.objeto.activo],
       observacion: [this.objeto.observacion, Validators.required],

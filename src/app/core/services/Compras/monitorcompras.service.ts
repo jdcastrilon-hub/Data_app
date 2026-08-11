@@ -8,6 +8,7 @@ import { MonitorComprasFiltros } from '../../interfaces/Compras/MonitorComprasFi
 import { MonitorCompraReporteCostos } from '../../interfaces/Compras/MonitorCompraReporteCostos';
 import { DetalleCompraLinea } from '../../interfaces/Compras/DetalleCompraLinea';
 import { DevolucionCompraLinea } from '../../interfaces/Compras/DevolucionCompraLinea';
+import { CostoKardexLinea } from '../../interfaces/Compras/CostoKardexLinea';
 
 @Injectable({
   providedIn: 'root'
@@ -117,6 +118,17 @@ export class MonitorcomprasService {
   devolucionesCompra(nroTrans: number): Observable<DevolucionCompraLinea[]> {
     const params = new HttpParams().set('nro_trans', nroTrans.toString());
     return this.http.get<DevolucionCompraLinea[]>(this.url + "comprasrealizadas/devoluciones", { params });
+  }
+
+  // Kardex de costos: lee s_costovariacion, ya pre-filtrada a solo cambios
+  // reales de costo (compras, ajustes directos, cargastock) - sin filtro de
+  // fechas, trae todo el historial de una vez.
+  costoKardex(idArticulo: number, idBodega: number): Observable<CostoKardexLinea[]> {
+    const params = new HttpParams()
+      .set('id_articulo', idArticulo.toString())
+      .set('id_bodega', idBodega.toString());
+
+    return this.http.get<CostoKardexLinea[]>(this.url + "costos/kardex", { params });
   }
 
   private formatDate(date: any): string {

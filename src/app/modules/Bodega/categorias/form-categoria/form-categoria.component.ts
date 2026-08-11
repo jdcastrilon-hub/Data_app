@@ -63,7 +63,7 @@ export class FormCategoriaComponent {
 
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({
-      codCategoria: [this.objeto.codCategoria, Validators.required],
+      codCategoria: [this.objeto.codCategoria],
       nomCategoria: [this.objeto.nomCategoria, Validators.required],
       // No se selecciona: siempre es la empresa de la sesion actual.
       idEmpresa: [this.objeto.idEmpresa],

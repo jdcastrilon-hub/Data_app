@@ -4,4 +4,5 @@ export class RolView {
     nombre!: string;
     activo!: boolean;
     fechaMod!: Date;
+    esProtegido!: boolean;
 }

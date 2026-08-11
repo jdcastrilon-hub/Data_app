@@ -2,6 +2,6 @@ export class MotivoAjusteView{
     id!: number;
     motivo!: string;
     nombreMotivo!: string;
-    activo!: string;
+    activo!: boolean;
     fechaMod!: Date;
 }

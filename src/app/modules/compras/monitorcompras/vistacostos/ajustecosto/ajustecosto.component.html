@@ -48,6 +48,13 @@
         </mat-form-field>
       </div>
 
+      @if (formulario.hasError('costoIgual') && formulario.get('impCostoNuevo')?.touched) {
+      <p class="error-costo-igual">
+        <mat-icon>error_outline</mat-icon>
+        El costo nuevo debe ser diferente al costo actual (mayor o menor).
+      </p>
+      }
+
     </div>
   </mat-dialog-content>
 

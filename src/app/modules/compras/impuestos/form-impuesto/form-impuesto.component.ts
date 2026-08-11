@@ -7,7 +7,6 @@ import { Impuesto } from '../../../../core/models/Impuestos/Impuesto';
 import { Auditoria } from '../../../../core/models/core/Auditoria';
 import { TasaImpuestoService } from '../../../../core/services/impuestos/tasa-impuesto.service';
 import { TipoImpuestoCombo } from '../../../../core/interfaces/Impuestos/TipoImpuestoCombo';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
@@ -16,7 +15,7 @@ import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-di
 
 @Component({
   selector: 'form-impuesto',
-  imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule, RouterModule, MatCheckboxModule],
+  imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule, RouterModule],
   templateUrl: './form-impuesto.component.html',
   styleUrl: './form-impuesto.component.scss'
 })
@@ -63,27 +62,35 @@ export class FormImpuestoComponent {
       // No se selecciona: siempre es la empresa de la sesion actual.
       idEmp: [this.objeto.idEmp],
       idTipo: [this.objeto.idTipo, Validators.required],
-      tasaImpuesto: [this.objeto.tasaImpuesto, Validators.required],
+      tasaImpuesto: [this.objeto.tasaImpuesto],
+      // Bloqueado: se arma solo concatenando Tipo + Porcentaje (ver actualizarNombreTasa()).
       nombreTasa: [this.objeto.nombreTasa, Validators.required],
-      exenta: [this.objeto.exenta],
-      porcentaje: [this.objeto.porcentaje, Validators.required],
-      impMinimo: [this.objeto.impMinimo],
-      cuentaVenta: [this.objeto.cuentaVenta, Validators.required],
-      cuentaCompra: [this.objeto.cuentaCompra, Validators.required],
+      // Sin campo en el formulario - siempre graba 'N' (no exenta). Mismo
+      // criterio que impMinimo/cuentaVenta/cuentaCompra: valor fijo por defecto.
+      exenta: ['N'],
+      porcentaje: [this.objeto.porcentaje, [Validators.required, Validators.min(0), Validators.max(100)]],
+      // Sin campos en el formulario (todavia no hay modulo contable) - valores
+      // fijos por defecto, mismo criterio que ctaInventario en Motivos de Ajuste.
+      impMinimo: [0],
+      cuentaVenta: ['0'],
+      cuentaCompra: ['0'],
       fechaMod: [this.objeto.fechaMod],
       logs: this.fb.array([]),
     });
 
     // No se usa formulario.disable(): los inputs de texto usan [readonly] en la
-    // plantilla. El checkbox y el select son la excepcion: no tienen un
-    // "readonly" real, asi que esos controles si se deshabilitan.
+    // plantilla. El select es la excepcion: no tiene un "readonly" real, asi
+    // que ese control si se deshabilita.
     this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
     if (this.isReadOnly) {
-      this.formulario.get('exenta')?.disable();
       this.formulario.get('idTipo')?.disable();
     }
 
     this.cargarTiposImpuesto();
+
+    // Nombre/Descripcion se recalcula solo, ante cualquier cambio de Tipo o Porcentaje.
+    this.formulario.get('idTipo')?.valueChanges.subscribe(() => this.actualizarNombreTasa());
+    this.formulario.get('porcentaje')?.valueChanges.subscribe(() => this.actualizarNombreTasa());
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -100,17 +107,35 @@ export class FormImpuestoComponent {
         this.isEditMode = false;
         this.titulo_form = "REGISTRO DE IMPUESTO";
         this.objeto = new Impuesto();
-        this.formulario.get('exenta')?.patchValue(false);
-        this.formulario.get('impMinimo')?.patchValue(0);
       }
     });
   }
 
   cargarTiposImpuesto(): void {
     this.impuestoService.listTiposImpuesto().subscribe({
-      next: (data) => { this.list_tipos = data; },
+      next: (data) => {
+        this.list_tipos = data;
+        // Si ya habia un idTipo cargado (edicion) antes de que el combo terminara
+        // de llegar, recalcula ahora que ya se puede resolver el nombre del tipo.
+        this.actualizarNombreTasa();
+      },
       error: (err) => console.error('Error cargando tipos de impuesto', err)
     });
+  }
+
+  // Arma "Nombre / Descripcion" solo, concatenando el tipo seleccionado + el
+  // porcentaje (ej. "IVA" + 19 -> "IVA 19%"). El campo queda bloqueado en la
+  // plantilla: el usuario nunca lo escribe a mano.
+  actualizarNombreTasa(): void {
+    const idTipo = this.formulario.get('idTipo')?.value;
+    const porcentaje = this.formulario.get('porcentaje')?.value;
+    const tipo = this.list_tipos.find(t => t.id === idTipo);
+
+    if (!tipo || porcentaje === null || porcentaje === undefined || porcentaje === '') {
+      return;
+    }
+
+    this.formulario.get('nombreTasa')?.setValue(`${tipo.nombreTipo} ${porcentaje}%`, { emitEvent: false });
   }
 
   /**
@@ -126,12 +151,14 @@ export class FormImpuestoComponent {
           idTipo: data.idTipo,
           tasaImpuesto: data.tasaImpuesto,
           nombreTasa: data.nombreTasa,
-          exenta: data.exenta === 'S',
           porcentaje: data.porcentaje,
-          impMinimo: data.impMinimo,
-          cuentaVenta: data.cuentaVenta,
-          cuentaCompra: data.cuentaCompra
+          // exenta/impMinimo/cuentaVenta/cuentaCompra no se cargan del registro
+          // existente: quedan siempre en su valor fijo por defecto (ver ngOnInit).
         });
+        // Refuerzo explicito: patchValue ya dispara la suscripcion de idTipo/porcentaje,
+        // pero si el combo de tipos (cargarTiposImpuesto) todavia no habia llegado en
+        // ese momento, list_tipos estaria vacio y no se podria resolver el nombre.
+        this.actualizarNombreTasa();
         this.cargarLogsExistentes(data.logs);
       },
       error => {
@@ -174,12 +201,9 @@ export class FormImpuestoComponent {
 
   enviarFormulario() {
     //Asignacion de campos en cabezal
-    const esExenta = this.formulario.get('exenta')?.value;
-
     this.formulario.patchValue({
       idEmp: this.loginService.getIdEmpresaActual(),
       fechaMod: new Date().toISOString(),
-      exenta: esExenta ? 'S' : 'N',
     });
 
     if (this.formulario.invalid) {
@@ -224,9 +248,7 @@ export class FormImpuestoComponent {
   // Limpia el formulario y el FormGroup para dejarlo listo para un nuevo registro
   resetCampos(): void {
     this.objeto = new Impuesto();
-    this.formDirective.resetForm(); // limpia valores + estado submitted/touched
-    this.formulario.get('exenta')?.patchValue(false);
-    this.formulario.get('impMinimo')?.patchValue(0);
+    this.formDirective.resetForm(); // limpia valores + estado submitted/touched (incluye exenta/impMinimo/cuentaVenta/cuentaCompra, que vuelven a su default fijo)
 
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.clear();

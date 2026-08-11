@@ -1,0 +1,79 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon>history</mat-icon> Historial de Precios — {{ data.codArticulo }} - {{ data.nomArticulo }}
+</h2>
+
+<mat-dialog-content class="mat-typography">
+
+  @if (cargando) {
+  <div fxLayout="row" fxLayoutAlign="center center" class="cargando-container">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+  }
+
+  @if (!cargando) {
+  <div class="table-scroll-container">
+    <table mat-table [dataSource]="movimientos" class="mat-elevation-z1">
+      <ng-container matColumnDef="fecha">
+        <th mat-header-cell *matHeaderCellDef>Fecha</th>
+        <td mat-cell *matCellDef="let m">{{ m.fechaMod | date:'dd/MM/yyyy HH:mm' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="documento">
+        <th mat-header-cell *matHeaderCellDef>Documento</th>
+        <td mat-cell *matCellDef="let m">
+          @if (m.documento) { {{ m.documento }} #{{ m.nroDocum }} } @else { - }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="origen">
+        <th mat-header-cell *matHeaderCellDef>Origen</th>
+        <td mat-cell *matCellDef="let m">{{ m.origen }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="precioAnterior">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Precio Anterior</th>
+        <td mat-cell *matCellDef="let m" class="text-right">
+          @if (m.precioAnterior !== null && m.precioAnterior !== undefined) {
+          {{ m.precioAnterior | currency:'COP':'symbol-narrow':'1.2-2' }}
+          } @else { - }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="precioNuevo">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Precio Nuevo</th>
+        <td mat-cell *matCellDef="let m" class="text-right">{{ m.precioNuevo | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="variacion">
+        <th mat-header-cell *matHeaderCellDef class="text-right">Variación</th>
+        <td mat-cell *matCellDef="let m" class="text-right">
+          @if (variacion(m) !== null) {
+          <span [class.variacion-positiva]="variacion(m)! > 0" [class.variacion-negativa]="variacion(m)! < 0">
+            {{ variacion(m) | number:'1.0-2' }}%
+          </span>
+          } @else {
+          -
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="usuario">
+        <th mat-header-cell *matHeaderCellDef>Usuario</th>
+        <td mat-cell *matCellDef="let m">{{ m.usuarioMod || '-' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnasHistorial"></tr>
+      <tr mat-row *matRowDef="let row; columns: columnasHistorial;"></tr>
+    </table>
+  </div>
+
+  @if (movimientos.length === 0) {
+  <p>Este artículo no tiene cambios de precio registrados en esta lista.</p>
+  }
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

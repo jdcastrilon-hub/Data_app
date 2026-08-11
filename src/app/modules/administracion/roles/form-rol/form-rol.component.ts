@@ -219,7 +219,7 @@ export class FormRolComponent {
         },
         error: (err) => {
           console.error('Error al editar:', err);
-          this.notificacion.showError(err.error?.message || 'No se pudo editar el rol.');
+          this.notificacion.showError(err.error?.detail || err.error?.message || 'No se pudo editar el rol.');
         }
       });
     } else {
@@ -230,7 +230,7 @@ export class FormRolComponent {
         },
         error: (err) => {
           console.error('Error al guardar:', err);
-          this.notificacion.showError(err.error?.message || 'No se pudo guardar el rol.');
+          this.notificacion.showError(err.error?.detail || err.error?.message || 'No se pudo guardar el rol.');
         }
       });
     }

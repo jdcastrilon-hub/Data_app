@@ -115,8 +115,9 @@ export class FormArticuloComponent {
       stockMax: [this.objeto.stockMax],
       idRef: [this.objeto.idRef, Validators.required],
       idunidad: [this.objeto.idunidad, Validators.required],
-      grupoContable: [this.objeto.grupoContable],
-      cuentaInventario: [this.objeto.cuentaInventario],
+      // Sin campo en el formulario (todavia no hay modulo contable) - valor fijo por defecto.
+      grupoContable: ['SRV'],
+      cuentaInventario: ['0'],
       idImpuesto: [this.objeto.idImpuesto, Validators.required],
       fechaMod: [this.objeto.fechaMod],
       codigosBarra: this.fb.array([]),
@@ -225,8 +226,8 @@ export class FormArticuloComponent {
         this.formulario.get('idImpuesto')?.patchValue(data.idImpuesto);
         this.formulario.get('activoStock')?.patchValue(data.activoStock);
         this.formulario.get('manejaLote')?.patchValue(data.manejaLote);
-        this.formulario.get('grupoContable')?.patchValue(data.grupoContable);
-        this.formulario.get('cuentaInventario')?.patchValue(data.cuentaInventario);
+        // grupoContable/cuentaInventario ya no se cargan desde el registro existente:
+        // quedan siempre en su valor por defecto ('SRV'/'0') hasta que exista modulo contable.
         this.cargarLogsExistentes(data.logs);
 
         //Cargas

@@ -37,14 +37,15 @@
                                 }
                             </mat-form-field>
                         </div>
+                        @if (isEditMode) {
                         <div fxFlex="30" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Codigo Bodega</mat-label>
-                                <input matInput formControlName="codBodega" [readonly]="isReadOnly">
-                                <mat-error>Codigo requerido</mat-error>
+                                <input matInput formControlName="codBodega" readonly>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="40" fxFlex.lt-md="100%">
+                        }
+                        <div [fxFlex]="isEditMode ? 40 : 70" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Nombre Bodega</mat-label>
                                 <input matInput formControlName="nomBodega" [readonly]="isReadOnly">

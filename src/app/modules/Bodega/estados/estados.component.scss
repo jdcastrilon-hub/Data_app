@@ -8,6 +8,25 @@
 
 }
 
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+
+  &.inactive {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+  }
+}
+
 .table-scroll-container {
     /* 1. Define la altura máxima. Usa 'vh' (altura de la ventana visible) o 'px'. */
     max-height: 700px;

@@ -11,6 +11,10 @@ import { MotivosDevolucionService } from '../../../core/services/Compras/motivos
 import { MotivoDevolucionListStateService } from '../../../core/services/Compras/motivo-devolucion-list-state.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { ConfirmDialogComponent } from 'src/app/modules/resources/confirm-dialog/confirm-dialog.component';
+import { PermisosStateService } from 'src/app/core/services/core/permisos-state.service';
+
+// Codigo del formulario en md_menu (matriz de permisos)
+const MENU_CODIGO = 'COM_MOV';
 
 @Component({
   selector: 'motivos-devolucion',
@@ -35,15 +39,28 @@ export class MotivosDevolucionComponent {
   pageSize: number = 10;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
+  // Segun los permisos del rol actual sobre este formulario (COM_MOV) - se
+  // esconden los botones que igual rebotarian con 403 en el backend.
+  puedeCrear = false;
+  puedeEditar = false;
+  puedeEliminar = false;
+
   constructor(
     private service: MotivosDevolucionService,
     private notificacion: NotificacionesService,
     private router: Router,
     private listState: MotivoDevolucionListStateService,
+    private permisosState: PermisosStateService,
     private dialog: MatDialog
   ) { }
 
   ngOnInit() {
+    this.permisosState.cargar().subscribe(() => {
+      this.puedeCrear = this.permisosState.tienePermiso(MENU_CODIGO, 'CREAR');
+      this.puedeEditar = this.permisosState.tienePermiso(MENU_CODIGO, 'EDITAR');
+      this.puedeEliminar = this.permisosState.tienePermiso(MENU_CODIGO, 'ELIMINAR');
+    });
+
     // Restaura el filtro/pagina donde haya quedado la ultima vez.
     this.buscadorControl.setValue(this.listState.texto, { emitEvent: false });
     this.paginaActual = this.listState.page;

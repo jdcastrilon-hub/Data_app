@@ -18,6 +18,10 @@ import { PersonaComponent, PersonaResumen } from 'src/app/modules/Comercial/reso
 import { PersonaService } from 'src/app/core/services/Compras/persona.service';
 import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { RolService } from 'src/app/core/services/core/rol.service';
+import { SucursalServiceService } from 'src/app/core/services/General/sucursal-service.service';
+import { RolCombo } from 'src/app/core/interfaces/Core/PermisosMatriz';
+import { Sucursal } from 'src/app/core/models/General/Sucursal';
 
 // Estados posibles del sub-formulario de persona dentro del usuario (mismo patron que proveedores):
 // - pendiente: aun no se decide si es una persona nueva o existente (bloqueado)
@@ -44,11 +48,18 @@ export class FormUsuarioComponent {
   // Mientras no se busque/elija una persona, el sub-formulario de persona permanece bloqueado
   estadoPersona: EstadoPersona = 'pendiente';
 
+  // Pickers de rol/sucursal - aprovecha el alta/edicion del usuario para
+  // asignarlo de una vez, en vez de ir a Roles/Sucursales por separado despues.
+  list_roles: RolCombo[] = [];
+  list_sucursales: Sucursal[] = [];
+
   @ViewChild('formDirective') formDirective!: NgForm;
 
   constructor(private fb: FormBuilder,
     private usuarioService: UsuariosService,
     private personaService: PersonaService,
+    private rolService: RolService,
+    private sucursalService: SucursalServiceService,
     private logAuditoria: AuditoriaService,
     private route: ActivatedRoute,
     private notificacion: NotificacionesService,
@@ -84,13 +95,20 @@ export class FormUsuarioComponent {
       searchPersona: [persona_filtro],
       fechaMod: this.objeto.fechaMod,
       logs: this.fb.array([]),
+      idRol: [null, Validators.required],
+      sucursales: [[], Validators.required],
     });
 
+    this.rolService.listCombo().subscribe(data => this.list_roles = data);
+    this.sucursalService.listCombo().subscribe(data => this.list_sucursales = data);
+
     // No se usa formulario.disable(): los inputs usan [readonly] en la plantilla.
-    // El checkbox es la excepción: HTML no tiene un "readonly" real, se deshabilita.
+    // El checkbox/mat-select son la excepción: no tienen un "readonly" real, se deshabilitan.
     this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
     if (this.isReadOnly) {
       this.formulario.get('activo')?.disable();
+      this.formulario.get('idRol')?.disable();
+      this.formulario.get('sucursales')?.disable();
     }
 
     //Validacion si es modo edicion o nuevo
@@ -130,6 +148,8 @@ export class FormUsuarioComponent {
           usuario: data.usuario,
           nomUsuario: data.nomUsuario,
           activo: data.activo,
+          idRol: data.idRol ?? null,
+          sucursales: data.sucursales ?? [],
         });
 
         // La persona ya esta ligada al usuario: queda bloqueada, igual que al

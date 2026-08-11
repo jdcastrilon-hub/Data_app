@@ -12,7 +12,6 @@ import { ArticuloSearch } from '../../../../core/models/Bodega/ArticuloSearch';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MotivosAjusteService } from '../../../../core/services/Bodega/motivos-ajuste.service'
 import { StockDisponible } from '../../../../core/models/Bodega/StockDisponible';
-import { AjusteStockDetalle } from '../../../../core/models/Bodega/AjusteStockDetalle';
 import { Auditoria } from '../../../../core/models/core/Auditoria';
 import { ArticuloAutocompletComponent } from '../../../resources/articulo-autocomplet/articulo-autocomplet.component';
 import { ComboBodegaComponent } from '../../../resources/combo-bodega/combo-bodega.component';

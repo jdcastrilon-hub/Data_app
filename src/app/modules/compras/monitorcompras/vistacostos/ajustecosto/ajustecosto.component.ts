@@ -1,6 +1,6 @@
 import { Component, ElementRef, Inject, ViewChild } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MonitorCompraReporteCostosDetalle } from 'src/app/core/interfaces/Compras/MonitorCompraReporteCostosDetalle';
@@ -73,7 +73,7 @@ export class AjustecostoComponent {
       nomBodega: this.data.objecto_modal.bodega,
       impCostoActual: this.data.objecto_modal.costo,
       impCostoActualFormateado: costoFormateado,
-      impCostoNuevo: this.objeto.impCostoNuevo,
+      impCostoNuevo: [this.objeto.impCostoNuevo, Validators.required],
       idArticulo: this.data.objecto_modal.idarticulo,
       nomArticulo: `${this.data.objecto_modal.codarticulo} - ${this.data.objecto_modal.nomarticulo}`,
       documento: this.objeto.documento,
@@ -81,8 +81,22 @@ export class AjustecostoComponent {
       vista: this.objeto.vista,
       fechaMod: this.objeto.fechaMod,
       logs: this.fb.array([]),
-    });
+    }, { validators: this.costoDebeSerDiferenteValidator });
 
+  }
+
+  // Un ajuste de costo existe para corregir el costo a un valor DISTINTO
+  // (mayor o menor) - no tiene sentido "ajustar" al mismo costo que ya tiene.
+  private costoDebeSerDiferenteValidator(group: AbstractControl): ValidationErrors | null {
+    const actual = Number(group.get('impCostoActual')?.value);
+    const nuevo = group.get('impCostoNuevo')?.value;
+    if (nuevo === null || nuevo === undefined || nuevo === '') {
+      return null; // el required de impCostoNuevo ya cubre este caso
+    }
+    if (Number(nuevo) === actual) {
+      return { costoIgual: true };
+    }
+    return null;
   }
 
   // Método para agregar el log al FormArray

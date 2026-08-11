@@ -56,18 +56,35 @@ export class PersonaComponent implements OnInit, OnChanges {
   // Avisa al padre cuando cambian los datos que suele necesitar duplicar (ej. proveedor.codigoTitular/razonSocial)
   @Output() personaChange = new EventEmitter<PersonaResumen>();
 
+  // Valores por defecto - static porque crearFormGroup() (factory estatico,
+  // usado por el padre para resetear el sub-formulario al registrar una
+  // persona nueva) tiene que usar EXACTAMENTE los mismos valores que los
+  // combos visuales de abajo. Antes divergian (crearFormGroup ponia
+  // idTipoDoc/idCiudad en null, los combos seguian mostrando CC/Cali) - un
+  // reset dejaba el formulario invalido (null, Validators.required) sin
+  // ninguna señal visible, porque el combo nunca se actualizaba a partir de
+  // null (su sincronizacion solo actua si encuentra una coincidencia real).
+  static readonly DEFAULT_TIPO_DOC = { id: 1, codigoTipoDocumento: 'CC', nombreTipoDocumento: 'CC' };
+  static readonly DEFAULT_SEXO = 'M';
+  // idCiudad=1 es el id real de Cali (cod_ciudad '76001') en m_ciudades -
+  // corregido 2026-08-04: antes decia idCiudad=3, que en la base real es
+  // "Yumbo", no Cali (bug pre-existente, quedaba "corregido" en silencio via
+  // CargaCiudades() una vez cargaba la lista real, pero solo confirmaba el id
+  // equivocado, nunca lo corregia).
+  static readonly DEFAULT_CIUDAD = { idCiudad: 1, codCiudad: '76001', nomCiudad: 'CALI' };
+
   //Tipo Documentos
-  defaultTipoDoc = { id: 1, codigoTipoDocumento: 'CC', nombreTipoDocumento: 'CC' }; //Valor por defecto
+  defaultTipoDoc = PersonaComponent.DEFAULT_TIPO_DOC;
   list_tipos: TipoDocumento[] = [];
   SelecTiposControl = new FormControl<TipoDocumento | null>(this.defaultTipoDoc, Validators.required);
 
   //Tipos de sexo
-  defaultSexo = 'M'; //Valor por defecto
+  defaultSexo = PersonaComponent.DEFAULT_SEXO;
   list_sexos: string[] = ['M', 'F'];
   SelecSexoControl = new FormControl<string | null>(this.defaultSexo, Validators.required);
 
   //Ciudades
-  defaultCiudad = { idCiudad: 3, codCiudad: '76001', nomCiudad: 'CALI' }; //Valor por defecto
+  defaultCiudad = PersonaComponent.DEFAULT_CIUDAD;
   list_ciudades: CiudadCombo[] = [];
   SelecCiudadControl = new FormControl<CiudadCombo | null>(this.defaultCiudad, Validators.required);
 
@@ -81,15 +98,15 @@ export class PersonaComponent implements OnInit, OnChanges {
   static crearFormGroup(data?: Partial<Persona>): FormGroup {
     return new FormGroup({
       idPersona: new FormControl(data?.idPersona ?? 0),
-      idTipoDoc: new FormControl(data?.idTipoDoc ?? null, Validators.required),
+      idTipoDoc: new FormControl(data?.idTipoDoc ?? PersonaComponent.DEFAULT_TIPO_DOC.id, Validators.required),
       codigoTitular: new FormControl(data?.codigoTitular ?? '', Validators.required),
       nombres: new FormControl(data?.nombres ?? '', Validators.required),
       apellidos: new FormControl(data?.apellidos ?? '', Validators.required),
-      sexo: new FormControl(data?.sexo ?? 'M', Validators.required),
+      sexo: new FormControl(data?.sexo ?? PersonaComponent.DEFAULT_SEXO, Validators.required),
       direccion: new FormControl(data?.direccion ?? ''),
       telefono: new FormControl(data?.telefono ?? ''),
       email: new FormControl(data?.email ?? ''),
-      idCiudad: new FormControl(data?.idCiudad ?? null, Validators.required),
+      idCiudad: new FormControl(data?.idCiudad ?? PersonaComponent.DEFAULT_CIUDAD.idCiudad, Validators.required),
       fechaNacimiento: new FormControl(data?.fechaNacimiento ?? null, [Validators.required, mayorDeEdadValidator()]),
       fechaMod: new FormControl(data?.fechaMod ?? null),
       nombreCompleto: new FormControl(data?.nombreCompleto ?? ''),

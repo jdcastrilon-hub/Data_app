@@ -202,27 +202,9 @@
                             </mat-checkbox>
                         </div>
                     </div>
-
-                </div>
-            </mat-tab>
-
-            <mat-tab label="Impuestos">
-                <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
-                        <div fxFlex="30">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Grupo Contable</mat-label>
-                                <input matInput formControlName="grupoContable" [readonly]="isReadOnly">
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="30">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Cuenta Inventario</mat-label>
-                                <input matInput formControlName="cuentaInventario" [readonly]="isReadOnly">
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="30">
+                        <div fxFlex="25">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Tasa Impuesto IVA</mat-label>
                                 <mat-select [formControl]="SelectTasaImpuestoControl" required>
@@ -235,8 +217,8 @@
                                 }
                             </mat-form-field>
                         </div>
-                        <div fxFlex="50"></div>
                     </div>
+
                 </div>
             </mat-tab>
 

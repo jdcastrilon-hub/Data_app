@@ -60,11 +60,12 @@ export class FormMotivoComponent {
       idMotivo: [this.objeto.idMotivo],
       // No se selecciona: siempre es la empresa de la sesion actual.
       idEmp: [this.objeto.idEmp],
-      codMotivo: [this.objeto.codMotivo, Validators.required],
+      codMotivo: [this.objeto.codMotivo],
       nomMotivo: [this.objeto.nomMotivo, Validators.required],
       signo: [this.objeto.signo, Validators.required],
       activo: [this.objeto.activo],
-      ctaInventario: [this.objeto.ctaInventario, Validators.required],
+      // Sin campo en el formulario (todavia no hay modulo contable) - valor fijo por defecto.
+      ctaInventario: ['0'],
       fechaMod: [this.objeto.fechaMod],
       logs: this.fb.array([]),
     });
@@ -112,8 +113,9 @@ export class FormMotivoComponent {
         this.formulario.get('codMotivo')?.patchValue(data.codMotivo);
         this.formulario.get('nomMotivo')?.patchValue(data.nomMotivo);
         this.formulario.get('signo')?.patchValue(data.signo);
-        this.formulario.get('activo')?.patchValue(data.activo === 'S');
-        this.formulario.get('ctaInventario')?.patchValue(data.ctaInventario);
+        this.formulario.get('activo')?.patchValue(data.activo);
+        // ctaInventario ya no se carga desde el registro existente: queda siempre
+        // en su valor por defecto ('0') hasta que exista modulo contable.
         this.cargarLogsExistentes(data.logs);
       },
       error => {
@@ -156,11 +158,8 @@ export class FormMotivoComponent {
 
   enviarFormulario() {
     //Asignacion de campos en cabezal
-    const estadoActivo = this.formulario.get('activo')?.value;
-
     this.formulario.patchValue({
       fechaMod: new Date().toISOString(),
-      activo: estadoActivo ? 'S' : 'N',
     });
 
     if (this.formulario.invalid) {

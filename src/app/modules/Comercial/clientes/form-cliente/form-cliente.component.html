@@ -2,72 +2,87 @@
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
-                <a mat-icon-button color="primary" routerLink="/proveedores">
-                    <mat-icon>list</mat-icon>
-                </a>
-                <span>REGISTRO CLIENTES</span>
+                <div class="titulo-izquierda">
+                    <button mat-icon-button color="primary" type="button" (click)="volver()">
+                        <mat-icon>list</mat-icon>
+                    </button>
+                    <span>{{titulo_form}}</span>
+                </div>
+                @if (isEditMode) {
+                <button mat-icon-button color="primary" type="button" (click)="verHistorialAuditoria()"
+                    title="Ver historial de auditoría">
+                    <mat-icon>info</mat-icon>
+                </button>
+                }
             </mat-card-title>
         </mat-card-header>
         <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
         <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
 
-            <mat-tab label="Datos Generales" style="background-color: brown;">
+            <mat-tab label="Datos Generales">
                 <div class="bloque">
                     <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
                         <div fxFlex="40">
-                         <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="mostrarOpcionCrear"
+                            <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="true"
                                 (personaSelecionado)="onPersonaChange($event)"
-                                (crearNuevo)="ModalcrearNuevaPersona()"></combo-persona> 
-                        </div>
-                        <div fxFlex="60">
-                            <button mat-icon-button color="primary" >
-                                <mat-icon>remove</mat-icon>
-                            </button>
-
+                                (crearNuevo)="habilitarNuevaPersona($event)"></combo-persona>
                         </div>
                     </div>
 
-                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
-                        <div fxFlex="25">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Documento</mat-label>
-                                <input matInput formControlName="codigoTitular">
-                                <mat-error>Codigo requerido</mat-error>
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="30">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Nombre Cliente</mat-label>
-                                <input matInput formControlName="nomCliente">
-                                <mat-error>Codigo requerido</mat-error>
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="30">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Direccion</mat-label>
-                                <input matInput formControlName="direccion">
-                                <mat-error>Codigo requerido</mat-error>
-                            </mat-form-field>
-                        </div>
-                        <div fxFlex="15">
-                            <section class="example-section">
-                                <mat-checkbox formControlName="activo" color="primary">
-                                    Activo
-                                </mat-checkbox>
-                            </section>
-                        </div>
-                    </div>
+                    <app-persona [group]="personaGroup" [disabled]="personaSubformDeshabilitado"
+                        (personaChange)="onPersonaSubformChange($event)"></app-persona>
+                    <br />
 
-                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
-                        <div fxFlex="50">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Observaciones</mat-label>
-                                <input matInput formControlName="observacion">
-                                <mat-error>Codigo requerido</mat-error>
-                            </mat-form-field>
+                    <div class="bloque_interno">
+                        <h4>Datos del cliente</h4>
+                        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                            <div fxFlex="25">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Documento</mat-label>
+                                    <input matInput formControlName="codigoTitular" [readonly]="isReadOnly">
+                                    <mat-error>Codigo requerido</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="30">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Nombre Cliente</mat-label>
+                                    <input matInput formControlName="nomCliente" [readonly]="isReadOnly">
+                                    <mat-error>Nombre requerido</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="30">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Direccion</mat-label>
+                                    <input matInput formControlName="direccion" [readonly]="isReadOnly">
+                                    <mat-error>Direccion requerida</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="15">
+                                <section class="example-section">
+                                    <mat-checkbox formControlName="activo" color="primary">
+                                        Activo
+                                    </mat-checkbox>
+                                </section>
+                            </div>
                         </div>
-                        <div fxFlex="50"></div>
+
+                        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                            <div fxFlex="30">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Mail</mat-label>
+                                    <input matInput type="email" formControlName="mail" [readonly]="isReadOnly">
+                                    <mat-error>Mail requerido</mat-error>
+                                </mat-form-field>
+                            </div>
+                            <div fxFlex="50">
+                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                    <mat-label>Observaciones</mat-label>
+                                    <input matInput formControlName="observacion" [readonly]="isReadOnly">
+                                </mat-form-field>
+                            </div>
+                        </div>
                     </div>
+                    <br />
                 </div>
 
             </mat-tab>
@@ -76,9 +91,9 @@
         <br>
 
         <mat-card-actions class="mat-accion-botones">
-            <button mat-raised-button color="primary" type="submit">Guardar</button>
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
             <br>
-            <button mat-raised-button color="warn" type="button">Salir</button>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly" (click)="volver()">Cancelar</button>
         </mat-card-actions>
 
     </mat-card>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { LoginService } from '../services/core/login.service';
+import { ThemeService } from '../services/core/theme.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
@@ -25,13 +26,14 @@ import { ActivatedRoute, Router } from '@angular/router';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;
   // Controlamos la visualización de la clave con un Signal moderno de Angular
   ocultarClave = signal(true);
 
   constructor(private fb: FormBuilder,
     private loginService: LoginService,
+    private themeService: ThemeService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -39,6 +41,16 @@ export class LoginComponent {
       usuario: ['', [Validators.required]],
       clave: ['', [Validators.required, Validators.minLength(4)]]
     });
+  }
+
+  // El login siempre se ve en tema claro por estetica, sin importar la
+  // preferencia guardada del usuario - se restaura al salir de esta pantalla.
+  ngOnInit(): void {
+    this.themeService.aplicarThemeClaroForzado();
+  }
+
+  ngOnDestroy(): void {
+    this.themeService.aplicarThemeActual();
   }
 
   conmutarVisibilidadClave(event: MouseEvent) {

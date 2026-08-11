@@ -24,14 +24,15 @@
                 <div class="bloque">
                     <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
                         fxLayoutGap="10px">
+                        @if (isEditMode) {
                         <div fxFlex="25" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Codigo Motivo</mat-label>
-                                <input matInput formControlName="codMotivo" [readonly]="isReadOnly">
-                                <mat-error>Codigo requerido</mat-error>
+                                <input matInput formControlName="codMotivo" readonly>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="35" fxFlex.lt-md="100%">
+                        }
+                        <div [fxFlex]="isEditMode ? 35 : 60" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Nombre Motivo</mat-label>
                                 <input matInput formControlName="nomMotivo" [readonly]="isReadOnly">
@@ -40,8 +41,8 @@
                         </div>
                         <div fxFlex="20" fxFlex.lt-md="100%">
                             <mat-radio-group aria-label="Select an option" color="primary" formControlName="signo">
-                                <mat-radio-button value="1">Ingreso</mat-radio-button>
-                                <mat-radio-button value="-1">Salida</mat-radio-button>
+                                <mat-radio-button [value]="1">Ingreso</mat-radio-button>
+                                <mat-radio-button [value]="-1">Salida</mat-radio-button>
                             </mat-radio-group>
                         </div>
                         <div fxFlex="20" fxFlex.lt-md="100%">
@@ -50,17 +51,6 @@
                                     Activo
                                 </mat-checkbox>
                             </section>
-                        </div>
-                    </div>
-
-                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
-                        fxLayoutGap="10px">
-                        <div fxFlex="30" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Cuenta Inventario</mat-label>
-                                <input matInput formControlName="ctaInventario" [readonly]="isReadOnly">
-                                <mat-error>Cuenta requerida</mat-error>
-                            </mat-form-field>
                         </div>
                     </div>
                 </div>

@@ -20,6 +20,7 @@ import { SubCategorias } from 'src/app/core/models/Bodega/SubCategorias';
 import { ArticuloSearch } from 'src/app/core/models/Bodega/ArticuloSearch';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ComboArticuloComponent } from 'src/app/modules/resources/combo-articulo/combo-articulo.component';
+import { FiltroReporteState, MonitorstockFiltrosStateService } from 'src/app/core/services/Bodega/monitorstock-filtros-state.service';
 
 @Component({
   selector: 'filtrostock',
@@ -85,10 +86,17 @@ export class FiltrostockComponent {
       articulos: []
     };
 
-  ngOnInit(): void {
-    console.log("Carga Inicial");
-    this.cargarFiltros();
-
+  // Las suscripciones se registran aca (no en ngOnInit) para garantizar que
+  // esten activas ANTES de que corra cargarFiltros() - Angular llama
+  // ngOnChanges() antes que ngOnInit() cuando el @Input ya trae un valor no
+  // vacio al montar (pasa siempre que se reingresa a este reporte con
+  // obj_filtros ya resuelto en el padre). Si las suscripciones se registraban
+  // en ngOnInit, ese primer cargarFiltros()-via-ngOnChanges seleccionaba la
+  // sucursal sin que nadie estuviera escuchando, y list_bodegas quedaba vacio
+  // para siempre en esa instancia - encontrado en vivo al restaurar filtros
+  // guardados (bug real, preexistente, pero antes invisible porque nada
+  // dependia de que la cascada funcionara en un segundo ingreso).
+  constructor(private filtrosState: MonitorstockFiltrosStateService) {
     //Subcribir los cambios al selecionar la sucursal
     this.SelectSucursalControl.valueChanges.subscribe(objectoSucusal => {
       if (objectoSucusal) {
@@ -168,6 +176,11 @@ export class FiltrostockComponent {
 
   }
 
+  ngOnInit(): void {
+    console.log("Carga Inicial");
+    this.cargarFiltros();
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['obj_filtros'] && changes['obj_filtros'].currentValue) {
       this.cargarFiltros();
@@ -193,17 +206,72 @@ export class FiltrostockComponent {
     this.mostrarEstado = this.list_estados.length !== 1;
 
     console.log("carga datos")
+
+    // Si ya habia una consulta previa de este reporte (el usuario cambio de
+    // "Tipo de Informe" y volvio), se restaura tal cual quedo en vez del
+    // default. Ver MonitorstockFiltrosStateService para el porque.
+    const guardado = this.filtrosState.inventario;
+    if (guardado) {
+      this.restaurarFiltrosGuardados(guardado);
+      return;
+    }
+
     // El negocio inicia en "TODOS" (a diferencia de la sucursal, que si requiere un valor puntual)
     const objsucural = this.list_sucursal[0]
     if (objsucural) {
       this.SelectSucursalControl.setValue(objsucural);
-
-
     }
+  }
+
+  // Reaplica una seleccion de filtros guardada, respetando el mismo orden de
+  // dependencias que el usuario seguiria a mano: primero Sucursal (dispara la
+  // carga de Bodegas), despues Categoria (dispara la carga de SubCategorias),
+  // y recien ahi Bodega/SubCategoria. Si algo guardado ya no existe en las
+  // listas actuales (ej. se elimino esa bodega), cae a "TODOS" en vez de
+  // fallar - el resto de los campos guardados se restaura igual.
+  private restaurarFiltrosGuardados(guardado: FiltroReporteState<typeof this.filtro>) {
+    const sucursal = this.list_sucursal.find(s => s.id === guardado.sucursalId) ?? this.list_sucursal[0];
+    if (sucursal) {
+      this.SelectSucursalControl.setValue(sucursal);
+    }
+
+    const bodega = guardado.filtro.bodega === 'TODOS'
+      ? 'TODOS'
+      : this.list_bodegas.find(b => b.id === guardado.filtro.bodega) ?? 'TODOS';
+    this.SelectBodegasControl.setValue(bodega);
+
+    const negocio = guardado.filtro.negocio === 'TODOS'
+      ? 'TODOS'
+      : this.list_negocios.find(n => n.idNegocio === guardado.filtro.negocio) ?? 'TODOS';
+    this.SelectNegocioControl.setValue(negocio);
+
+    const categoria = guardado.filtro.categoria === 'TODOS'
+      ? 'TODOS'
+      : this.lista_categorias.find(c => c.id === guardado.filtro.categoria) ?? 'TODOS';
+    this.SelectCategoriaControl.setValue(categoria);
+
+    if (categoria !== 'TODOS' && guardado.filtro.subcategoria !== 'TODOS') {
+      const subcategoria = this.lista_Subcategorias.find(s => s.id === guardado.filtro.subcategoria) ?? 'TODOS';
+      this.SelectSubCategoriaControl.setValue(subcategoria);
+    }
+
+    const estado = guardado.filtro.estado === 'TODOS'
+      ? 'TODOS'
+      : this.list_estados.find(e => e.id === guardado.filtro.estado) ?? 'TODOS';
+    this.SelectEstadoControl.setValue(estado);
+
+    this.filtro.soloAlzas = guardado.filtro.soloAlzas;
+    this.articulosSeleccionados = guardado.articulosSeleccionados;
+    this.filtro.articulos = this.articulosSeleccionados.map(a => a.idArticulo!);
   }
 
   enviarConsulta() {
     this.alConsultar.emit(this.filtro);
+    this.filtrosState.inventario = {
+      sucursalId: this.SelectSucursalControl.value?.id ?? null,
+      filtro: { ...this.filtro },
+      articulosSeleccionados: this.articulosSeleccionados
+    };
   }
 
   agregarArticulo(articulo: ArticuloSearch) {
