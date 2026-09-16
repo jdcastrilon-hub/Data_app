@@ -19,7 +19,7 @@
         </div>
         }
 
-        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+        <mat-tab-group [(selectedIndex)]="selectedTabIndex" animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
 
             <mat-tab label="Datos Generales" style="background-color: brown;">
 
@@ -36,7 +36,8 @@
                         </div>
                         <div fxFlex="40">
                             <combo-cliente formControlName="searchCliente"
-                                (clienteSelecionado)="onClienteChange($event)"></combo-cliente>
+                                (clienteSelecionado)="onClienteChange($event)"
+                                [mostrarError]="intentoGuardar && !!formulario.get('idCliente')?.invalid"></combo-cliente>
 
                         </div>
                         <div fxFlex="15">
@@ -283,12 +284,14 @@
                                     </mat-form-field>
                                 </div>
                                 <div fxFlex="20">
+                                    @if (esEfectivoSimple) {
                                     <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                         <mat-label>Valor Ingreso</mat-label>
-                                        <input matInput formControlName="impIgreso">
-                                        <mat-error>Codigo requerido</mat-error>
+                                        <input matInput #impIgresoInput formControlName="impIgreso"
+                                            (input)="onImpIgresoInput($event)"
+                                            placeholder="Dejar vacio = pago exacto">
                                     </mat-form-field>
-
+                                    }
                                 </div>
                             </div>
 

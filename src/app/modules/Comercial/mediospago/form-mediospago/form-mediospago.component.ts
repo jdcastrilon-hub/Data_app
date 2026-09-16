@@ -1,12 +1,14 @@
 import { Component, ViewChild } from '@angular/core';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
-import { FormArray, FormBuilder, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { BancoCombo } from 'src/app/core/interfaces/Tesoreria/BancoCombo';
 import { MediosPago } from 'src/app/core/models/Ventas/MediosPago';
 import { Auditoria } from 'src/app/core/models/core/Auditoria';
 import { MediospagoService } from 'src/app/core/services/Ventas/mediospago.service';
+import { BancosService } from 'src/app/core/services/Tesoreria/bancos.service';
 import { AuditoriaService } from 'src/app/core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { LoginService } from 'src/app/core/services/core/login.service';
@@ -26,10 +28,16 @@ export class FormMediospagoComponent {
   isEditMode: boolean = false;
   isReadOnly: boolean = false;
 
+  // Banco donde liquida este medio de pago (opcional - solo aplica a
+  // Transferencia/Tarjeta, Efectivo se deja sin seleccionar).
+  list_bancos: BancoCombo[] = [];
+  SelectBancoControl = new FormControl<BancoCombo | null>(null);
+
   @ViewChild('formDirective') formDirective!: NgForm;
 
   constructor(private fb: FormBuilder,
     private mediospagoService: MediospagoService,
+    private bancosService: BancosService,
     private logAuditoria: AuditoriaService,
     private notificacion: NotificacionesService,
     private loginService: LoginService,
@@ -51,12 +59,22 @@ export class FormMediospagoComponent {
       idEmp: [this.objeto.idEmp],
       tipo: [this.objeto.tipo, Validators.required],
       orden: [this.objeto.orden],
+      idBanco: [this.objeto.idBanco],
       fechaMod: [this.objeto.fechaMod],
       logs: this.fb.array([])
     });
 
     // No se usa formulario.disable(): los inputs usan [readonly] en la plantilla.
     this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
+    if (this.isReadOnly) {
+      this.SelectBancoControl.disable();
+    }
+
+    this.SelectBancoControl.valueChanges.subscribe(banco => {
+      this.formulario.patchValue({ idBanco: banco?.idBanco ?? null });
+    });
+
+    this.cargarBancos();
 
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -85,14 +103,40 @@ export class FormMediospagoComponent {
           id: data.id,
           idEmp: data.idEmp,
           tipo: data.tipo,
-          orden: data.orden
+          orden: data.orden,
+          idBanco: data.idBanco
         });
+
+        this.preseleccionarBanco();
       },
       error: (err) => {
         console.error('Error al cargar el medio de pago:', err);
         this.router.navigate(['/mediospago']);
       }
     });
+  }
+
+  // El combo de bancos y la carga del medio de pago son dos llamadas async
+  // independientes - se intenta preseleccionar desde ambos lados (el que
+  // termine de ultimo es el que realmente logra marcar la opcion).
+  cargarBancos(): void {
+    this.bancosService.listCombo().subscribe({
+      next: (data) => {
+        this.list_bancos = data;
+        this.preseleccionarBanco();
+      },
+      error: (err) => console.error('Error cargando bancos', err)
+    });
+  }
+
+  preseleccionarBanco(): void {
+    if (!this.isEditMode || !this.objeto.idBanco || this.list_bancos.length === 0) {
+      return;
+    }
+    const bancoSeleccionado = this.list_bancos.find(b => b.idBanco === this.objeto.idBanco);
+    if (bancoSeleccionado) {
+      this.SelectBancoControl.setValue(bancoSeleccionado, { emitEvent: false });
+    }
   }
 
   // Carga el historial de auditoria ya existente en el FormArray, para que al editar
@@ -179,6 +223,7 @@ export class FormMediospagoComponent {
   resetCampos() {
     this.objeto = new MediosPago();
     this.formDirective.resetForm();
+    this.SelectBancoControl.setValue(null, { emitEvent: false });
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.clear();
     this.formulario.patchValue({ idEmp: this.loginService.getIdEmpresaActual() });

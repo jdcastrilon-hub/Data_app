@@ -5,31 +5,30 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PersonaSearch } from '../../../../core/interfaces/Compras/PersonaSearch';
 import { ClientesService } from '../../../../core/services/Ventas/clientes.service';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { Clientes } from '../../../../core/models/Ventas/Clientes';
 import { Auditoria } from '../../../../core/models/core/Auditoria';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuditoriaService } from '../../../../core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
-import { ComboPersonaComponent } from 'src/app/modules/resources/combo-persona/combo-persona.component';
 import { PersonaComponent, PersonaResumen } from 'src/app/modules/Comercial/resources/persona/persona.component';
 import { PersonaService } from 'src/app/core/services/Compras/persona.service';
 import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { ModalSeleccionarPersonaComponent } from 'src/app/modules/resources/modal-seleccionar-persona/modal-seleccionar-persona.component';
 import { LoginService } from 'src/app/core/services/core/login.service';
 
 // Estados posibles del sub-formulario de persona dentro del cliente:
-// - pendiente: aun no se decide si es una persona nueva o existente (bloqueado)
-// - existente: se seleccionó una persona ya registrada (bloqueado, datos cargados)
-// - nueva: se va a registrar una persona nueva (habilitado)
-type EstadoPersona = 'pendiente' | 'existente' | 'nueva';
+// - nueva: por defecto - el campo Numero/resto de datos estan abiertos, se
+//   entiende que se esta registrando una persona nueva mientras no se
+//   demuestre lo contrario (buscador, o coincidencia exacta al perder el foco).
+// - existente: se encontro/eligio una persona ya registrada (bloqueado, datos
+//   cargados) - "Cambiar persona" vuelve a "nueva".
+type EstadoPersona = 'existente' | 'nueva';
 
 @Component({
   selector: 'app-form-cliente',
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
-    RouterModule, MatAutocompleteModule, MatDatepickerModule,
-    MatCheckboxModule, ComboPersonaComponent, PersonaComponent],
+    RouterModule, MatCheckboxModule, PersonaComponent],
   templateUrl: './form-cliente.component.html',
   styleUrl: './form-cliente.component.scss'
 })
@@ -41,8 +40,9 @@ export class FormClienteComponent {
   isEditMode: boolean = false;
   isReadOnly: boolean = false;
 
-  // Mientras no se busque/elija una persona, el sub-formulario de persona permanece bloqueado
-  estadoPersona: EstadoPersona = 'pendiente';
+  // Por defecto "nueva": el formulario no bloquea nada mientras se decide -
+  // ver EstadoPersona.
+  estadoPersona: EstadoPersona = 'nueva';
 
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
@@ -67,12 +67,6 @@ export class FormClienteComponent {
 
   ngOnInit() {
 
-    let persona_filtro: PersonaSearch = {
-      idPersona: 0,
-      codTit: '',
-      nombreCompleto: ''
-    }
-
     this.formulario = this.fb.group({
       idEmp: [this.objeto.idEmp],
       idCliente: [this.objeto.idCliente],
@@ -84,7 +78,6 @@ export class FormClienteComponent {
       mail: [this.objeto.mail, Validators.required],
       activo: [this.objeto.activo],
       observacion: [this.objeto.observacion],
-      searchPersona: [persona_filtro],
       fechaMod: this.objeto.fechaMod,
       logs: this.fb.array([]),
     });
@@ -135,18 +128,9 @@ export class FormClienteComponent {
         });
 
         // La persona ya esta ligada al cliente: queda bloqueada, igual que al
-        // seleccionar una "existente" desde el buscador.
+        // elegir una "existente" desde el modal de busqueda.
         this.estadoPersona = 'existente';
-        this.formulario.get('searchPersona')?.patchValue({
-          idPersona: data.idPersona,
-          codTit: data.persona.codigoTitular,
-          nombreCompleto: data.persona.nombreCompleto
-        } as PersonaSearch);
-        this.formulario.get('searchPersona')?.disable();
-        this.personaGroup.patchValue({
-          ...data.persona,
-          fechaNacimiento: data.persona.fechaNacimiento ? new Date(data.persona.fechaNacimiento) : null,
-        });
+        this.personaGroup.patchValue(data.persona);
 
         this.cargarLogsExistentes(data.logs);
       },
@@ -196,59 +180,53 @@ export class FormClienteComponent {
     }
     // No existe todavia un maestro de personas dedicado: al editar un cliente
     // tambien se permite corregir los datos propios de la persona ya ligada
-    // (el buscador sigue bloqueado: no se puede reasignar a otra persona desde aqui).
+    // (no se puede reasignar a otra persona desde aqui).
     if (this.isEditMode) {
       return false;
     }
     return this.estadoPersona !== 'nueva';
   }
 
-  // El buscador de personas (combo-persona) dispara esto al elegir/limpiar una coincidencia existente
-  onPersonaChange(persona: PersonaSearch) {
-    if (persona != null) {
-      this.estadoPersona = 'existente';
-      this.formulario.patchValue({
-        idPersona: persona.idPersona,
-        searchPersona: persona,
-        codigoTitular: persona.codTit,
-        nomCliente: persona.nombreCompleto
-      });
-      this.formulario.get('searchPersona')?.disable();
-
-      // Cargamos el detalle completo para que el sub-formulario de persona lo muestre
-      this.personaService.getById(persona.idPersona!).subscribe({
-        next: (personaCompleta) => {
-          this.personaGroup.patchValue({
-            ...personaCompleta,
-            fechaNacimiento: personaCompleta.fechaNacimiento ? new Date(personaCompleta.fechaNacimiento) : null,
-          });
-        },
-        error: (err) => console.error('Error cargando el detalle de la persona', err)
-      });
-    } else {
-      this.reiniciarSeleccionPersona();
-    }
-  }
-
-  // El usuario indicó que quiere registrar una persona nueva (opción "Crear nueva persona" del buscador)
-  habilitarNuevaPersona(textoBuscado?: string) {
-    this.estadoPersona = 'nueva';
-    this.formulario.get('searchPersona')?.disable();
-    this.formulario.patchValue({
-      idPersona: 0,
-      codigoTitular: null,
-      nomCliente: null
+  // El boton "Buscar persona" (junto a Numero) abre el modal de seleccion.
+  abrirModalPersona(): void {
+    const dialogRef = this.dialog.open(ModalSeleccionarPersonaComponent, {
+      width: '700px'
     });
-    this.personaGroup.reset(PersonaComponent.crearFormGroup({ codigoTitular: textoBuscado }).getRawValue());
+
+    dialogRef.afterClosed().subscribe((persona: PersonaSearch | undefined) => {
+      // Sin seleccion (se cerro el modal sin elegir nada) -> se entiende que
+      // sigue siendo una persona nueva, no hay nada que hacer.
+      if (persona) {
+        this.onPersonaEncontrada(persona);
+      }
+    });
   }
 
-  // Vuelve al estado inicial: ni persona existente ni nueva, todo bloqueado de nuevo
-  reiniciarSeleccionPersona() {
-    this.estadoPersona = 'pendiente';
-    this.formulario.get('searchPersona')?.enable();
+  // Se encontro/eligio una persona ya existente - sea desde el modal de
+  // busqueda, o porque coincidio el documento al perder el foco de "Numero".
+  onPersonaEncontrada(persona: PersonaSearch): void {
+    this.estadoPersona = 'existente';
+    this.formulario.patchValue({
+      idPersona: persona.idPersona,
+      codigoTitular: persona.codTit,
+      nomCliente: persona.nombreCompleto
+    });
+
+    // Cargamos el detalle completo para que el sub-formulario de persona lo muestre
+    this.personaService.getById(persona.idPersona!).subscribe({
+      next: (personaCompleta) => {
+        this.personaGroup.patchValue(personaCompleta);
+      },
+      error: (err) => console.error('Error cargando el detalle de la persona', err)
+    });
+  }
+
+  // El usuario quiere deshacer la persona vinculada (se equivoco al elegirla,
+  // o simplemente cambio de opinion) - vuelve al estado inicial, abierto.
+  cambiarPersona(): void {
+    this.estadoPersona = 'nueva';
     this.formulario.patchValue({
       idPersona: 0,
-      searchPersona: null,
       codigoTitular: null,
       nomCliente: null
     });
@@ -290,11 +268,6 @@ export class FormClienteComponent {
       idEmp: this.loginService.getIdEmpresaActual()
     });
 
-    if (this.estadoPersona === 'pendiente') {
-      this.notificacion.showError('Debes buscar una persona existente o crear una nueva antes de guardar.');
-      return;
-    }
-
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;
@@ -311,7 +284,6 @@ export class FormClienteComponent {
     const personaEditable = this.isEditMode || this.estadoPersona === 'nueva';
     const jsonParaAPI = {
       ...dataCompleta,
-      searchPersona: undefined,
       persona: personaEditable
         ? PersonaComponent.aPayload(dataCompleta.persona)
         : undefined,
@@ -345,7 +317,7 @@ export class FormClienteComponent {
   resetCampos() {
     this.objeto = new Clientes();
     this.formDirective.resetForm();
-    this.estadoPersona = 'pendiente';
+    this.estadoPersona = 'nueva';
     this.personaGroup.reset(PersonaComponent.crearFormGroup().getRawValue());
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.clear();

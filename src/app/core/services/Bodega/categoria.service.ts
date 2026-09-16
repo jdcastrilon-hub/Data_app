@@ -4,6 +4,8 @@ import { Categoria } from '../../models/Bodega/Categoria';
 import { Subject, Observable } from 'rxjs';
 import { PageResponse } from '../../models/core/PageResponse';
 import { CategoriaListView } from '../../models/Bodega/CategoriaListView';
+import { CategoriaCombo } from '../../interfaces/Bodega/CategoriaCombo';
+import { SubcategoriaCombo } from '../../interfaces/Bodega/SubcategoriaCombo';
 import { environment } from 'src/environments/environment';
 
 interface ApiResponse<T = void> {
@@ -28,6 +30,16 @@ export class CategoriaService {
 
 
   constructor(private http: HttpClient) { }
+
+  // Combo de categorias activas (usado por Utilidad x Categoria).
+  listSelection(): Observable<CategoriaCombo[]> {
+    return this.http.get<CategoriaCombo[]>(this.url + "listCombo");
+  }
+
+  // Combo de subcategorias de una categoria puntual (cascada del anterior).
+  listSubcategorias(idCategoria: number): Observable<SubcategoriaCombo[]> {
+    return this.http.get<SubcategoriaCombo[]>(this.url + idCategoria + "/subcategorias/listCombo");
+  }
 
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<CategoriaListView>> {
     let params = new HttpParams()

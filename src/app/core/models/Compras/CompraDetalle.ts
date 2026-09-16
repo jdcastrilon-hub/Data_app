@@ -3,6 +3,9 @@ export class CompraDetalle {
     refCompras !: string;
     codigoBarras !: string;
     costoUnit !: number;
+    // Precio de venta digitado en la compra (opcional por linea, condicionado a
+    // m_confcompras.actPrecioCompra). 0 = "sin precio para esta linea".
+    impPrecioVta?: number;
     cantidad!: number;
     idLote !:number;
     stock!: number;

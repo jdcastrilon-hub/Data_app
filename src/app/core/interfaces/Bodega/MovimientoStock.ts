@@ -7,4 +7,6 @@ export interface MovimientoStock {
     tipo_movimiento: string;
     cantidad: number;
     vista: string;
+    fecha_mod: string | null;
+    usuario_mod: string | null;
 }

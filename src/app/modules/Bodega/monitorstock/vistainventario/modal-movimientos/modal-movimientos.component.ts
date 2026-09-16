@@ -29,7 +29,7 @@ export interface ModalMovimientosData {
 })
 export class ModalMovimientosComponent {
 
-  columnasMovimientos: string[] = ['fec_doc', 'documento', 'nro_docum', 'bodega', 'tipo_movimiento', 'cantidad', 'vista'];
+  columnasMovimientos: string[] = ['fec_doc', 'documento', 'nro_docum', 'bodega', 'tipo_movimiento', 'cantidad', 'vista', 'fecha_mod', 'usuario_mod'];
   movimientos: MovimientoStock[] = [];
   cargando = false;
 

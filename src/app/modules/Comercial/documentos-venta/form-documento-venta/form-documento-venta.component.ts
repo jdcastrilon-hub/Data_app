@@ -37,6 +37,10 @@ export class FormDocumentoVentaComponent {
   list_sucursal: SucursalCombo[] = [];
   SelectSucursalControl = new FormControl<SucursalCombo | null>(null, Validators.required);
 
+  // Valores fijos de "Clase": determinan que flujo transaccional consume el documento
+  // (venta-directa/POS solo trae los de clase 'Factura', ver repository_sucursal.py).
+  list_clases: string[] = ['Factura', 'NotaCredito', 'NotaDebito'];
+
   @ViewChild('formDirective') formDirective!: NgForm;
 
   constructor(private fb: FormBuilder,
@@ -65,7 +69,9 @@ export class FormDocumentoVentaComponent {
       descripcion: [this.objeto.descripcion, Validators.required],
       serie: [this.objeto.serie, Validators.required],
       clase: [this.objeto.clase, Validators.required],
-      secuencia: [this.objeto.secuencia, Validators.required],
+      // El backend la calcula sola (documento + codigo de sucursal) - ya no se
+      // escribe a mano, esto solo la muestra en edicion/vista para transparencia.
+      secuencia: [{ value: this.objeto.secuencia, disabled: true }],
       aplicaPos: [false],
       activo: [true],
       fechaMod: [this.objeto.fechaMod],

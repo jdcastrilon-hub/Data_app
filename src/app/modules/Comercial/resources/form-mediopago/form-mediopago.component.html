@@ -1,6 +1,6 @@
 <div class="contenedor-pago">
     <div>
-        <table mat-table [dataSource]="lineasPago()" class="container-tabla mat-elevation-z2">
+        <table mat-table [dataSource]="lineasPago()" [trackBy]="trackByIndex" class="container-tabla mat-elevation-z2">
 
             <ng-container matColumnDef="formaPago">
                 <th mat-header-cell *matHeaderCellDef> Medio de Pago </th>
@@ -18,10 +18,10 @@
             <ng-container matColumnDef="valor">
                 <th mat-header-cell *matHeaderCellDef>Valor</th>
                 <td mat-cell *matCellDef="let element; let i = index">
-                    <input matInput type="number" [ngModel]="element.valor"
-                            (ngModelChange)="actualizarValor(i, $event)"
-                            placeholder="0.00" min="0" required class="text-right" #valorInput="ngModel" />
-                    @if (valorInput.invalid && (valorInput.dirty || valorInput.touched)) {
+                    <input matInput type="text" [value]="formatearValor(element.valor)"
+                            (input)="onValorInput($event, i)" (blur)="marcarTocado(i)"
+                            placeholder="0" class="text-right" />
+                    @if (filasTocadas.has(i) && element.valor <= 0) {
                     <small class="error-texto">Obligatorio</small>
                     }
                 </td>

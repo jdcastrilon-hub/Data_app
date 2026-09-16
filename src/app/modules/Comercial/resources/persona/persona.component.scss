@@ -8,8 +8,21 @@
 
 }
 
+// Sin borde propio a proposito: estos campos deben verse como parte de la
+// misma interfaz del formulario padre (proveedor/cliente), no como un bloque
+// aparte. Ver analisis "Persona Natural/Juridica" - unificacion de UI.
 .bloque {
-  border: 1px solid #ccc; // gris claro
-  border-radius: 8px; // opcional: bordes redondeados
-  padding: 0px 16px 0px 16px;
+  padding: 0;
+}
+
+.tipo-persona-row {
+  margin-bottom: 12px;
+}
+
+.tipo-persona-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, .6);
 }

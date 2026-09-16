@@ -6,7 +6,8 @@
     }
 </div>
 
-<mat-autocomplete #autoLote="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)">
+<mat-autocomplete #autoLote="matAutocomplete" [displayWith]="mascaraSalida" (optionSelected)="onSelected($event)"
+    panelWidth="280px">
 
     @for (item of opcionesFiltradas; track item.idLote) {
     <mat-option [value]="item">
@@ -14,9 +15,9 @@
     </mat-option>
     }
 
-    @if (textoActual && permitirCrear) {
-    <mat-option [value]="OPCION_CREAR">
-        + Crear lote "{{ textoActual }}"
+    @if (permitirCrear && opcionesFiltradas.length === 0) {
+    <mat-option (click)="abrirCrearLote()">
+        @if (textoActual) { + Crear lote "{{ textoActual }}" } @else { + Crear nuevo lote }
     </mat-option>
     }
 </mat-autocomplete>

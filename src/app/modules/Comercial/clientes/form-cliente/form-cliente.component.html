@@ -21,16 +21,24 @@
 
             <mat-tab label="Datos Generales">
                 <div class="bloque">
-                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
-                        <div fxFlex="40">
-                            <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="true"
-                                (personaSelecionado)="onPersonaChange($event)"
-                                (crearNuevo)="habilitarNuevaPersona($event)"></combo-persona>
-                        </div>
+                    @if (estadoPersona === 'existente' && !isEditMode && !isReadOnly) {
+                    <div fxLayout="row" fxLayoutAlign="end center">
+                        <button mat-button color="primary" type="button" (click)="cambiarPersona()">
+                            <mat-icon>close</mat-icon> Cambiar persona
+                        </button>
                     </div>
+                    <p class="nota-persona-existente">
+                        Estos datos pertenecen a una persona ya registrada (puede estar vinculada a otro
+                        cliente, proveedor o usuario) - para corregirlos, guarda primero y luego edita el
+                        cliente.
+                    </p>
+                    }
 
                     <app-persona [group]="personaGroup" [disabled]="personaSubformDeshabilitado"
-                        (personaChange)="onPersonaSubformChange($event)"></app-persona>
+                        [permitirBusquedaPersona]="!isEditMode && estadoPersona !== 'existente'"
+                        (personaChange)="onPersonaSubformChange($event)"
+                        (buscarPersona)="abrirModalPersona()"
+                        (personaEncontradaPorDocumento)="onPersonaEncontrada($event)"></app-persona>
                     <br />
 
                     <div class="bloque_interno">

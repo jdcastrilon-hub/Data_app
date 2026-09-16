@@ -62,6 +62,7 @@ export class ModalCodigobarraComponent {
     console.log('El padre recibió la bodega:', articulo);
     this.formulario.patchValue({
       idArticulo: articulo.idArticulo,
+      nomBarra:articulo.nomArticulo,
       searchArticulo: articulo
     });
   }

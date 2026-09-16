@@ -5,6 +5,8 @@ export class MediosPago {
     idEmp!: number;
     tipo!: string;
     orden!: number;
+    idBanco?: number;
+    banco?: { nomBanco: string };
     fechaMod!: Date;
     logs!: Auditoria[];
 }

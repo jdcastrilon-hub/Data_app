@@ -27,7 +27,7 @@ export class UnidadesStockComponent {
   //Paginador
   lista_unidades: UnidadListView[] = [];
   dataSource!: MatTableDataSource<UnidadListView>;
-  Columnas: string[] = ['codigo', 'nombre', 'espaquete', 'conversion', 'fecha', 'actions'];
+  Columnas: string[] = ['codigo', 'nombre', 'fecha', 'actions'];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   //Buscador (filtra por codigo o nombre en el backend)

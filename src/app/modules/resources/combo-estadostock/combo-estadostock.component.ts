@@ -24,6 +24,10 @@ export class ComboEstadostockComponent {
 
   //salidas
   estadoSeleccionado = output<EstadoCombo>();
+  // Emite la lista completa apenas se carga - permite que el formulario padre
+  // decida ocultar el selector cuando la empresa solo maneja un estado (ver
+  // form-venta-directa.component.ts).
+  estadosCargados = output<EstadoCombo[]>();
 
   //Estados de Stock
   list_estados: EstadoCombo[] = [];
@@ -61,6 +65,7 @@ cargaDatos(): void {
     next: (data) => {
       //Se recupera el Json del API
       this.list_estados = data;
+      this.estadosCargados.emit(data);
       this.seleccionarEstadoLogica();
     },
     error: (err) => {

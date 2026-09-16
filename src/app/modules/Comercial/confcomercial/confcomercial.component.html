@@ -1,0 +1,116 @@
+<form [formGroup]="formulario">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <span>CONFIGURACIÓN COMERCIAL</span>
+                <button mat-icon-button type="button" (click)="verHistorialAuditoria()" matTooltip="Ver historial">
+                    <mat-icon>history</mat-icon>
+                </button>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-content class="mat-content">
+
+            <div class="bloque">
+                <h3>Precios</h3>
+                <div class="fila-toggle">
+                    <div class="texto-toggle">
+                        <span class="nombre-toggle">Permitir que el cajero defina el precio cuando el artículo no tiene ninguno cargado</span>
+                        <span class="ayuda-toggle">Si está apagado, el sistema bloquea el guardado de una línea con precio $0 hasta que se corrija.</span>
+                    </div>
+                    <mat-slide-toggle formControlName="precioCeroEditable" color="primary"></mat-slide-toggle>
+                </div>
+            </div>
+
+            <div class="bloque">
+                <h3>Facturación (funciones aún no disponibles)</h3>
+                <div class="fila-toggle">
+                    <div class="texto-toggle">
+                        <span class="nombre-toggle">Permitir reimprimir una factura</span>
+                        <span class="ayuda-toggle">Sin efecto todavía — la impresión de facturas no está implementada.</span>
+                    </div>
+                    <mat-slide-toggle formControlName="reimpresionFacturaPermitida" color="primary"></mat-slide-toggle>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="start stretch">
+                    <div fxFlex="40">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Bodega por defecto para devoluciones</mat-label>
+                            <mat-select formControlName="idBodegaDevoluciones">
+                                <mat-option [value]="null">Sin definir</mat-option>
+                                @for (b of list_bodegas; track b.id) {
+                                <mat-option [value]="b.id">{{b.nomBodega}}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                        <p class="ayuda-toggle">Sin efecto todavía — no existe un módulo de devolución de venta.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bloque">
+                <h3>Descuento por rol</h3>
+                <p class="ayuda-toggle">
+                    Un rol que no aparece en esta lista no puede aplicar ningún descuento. Agrega los roles
+                    autorizados y el porcentaje máximo que pueden aplicar sin necesitar aprobación.
+                </p>
+
+                <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="8px" class="agregar-rol">
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Rol</mat-label>
+                        <mat-select [formControl]="SelecRolControl">
+                            @for (r of rolesDisponiblesParaAgregar; track r.idRol) {
+                            <mat-option [value]="r">{{r.nombre}}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                        <mat-label>Máximo % descuento</mat-label>
+                        <input matInput type="number" min="0" max="100" [(ngModel)]="nuevoMaxDescuento" [ngModelOptions]="{standalone: true}">
+                    </mat-form-field>
+                    <button mat-flat-button color="primary" type="button" (click)="agregarRolElegido()">
+                        <mat-icon>add</mat-icon> Agregar
+                    </button>
+                </div>
+
+                <div class="tabla-scroll" formArrayName="rolesDescuento">
+                    <table mat-table [dataSource]="rolesDescuentoArray.controls" class="mat-elevation-z1">
+
+                        <ng-container matColumnDef="rol">
+                            <th mat-header-cell *matHeaderCellDef>Rol</th>
+                            <td mat-cell *matCellDef="let fila">{{fila.get('nombreRol')?.value}}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="maxDescuento">
+                            <th mat-header-cell *matHeaderCellDef>Máximo % descuento</th>
+                            <td mat-cell *matCellDef="let fila; let i = index" [formGroupName]="i">
+                                <input matInput type="number" min="0" max="100" formControlName="maxDescuento" class="text-right">
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="acciones">
+                            <th mat-header-cell *matHeaderCellDef class="text-center">Acciones</th>
+                            <td mat-cell *matCellDef="let fila; let i = index" class="text-center">
+                                <button mat-icon-button color="warn" type="button" (click)="eliminarFilaRol(i)" matTooltip="Quitar">
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="['rol', 'maxDescuento', 'acciones']"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ['rol', 'maxDescuento', 'acciones'];"></tr>
+                    </table>
+
+                    @if (rolesDescuentoArray.length === 0) {
+                    <p class="sin-seleccion">Ningún rol tiene permiso de descuento todavía.</p>
+                    }
+                </div>
+            </div>
+
+        </mat-card-content>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="button" [disabled]="guardando" (click)="guardar()">Guardar</button>
+        </mat-card-actions>
+    </mat-card>
+</form>

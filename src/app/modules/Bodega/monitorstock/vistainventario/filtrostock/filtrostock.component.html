@@ -103,7 +103,7 @@
           }
           <div fxFlex="25">
             <button mat-flat-button color="primary" (click)="enviarConsulta()">
-              <mat-icon>search</mat-icon>
+              <mat-icon>search</mat-icon>Consultar
             </button>
 
 
@@ -117,9 +117,14 @@
 
     <mat-tab label="Articulos" style="background-color: brown;">
       <div class="bloque">
-        <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="8px">
+        <div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="8px">
           <div fxFlex="50">
-            <combo-articulo (articuloSeleccionado)="agregarArticulo($event)"></combo-articulo>
+            <combo-articulo [porCodigoBarra]="true" (articuloSeleccionado)="agregarArticulo($event)"></combo-articulo>
+          </div>
+          <div class="btn-consultar-wrapper" fxFlex="0 0 auto">
+            <button mat-flat-button color="primary" (click)="enviarConsulta()">
+              <mat-icon>search</mat-icon> Consultar
+            </button>
           </div>
         </div>
 
@@ -137,8 +142,8 @@
           <ng-container matColumnDef="acciones">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let art">
-              <button mat-icon-button (click)="quitarArticulo(art)" type="button">
-                <mat-icon>delete</mat-icon>
+              <button mat-icon-button color="warn" (click)="quitarArticulo(art)" type="button">
+                <mat-icon>close</mat-icon>
               </button>
             </td>
           </ng-container>

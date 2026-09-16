@@ -25,6 +25,13 @@ export class ArticuloService {
 
   constructor(private http: HttpClient) { }
 
+  // Indica si al menos un articulo del catalogo de la empresa activa maneja
+  // lote - usado para decidir si vale la pena mostrar la columna "Lote" en
+  // grillas de detalle (Compra Directa, etc.).
+  existeArticuloConLote(): Observable<boolean> {
+    return this.http.get<boolean>(this.url + "manejaLotes");
+  }
+
   listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<ArticuloListView>> {
     let params = new HttpParams()
       .set('page', page.toString())//Pagina

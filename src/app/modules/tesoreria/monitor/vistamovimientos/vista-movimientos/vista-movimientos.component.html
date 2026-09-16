@@ -1,0 +1,73 @@
+<div class="table-scroll-container">
+    <div class="barra-acciones-tabla" fxLayout="row" fxLayoutAlign="end center">
+        <button mat-icon-button matTooltip="Exportar a Excel" [disabled]="exportando || !datos.length" (click)="exportarExcel()" type="button">
+            @if (exportando) {
+            <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+            <mat-icon>download</mat-icon>
+            }
+        </button>
+        <button mat-icon-button matTooltip="Elegir columnas" [matMenuTriggerFor]="menuColumnas" type="button">
+            <mat-icon>view_column</mat-icon>
+        </button>
+        <mat-menu #menuColumnas="matMenu">
+            <div class="menu-columnas" (click)="$event.stopPropagation()">
+                @for (col of columnasConfigurables; track col.clave) {
+                <mat-checkbox [checked]="esVisible(col.clave)" (change)="toggleColumna(col.clave)">
+                    {{ col.label }}
+                </mat-checkbox>
+                }
+            </div>
+        </mat-menu>
+    </div>
+    <table mat-table [dataSource]="dataSource">
+
+        <ng-container matColumnDef="position">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
+        </ng-container>
+        <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let element">{{ element.fecha }}</td>
+        </ng-container>
+        <ng-container matColumnDef="tipoCuenta">
+            <th mat-header-cell *matHeaderCellDef>Tipo</th>
+            <td mat-cell *matCellDef="let element">
+                <mat-icon [matTooltip]="element.tipoCuenta" class="icono-tipo">
+                    {{ element.tipoCuenta === 'CAJA' ? 'point_of_sale' : 'account_balance' }}
+                </mat-icon>
+            </td>
+        </ng-container>
+        <ng-container matColumnDef="cuenta">
+            <th mat-header-cell *matHeaderCellDef>Cuenta</th>
+            <td mat-cell *matCellDef="let element">{{ nombreCuenta(element) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="mediopago">
+            <th mat-header-cell *matHeaderCellDef>Medio de Pago</th>
+            <td mat-cell *matCellDef="let element">{{ element.tipoMediopago }}</td>
+        </ng-container>
+        <ng-container matColumnDef="concepto">
+            <th mat-header-cell *matHeaderCellDef>Concepto</th>
+            <td mat-cell *matCellDef="let element">{{ element.concepto }}</td>
+        </ng-container>
+        <ng-container matColumnDef="vista">
+            <th mat-header-cell *matHeaderCellDef>Vista</th>
+            <td mat-cell *matCellDef="let element">{{ element.vista }}</td>
+        </ng-container>
+        <ng-container matColumnDef="importe">
+            <th mat-header-cell *matHeaderCellDef>Importe</th>
+            <td mat-cell *matCellDef="let element">
+                <span [ngClass]="element.signo === 1 ? 'importe-ingreso' : 'importe-egreso'">
+                    {{ element.signo === 1 ? '+' : '-' }}{{ element.importe | currency:'COP':'symbol-narrow':'1.2-2' }}
+                </span>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+    </table>
+    <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+        (page)="cambioPagina($event)" showFirstLastButtons></mat-paginator>
+
+</div>

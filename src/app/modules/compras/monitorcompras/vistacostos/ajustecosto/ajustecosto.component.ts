@@ -10,6 +10,7 @@ import { AjustecostoService } from 'src/app/core/services/Compras/ajustecosto.se
 import { AuditoriaService } from 'src/app/core/services/core/auditoria.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { LoginService } from 'src/app/core/services/core/login.service';
+import { BodegaService } from 'src/app/core/services/Bodega/bodega.service';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 
 export interface DialogData {
@@ -40,6 +41,7 @@ export class AjustecostoComponent {
     private ajusteservice: AjustecostoService,
     private notificacion: NotificacionesService,
     private loginService: LoginService,
+    private bodegaService: BodegaService,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {
     this.objeto = new AjusteCostos();
@@ -83,6 +85,23 @@ export class AjustecostoComponent {
       logs: this.fb.array([]),
     }, { validators: this.costoDebeSerDiferenteValidator });
 
+    // Articulo sin bodega asociada todavia (nunca tuvo movimiento en ninguna
+    // bodega, ej. recien creado) - la fila del reporte llega con idbodega nulo.
+    // En vez de dejar el ajuste sin poder grabarse, se asume la bodega
+    // principal de la empresa (mismo criterio que combo-bodega usa para
+    // documentos nuevos: primer elemento de listSelection(), que el backend
+    // ya ordena con la principal de primera - ver Bodega.principal).
+    if (!this.data.objecto_modal.idbodega) {
+      this.bodegaService.listSelection().subscribe({
+        next: (bodegas) => {
+          const principal = bodegas[0];
+          if (principal) {
+            this.formulario.patchValue({ idBodega: principal.id, nomBodega: principal.nomBodega });
+          }
+        },
+        error: (err) => console.error('Error cargando bodega principal', err)
+      });
+    }
   }
 
   // Un ajuste de costo existe para corregir el costo a un valor DISTINTO

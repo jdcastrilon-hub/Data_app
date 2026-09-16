@@ -29,6 +29,12 @@ $dark-theme: mat.m2-define-dark-theme((color: (primary: $primary_dark,
       density: 0));
 
 
+// Estilos estructurales base (CDK overlay, ripple, etc.) - requerido por Angular
+// Material antes de aplicar los temas de color; sin esto el overlay del CDK
+// (paneles de autocomplete, menus, tooltips) no se posiciona/renderiza como
+// panel flotante real.
+@include mat.core();
+
 // tema claro (modo predeterminado)
 @include mat.all-component-themes($my-theme);
 

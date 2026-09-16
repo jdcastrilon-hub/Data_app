@@ -65,7 +65,11 @@
                         <div fxFlex="15">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Clase</mat-label>
-                                <input matInput formControlName="clase">
+                                <mat-select formControlName="clase">
+                                    @for (opcion of list_clases; track opcion) {
+                                    <mat-option [value]="opcion">{{opcion}}</mat-option>
+                                    }
+                                </mat-select>
                                 <mat-error>Clase requerida</mat-error>
                             </mat-form-field>
                         </div>
@@ -75,8 +79,8 @@
                         <div fxFlex="25">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
                                 <mat-label>Secuencia (numerador)</mat-label>
-                                <input matInput formControlName="secuencia">
-                                <mat-error>Secuencia requerida</mat-error>
+                                <input matInput formControlName="secuencia" readonly>
+                                <mat-hint>Se genera automáticamente (documento-sucursal)</mat-hint>
                             </mat-form-field>
                         </div>
 

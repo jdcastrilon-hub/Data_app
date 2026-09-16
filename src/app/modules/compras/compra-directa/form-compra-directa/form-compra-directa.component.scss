@@ -30,8 +30,17 @@
   --mat-form-field-subscript-text-size: 12px; // change input hint font-size
   --mat-form-field-subscript-text-tracking: 0.033333333em; // change hint letter-spacing
   --mat-form-field-subscript-text-weight: 400; // change hint font-weight
-  --mat-form-field-subscript-text-line-height: 20px; // change hint line-height
+  --mat-form-field-subscript-text-line-height: 12px; // change hint line-height (reducido: antes 20px dejaba un espacio muerto grande debajo de cada campo, muy visible ahora que la fila hace wrap)
 
+}
+
+// El area reservada para hint/error (subscript-wrapper) queda debajo del recuadro
+// del campo, no dentro de el: al hacer wrap de la fila, ese espacio se ve como un
+// "salto" grande entre la fila de Sucursal/Proveedor/... y la de Bodega/Remito/...
+// Se recorta el padding superior de esa franja (Angular Material la reserva siempre,
+// tenga o no error, para no mover el layout cuando aparece un mat-error).
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  margin-top: -4px;
 }
 
 /* Estilos en tu archivo .component.css o styles.css */
@@ -183,7 +192,7 @@
   vertical-align: middle;
   /* Alineación base de tabla */
   width: auto;
-  min-width: 260px;
+  min-width: 338px; /* +30% sobre los 260px originales */
 }
 
 /* El contenedor interno de la celda */
@@ -192,9 +201,41 @@
   flex-direction: row;
   align-items: center;
   /* Centra verticalmente el input y el botón */
-  gap: 8px;
-  /* Espacio entre el buscador y el botón */
+  gap: 0px;
+  /* Pegado al input (antes 8px) - el boton en si compensa con margen negativo abajo */
   width: 100%;
+}
+
+/* Boton para quitar la linea: mas chico y pegado al input, mismo espiritu que
+   la "x" del buscador de proveedor (que vive dentro del propio campo). */
+.btn-quitar-linea {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 28px;
+  margin-left: -6px;
+  flex-shrink: 0;
+
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+  }
+}
+
+/* Nombre del articulo + etiqueta de Stock/Costo debajo, en vez de columnas propias */
+.celda-articulo-datos {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.etiqueta-stock-costo {
+  font-size: 11px;
+  color: rgba(0, 0, 0, .5);
+  padding-left: 2px;
 }
 
 .proveedor-container {
@@ -286,7 +327,10 @@ articulo-autocomplet {
 }
 
 .mat-column-position {
-  width: 50px;
+  width: 25px;
+  max-width: 25px;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
   text-align: center;
 }
 
@@ -325,16 +369,52 @@ articulo-autocomplet {
 }
 
 /* Columnas numéricas compactas */
-.mat-column-costo,
-.mat-column-cantidad,
-.mat-column-porc_dcto,
-.mat-column-impuesto1,
-/* Ajusta al nombre real de tu columna de combo */
 .mat-column-neto,
 .mat-column-imp1,
 .mat-column-total {
   width: 130px;
   /* Unifica el ancho para evitar el efecto de 'agrupamiento' */
+  padding: 0 8px !important;
+  text-align: center;
+}
+
+/* Imp. (IVA): reducida un 10% respecto a las 130px originales */
+.mat-column-impuesto1 {
+  width: 117px;
+  padding: 0 8px !important;
+  text-align: center;
+}
+
+/* Costo: vuelve a crecer un 10% sobre esos 117px (el formato ###.###.###,00
+   agregado despues no cabia en ese ancho) */
+.mat-column-costo {
+  width: 129px;
+  padding: 0 8px !important;
+  text-align: center;
+}
+
+/* Precio Venta: mismo ancho que Costo, columna condicional (solo visible si
+   la empresa activo m_confcompras.actPrecioCompra) */
+.mat-column-precioventa {
+  width: 129px;
+  max-width: 129px;
+  flex: 0 0 129px !important;
+  padding: 0 8px !important;
+  text-align: center;
+}
+
+/* Markup (%): solo lectura, mas angosta que Precio Venta (no lleva input) */
+.mat-column-markup {
+  width: 90px;
+  padding: 0 8px !important;
+  text-align: center;
+  color: rgba(0, 0, 0, .6);
+}
+
+/* Cantidad / (%) Dcto: reducidas un 30% respecto a las 130px originales */
+.mat-column-cantidad,
+.mat-column-porc_dcto {
+  width: 91px;
   padding: 0 8px !important;
   text-align: center;
 }

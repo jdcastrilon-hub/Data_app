@@ -24,7 +24,7 @@ export class MediospagoComponent {
   //Paginador
   lista_mediospago: MediospagoListView[] = [];
   dataSource!: MatTableDataSource<MediospagoListView>;
-  todasLasColumnas: string[] = ['id', 'tipo', 'orden', 'fecha', 'actions'];
+  todasLasColumnas: string[] = ['id', 'tipo', 'orden', 'banco', 'fecha', 'actions'];
   displayedColumns: string[] = [];
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 

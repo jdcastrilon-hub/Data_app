@@ -1,0 +1,59 @@
+<form [formGroup]="formulario">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <span>CONFIGURACIÓN DE COMPRAS</span>
+                <button mat-icon-button type="button" (click)="verHistorialAuditoria()" matTooltip="Ver historial">
+                    <mat-icon>history</mat-icon>
+                </button>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-content class="mat-content">
+
+            <div class="bloque">
+                <h3>Recepción de mercancía</h3>
+                <p class="ayuda-toggle">
+                    Estado que se asigna por defecto a la mercancía de toda Compra Directa. El usuario ya no lo
+                    selecciona en el formulario de compra - queda fijo con lo que definas aquí.
+                </p>
+                <div fxLayout="row" fxLayoutAlign="start stretch">
+                    <div fxFlex="40">
+                        <combo-estadostock [input_objeto]="objeto" [editMode]="true" [opcionview]="false"
+                            campo="idEstadoComp" (estadoSeleccionado)="onEstadoChange($event)"></combo-estadostock>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bloque">
+                <h3>Precios</h3>
+                <div class="fila-toggle">
+                    <div class="texto-toggle">
+                        <span class="nombre-toggle">Digitar precio de venta y utilidad directo en la compra</span>
+                        <span class="ayuda-toggle">Si está apagado, el precio de venta se sigue manejando aparte, por la Lista de Precios.</span>
+                    </div>
+                    <mat-slide-toggle formControlName="actPrecioCompra" color="primary"></mat-slide-toggle>
+                </div>
+                <div fxLayout="row" fxLayoutAlign="start stretch">
+                    <div fxFlex="25">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>% Utilidad general</mat-label>
+                            <input matInput type="number" formControlName="porcUtilidadGeneral">
+                            <span matTextSuffix>%</span>
+                        </mat-form-field>
+                        <p class="ayuda-toggle">
+                            Markup sugerido al digitar el costo en la compra, cuando el artículo no tiene un %
+                            propio en Utilidad x Categoría. Déjalo vacío para no sugerir nada por defecto.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </mat-card-content>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="button" [disabled]="guardando" (click)="guardar()">Guardar</button>
+        </mat-card-actions>
+    </mat-card>
+</form>

@@ -5,8 +5,7 @@ export class Persona{
     nombres! : string;
     apellidos! : string;
     nombreCompleto! : string;
-    sexo! : string;
-    fechaNacimiento! : Date;
+    sexo?: string;
     direccion! : string;
     telefono! : string;
     email! : string;

@@ -3,10 +3,12 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { combineLatest, startWith } from 'rxjs';
 import { BodegaCombo } from 'src/app/core/interfaces/Bodega/BodegaCombo';
+import { EstadoCombo } from 'src/app/core/interfaces/Bodega/EstadoCombo';
 import { ClienteSearch } from 'src/app/core/interfaces/Comercial/ClienteSearch';
 import { Documentos_Combo } from 'src/app/core/interfaces/Comercial/Documentos_Combo';
 import { VentaDisponible } from 'src/app/core/interfaces/Comercial/VentaDisponible';
@@ -35,6 +37,8 @@ import { CajaCombo } from 'src/app/core/interfaces/Comercial/CajaCombo';
 import { ListaPrecioCombo } from 'src/app/core/interfaces/Comercial/ListaPrecioCombo';
 import { ListaprecioService } from 'src/app/core/services/Ventas/listaprecio.service';
 import { FormMediopagoComponent, LineaPago } from 'src/app/modules/Comercial/resources/form-mediopago/form-mediopago.component';
+import { ModalConfirmacionReporteComponent, ModalConfirmacionReporteData } from 'src/app/modules/Comercial/resources/modal-confirmacion-reporte/modal-confirmacion-reporte.component';
+import { FacturaReporteService } from 'src/app/core/reports/Comercial/factura-reporte.service';
 
 // Sentinel de UI, nunca se manda al backend como id_mediopago real - solo
 // activa la grilla de lineas de pago (form-mediopago) cuando se selecciona.
@@ -67,8 +71,16 @@ export class FormVentaDirectaComponent {
   // en rojo los campos obligatorios sin llenar (combo-cliente, ver mostrarError).
   intentoGuardar: boolean = false;
 
+  // Indice de pestana activa (0=Datos Generales, 1=Medio de Pago y Totales) -
+  // controlado por codigo para poder saltar a la pestana de pago cuando el
+  // guardado falla por no haber distribuido el pago mixto (ver enviarFormulario).
+  selectedTabIndex: number = 0;
+
   @ViewChild('formDirective') formDirective!: NgForm;
   @ViewChild('impIgresoInput') impIgresoInputRef!: ElementRef<HTMLInputElement>;
+  // Solo existe mientras "Pago Mixto" esta seleccionado (el @if del template lo
+  // monta/desmonta) - opcional porque puede no estar presente al momento del reset.
+  @ViewChild(FormMediopagoComponent) formMediopagoRef?: FormMediopagoComponent;
 
   //tabla de articulos
   //detalle: CompraDetalle[] = [];
@@ -91,6 +103,11 @@ export class FormVentaDirectaComponent {
   //Bodegas
   list_bodegas: BodegaCombo[] = [];
   SelectBodegasControl = new FormControl<BodegaCombo | null>(null, Validators.required);
+
+  // Poblado via el (estadosCargados) de combo-estadostock - solo para saber
+  // cuantas opciones cargo y decidir si el selector se oculta (ver
+  // camposVisiblesCabezal/flexCampoCabezal mas abajo).
+  list_estados: EstadoCombo[] = [];
 
   //Impuestos
   list_impuestos: TasasCombo[] = [];
@@ -168,7 +185,9 @@ export class FormVentaDirectaComponent {
     private listaprecioService: ListaprecioService,
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
-    private router: Router) {
+    private router: Router,
+    private dialog: MatDialog,
+    private reporteService: FacturaReporteService) {
     this.objeto = new Ventas();
   }
 
@@ -608,6 +627,10 @@ Receptores
       idEstado: estado.id
     });
     this.actualizarStockPreciosMasivo();
+  }
+
+  recibirEstadosCargados(estados: EstadoCombo[]) {
+    this.list_estados = estados;
   }
 
   // Recalcula stock y precio de todas las lineas ya cargadas en la grilla en una
@@ -1258,6 +1281,17 @@ Receptores
 
   // Método para agregar el log al FormArray
   agregarLogAuditoria() {
+    const logsArray = this.formulario.get('logs') as FormArray;
+
+    // Una venta nueva (aun no persistida) no tiene historia real todavia - si
+    // un intento anterior de guardar fallo (ej. error del backend) ya dejo una
+    // entrada "Nuevo" pegada aca (resetCampos() solo limpia tras un guardado
+    // EXITOSO), un reintento no debe acumular otra encima, se reemplaza. En
+    // edicion si se acumula: cada guardado exitoso es un evento real distinto.
+    if (!this.isEditMode) {
+      logsArray.clear();
+    }
+
     // 1. Obtienes el objeto de log ya completo y formateado del servicio
     const logData = this.logAuditoria.generarLog(!this.isEditMode ? 'Nuevo' : 'Edicion');
 
@@ -1269,7 +1303,6 @@ Receptores
     });
 
     // 3. Lo añades al FormArray
-    const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.push(auditoriaGroup);
   }
 
@@ -1359,7 +1392,8 @@ Receptores
     if (this.formulario.invalid) {
       return; // El resto de los campos obligatorios ya quedaron en rojo arriba
     }
-
+    console.log("paso test")
+    console.log(this.formulario.value);
     // Construye las lineas de pago: un solo medio (lo elegido en "Forma Pago")
     // o, si es "Pago Mixto", las lineas armadas por la grilla form-mediopago.
     // El backend vuelve a validar esta suma (single round-trip), esto es solo
@@ -1373,6 +1407,9 @@ Receptores
     const sumaPagos = Math.round(detallesPago.reduce((acc, d) => acc + (d.importe || 0), 0) * 100) / 100;
     if (Math.abs(sumaPagos - this.totalFinal) > 0.01) {
       this.notificacion.showError('La suma de los medios de pago no coincide con el total de la venta.');
+      // Salta a "Medio de Pago y Totales" para que el usuario pueda distribuir
+      // el pago mixto sin tener que ir a buscar la pestana manualmente.
+      this.selectedTabIndex = 1;
       return;
     }
     console.log("Paso Json");
@@ -1409,7 +1446,6 @@ Receptores
 
     // 4. Ahora sí, enviamos jsonParaAPI al servicio
     console.log('JSON Limpio:', jsonParaAPI);
-
     if (this.isEditMode) {
       console.log("Editar")
       this.VentasService.edit(this.objeto.idTrans!, jsonParaAPI).subscribe({
@@ -1427,6 +1463,10 @@ Receptores
       this.VentasService.save(jsonParaAPI).subscribe({
         next: (venta) => {
           this.notificacion.showSuccess('Venta guardada con éxito!');
+          // .value excluye searchCliente porque queda deshabilitado tras
+          // seleccionar el cliente (ver onClienteChange) - getRawValue() si
+          // trae su valor, mismo criterio que dataCompleta mas arriba.
+          this.mostrarConfirmacionGuardado(venta, this.formulario.getRawValue().searchCliente);
           this.resetCampos();
         },
         error: (err) => {
@@ -1436,6 +1476,47 @@ Receptores
       });
     }
 
+  }
+
+  // A diferencia de venta-pos (impresion silenciosa directa), aca se confirma
+  // el guardado con una modal que ofrece los reportes bajo demanda - factura
+  // directa no es una cola de caja rapida, y el formato Carta es nuevo/sin
+  // probar en campo. El PDF de cada formato solo se genera si el usuario
+  // pide ese reporte (nunca al guardar), y se abre en pestana nueva - el
+  // visor nativo del navegador ya trae su propio zoom/imprimir/descargar,
+  // sin que nosotros tengamos que simularlo en una modal apretada.
+  mostrarConfirmacionGuardado(objeto: any, cliente: ClienteSearch): void {
+    const construirFacturaJson = () => {
+      const fechaObjeto = new Date(objeto.fecDoc);
+      return {
+        consecutivo: `${objeto.serie || ''}-${objeto.nroDocum || ''}`,
+        fecha: new Intl.DateTimeFormat('es-CO', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).format(fechaObjeto).replace(',', ''),
+        cliente: `${cliente.codTit || ''} - ${cliente.nombreCompleto || ''}`,
+        items: objeto.detalles,
+        neto: objeto.impNeto,
+        impdcto: objeto.impDescuento,
+        impIVA: objeto.valorImpuesto1,
+        total: objeto.impTotal
+      };
+    };
+
+    this.dialog.open(ModalConfirmacionReporteComponent, {
+      data: {
+        titulo: `Factura ${objeto.serie || ''}-${objeto.nroDocum || ''} guardada con éxito`,
+        subtitulo: `Total: ${(objeto.impTotal ?? 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP' })}`,
+        acciones: [
+          { label: 'Imprimir Tirilla', generarUrl: () => this.reporteService.generarUrlFactura(construirFacturaJson(), 'TIRILLA') },
+          { label: 'Imprimir Carta', generarUrl: () => this.reporteService.generarUrlFactura(construirFacturaJson(), 'CARTA') }
+        ]
+      } as ModalConfirmacionReporteData
+    });
   }
 
   resetCampos() {
@@ -1505,6 +1586,11 @@ Receptores
 
     this.lineasPagoMixto = [];
     this.lineasPagoIniciales = [];
+    // El propio componente form-mediopago no se destruye/recrea entre ventas si
+    // "Pago Mixto" sigue seleccionado (su @if no cambia) - hay que pedirle
+    // explicitamente que limpie su grilla interna, sino arrastra las lineas
+    // de la venta anterior ya grabada.
+    this.formMediopagoRef?.resetear();
   }
 
 

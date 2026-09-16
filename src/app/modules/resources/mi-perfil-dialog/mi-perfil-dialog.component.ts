@@ -61,10 +61,7 @@ export class MiPerfilDialogComponent {
           usuario: data.usuario,
           nomUsuario: data.nomUsuario,
         });
-        this.personaGroup.patchValue({
-          ...data.persona,
-          fechaNacimiento: data.persona.fechaNacimiento ? new Date(data.persona.fechaNacimiento) : null,
-        }, { emitEvent: false });
+        this.personaGroup.patchValue(data.persona, { emitEvent: false });
         this.cargarLogsExistentes(data.logs);
         this.cargando = false;
       },

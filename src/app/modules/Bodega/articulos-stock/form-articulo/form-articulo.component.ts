@@ -24,6 +24,11 @@ import { modules_depencias } from 'src/app/modules/dependencias/modules_depencia
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
+import { PermisosStateService } from 'src/app/core/services/core/permisos-state.service';
+
+// Mismo codigo de menu que usa el guard de las rutas articulos/edit y
+// articulos-stock.component.ts para su propio boton de editar en la lista.
+const MENU_CODIGO = 'INV_ART';
 
 @Component({
   selector: 'form-articulo',
@@ -40,6 +45,10 @@ export class FormArticuloComponent {
   titulo_form !: string;
   isEditMode: boolean = false;
   isReadOnly: boolean = false;
+  // Controla si se muestra el lapiz de "habilitar edicion" en modo vista -
+  // se lee del cache en memoria de PermisosStateService (ya resuelto por el
+  // guard/la lista antes de llegar aqui, no dispara una consulta nueva al API).
+  puedeEditar: boolean = false;
 
   //Objecto de filtros
   objeto_filtro!: EmpresaByNegocioCategorias;
@@ -84,7 +93,8 @@ export class FormArticuloComponent {
     private logAuditoria: AuditoriaService,
     private router: Router,
     private route: ActivatedRoute,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private permisosState: PermisosStateService
   ) {
     this.objeto = new Articulo();
   }
@@ -96,9 +106,18 @@ export class FormArticuloComponent {
     this.router.navigate(['/articulos']);
   }
 
+  // Lapiz junto al boton de auditoria (solo visible en modo vista, y solo si
+  // el usuario tiene permiso real de editar): navega a la ruta de edicion ya
+  // existente en vez de habilitar los campos in-place, para reutilizar el
+  // guard de permisos y mantener la URL coherente con el modo del formulario.
+  editarArticulo(): void {
+    this.router.navigate(['/articulos/edit', this.objeto.id_articulo]);
+  }
+
   ngOnInit(): void {
     console.log("form Articulo")
     console.log(this.objeto)
+    this.puedeEditar = this.permisosState.tienePermiso(MENU_CODIGO, 'EDITAR');
     //Se instancias las variables para el formulario
     this.formulario = this.fb.group({
       id_articulo: [this.objeto.id_articulo],
@@ -226,6 +245,8 @@ export class FormArticuloComponent {
         this.formulario.get('idImpuesto')?.patchValue(data.idImpuesto);
         this.formulario.get('activoStock')?.patchValue(data.activoStock);
         this.formulario.get('manejaLote')?.patchValue(data.manejaLote);
+        this.formulario.get('stockMin')?.patchValue(data.stockMin);
+        this.formulario.get('stockMax')?.patchValue(data.stockMax);
         // grupoContable/cuentaInventario ya no se cargan desde el registro existente:
         // quedan siempre en su valor por defecto ('SRV'/'0') hasta que exista modulo contable.
         this.cargarLogsExistentes(data.logs);

@@ -166,10 +166,7 @@ export class FormUsuarioComponent {
         // nombres/apellidos dispara PersonaComponent.actualizarResumen() ->
         // onPersonaSubformChange(), que pisa el nomUsuario recien cargado
         // (linea de arriba) con el nombre completo de la persona.
-        this.personaGroup.patchValue({
-          ...data.persona,
-          fechaNacimiento: data.persona.fechaNacimiento ? new Date(data.persona.fechaNacimiento) : null,
-        }, { emitEvent: false });
+        this.personaGroup.patchValue(data.persona, { emitEvent: false });
 
         this.cargarLogsExistentes(data.logs);
       },
@@ -234,10 +231,7 @@ export class FormUsuarioComponent {
 
       this.personaService.getById(persona.idPersona!).subscribe({
         next: (personaCompleta) => {
-          this.personaGroup.patchValue({
-            ...personaCompleta,
-            fechaNacimiento: personaCompleta.fechaNacimiento ? new Date(personaCompleta.fechaNacimiento) : null,
-          });
+          this.personaGroup.patchValue(personaCompleta);
         },
         error: (err) => console.error('Error cargando el detalle de la persona', err)
       });

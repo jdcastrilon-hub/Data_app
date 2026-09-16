@@ -1,0 +1,27 @@
+.mat-column-position {
+  width: 50px;
+  text-align: center;
+}
+
+// El panel de mat-menu se renderiza en un overlay fuera del componente,
+// por eso se necesita ::ng-deep para poder darle estilo.
+::ng-deep .menu-columnas {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 16px;
+}
+
+.icono-tipo {
+  color: #757575;
+  vertical-align: middle;
+}
+
+.importe-ingreso {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.importe-egreso {
+  color: #c62828;
+  font-weight: 500;
+}

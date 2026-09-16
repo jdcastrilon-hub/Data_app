@@ -20,6 +20,17 @@
             </div>
         </mat-menu>
     </div>
+    @if (cargando) {
+    <div class="sin-resultados">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p>Consultando...</p>
+    </div>
+    } @else if (filtrosActuales && dataSource.data.length === 0) {
+    <div class="sin-resultados">
+        <mat-icon>search_off</mat-icon>
+        <p>No se encontraron datos para los filtros seleccionados.</p>
+    </div>
+    } @else {
     <table mat-table [dataSource]="dataSource">
 
         <ng-container matColumnDef="position">
@@ -77,5 +88,6 @@
     </table>
     <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
         (page)="cambioPagina($event)" showFirstLastButtons></mat-paginator>
+    }
 
 </div>

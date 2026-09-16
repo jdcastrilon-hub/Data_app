@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ElementRef, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { modules_depencias } from '../../../dependencias/modules_depencias.module';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -23,13 +23,14 @@ import { LoginService } from 'src/app/core/services/core/login.service';
 import { MatDialog } from '@angular/material/dialog';
 import { AuditoriaDialogComponent } from 'src/app/modules/resources/auditoria-dialog/auditoria-dialog.component';
 import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'form-ajustestock',
   standalone: true,
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
     MatDatepickerModule, ArticuloAutocompletComponent, RouterModule,
-    ComboBodegaComponent, ComboEstadostockComponent, ComboLoteComponent],
+    ComboBodegaComponent, ComboEstadostockComponent, ComboLoteComponent, MatTooltipModule],
   templateUrl: './form-ajuste.component.html',
   styleUrl: './form-ajuste.component.scss'
 })
@@ -54,6 +55,10 @@ export class FormAjusteComponent {
 
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
+
+  // Un input por fila de la grilla (uno se crea por cada *matCellDef) - se usa
+  // para pasar el foco a "Cantidad" apenas se carga un articulo nuevo.
+  @ViewChildren('inputCantidad') inputsCantidad!: QueryList<ElementRef>;
 
   //constructor
   constructor(private fb: FormBuilder,
@@ -380,6 +385,7 @@ export class FormAjusteComponent {
           fila.get('idLote')?.updateValueAndValidity();
           fila.get('search')?.disable(); //Se bloque la primera columna.
           this.agregarLineaVacia(); //Se agrega linea vacia para que el usuario cargue mas articulos.
+          this.enfocarCantidad(index); //Pasamos el foco a "Cantidad" de esta misma fila.
         }
 
       },
@@ -387,6 +393,23 @@ export class FormAjusteComponent {
         console.error('Error (onArticuloChange)', err);
       }
     });
+  }
+
+  /**
+   * Pasa el foco (y selecciona el texto) al input de "Cantidad" de la fila
+   * indicada, una vez el articulo ya quedo cargado - mismo patron ya usado en
+   * form-compra-directa (enfocarCosto). El setTimeout espera a que Angular
+   * termine de renderizar la fila (el articulo recien se acaba de patchear).
+   */
+  enfocarCantidad(index: number): void {
+    setTimeout(() => {
+      const lista = this.inputsCantidad.toArray();
+      const inputActual = lista[index];
+      if (inputActual) {
+        inputActual.nativeElement.focus();
+        inputActual.nativeElement.select();
+      }
+    }, 150);
   }
 
   /**
@@ -481,6 +504,7 @@ export class FormAjusteComponent {
    * Metodo que se activa cuando el combo-lote de una fila emite un lote seleccionado o creado.
    */
   onLoteChange(lote: LoteDisponible, index: number): void {
+    console.log("onLoteChange")
     const fila = this.detalles.at(index);
     fila.patchValue({ idLote: lote.idLote });
     fila.get('idLote')?.updateValueAndValidity();
@@ -491,6 +515,7 @@ export class FormAjusteComponent {
       this.agregarLoteAlArray(lote, fila.get('idArticulo')?.value, index + 1);
     }
   }
+
 
   // Método para obtener el FormArray de lotes nuevos pendientes
   get nuevosLotes(): FormArray {

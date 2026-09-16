@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  background-color: #e2e2e2;
+  padding: 8px;
+}
+
+.bloque {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 15px;
+    color: #333;
+  }
+}
+
+.ayuda {
+  font-size: 12px;
+  color: #777;
+  margin: 0 0 12px 0;
+}
+
+.lista-check {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detalle {
+  color: #777;
+  font-size: 12px;
+}
+
+.alerta {
+  margin: 12px 0 0 0;
+  font-size: 12px;
+  color: #b26a00;
+}
+
+.mat-accion-botones {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 16px 16px;
+}

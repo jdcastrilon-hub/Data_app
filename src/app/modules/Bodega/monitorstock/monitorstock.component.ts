@@ -35,6 +35,11 @@ export class MonitorstockComponent {
   pageSize: number = 50;
 
   filtrosActuales: any;
+  // Evita el parpadeo "sin resultados" -> tabla: mientras la consulta esta en
+  // vuelo, lista_* ya se vacio (para no mostrar datos viejos) pero todavia no
+  // llego la respuesta real - sin este flag, la vista de resultados no puede
+  // distinguir "consulte y no hay nada" de "estoy esperando la respuesta".
+  cargando: boolean = false;
 
   obj_filtros!: MonitorStockFiltroInventario;
 
@@ -93,6 +98,7 @@ export class MonitorstockComponent {
     console.log('Reporte seleccionado actualmente:', this.reporteSeleccionado);
 
     this.lista_inventario = [];
+    this.cargando = true;
 
     // Aquí es donde llamas a tu servicio de FastAPI
     // Pasando el tipo de reporte y los filtros
@@ -100,11 +106,18 @@ export class MonitorstockComponent {
       this.paginaActual,
       this.pageSize,
       filtrosRecibidos)
-      .subscribe(res => {
-        console.log('Repuesta API:', res);
-        this.kpisData[this.reporteSeleccionado] = res.kpis;
-        this.lista_inventario = res.detalles;
-        this.totalRegistros = res.totalElements;
+      .subscribe({
+        next: (res) => {
+          console.log('Repuesta API:', res);
+          this.kpisData[this.reporteSeleccionado] = res.kpis;
+          this.lista_inventario = res.detalles;
+          this.totalRegistros = res.totalElements;
+          this.cargando = false;
+        },
+        error: (err) => {
+          console.error('Error consultando inventario', err);
+          this.cargando = false;
+        }
       });
 
   }
@@ -134,25 +147,33 @@ export class MonitorstockComponent {
     }
 
     this.lista_valoracion = [];
+    this.cargando = true;
 
     this.service.monitorvaloracion(this.paginaActual, this.pageSize, filtrosRecibidos)
-      .subscribe(res => {
-        this.kpisData['valoracion'] = [
-          {
-            titulo: 'Valor Total de Inventario',
-            valor: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 2 }).format(res.valorTotalInventario),
-            icono: 'payments',
-            color: '#2e7d32'
-          },
-          {
-            titulo: 'Total de Artículos',
-            valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
-            icono: 'inventory_2',
-            color: '#1976d2'
-          }
-        ];
-        this.lista_valoracion = res.detalles;
-        this.totalRegistros = res.totalElements;
+      .subscribe({
+        next: (res) => {
+          this.kpisData['valoracion'] = [
+            {
+              titulo: 'Valor Total de Inventario',
+              valor: new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 2 }).format(res.valorTotalInventario),
+              icono: 'payments',
+              color: '#2e7d32'
+            },
+            {
+              titulo: 'Numero de Artículos',
+              valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
+              icono: 'inventory_2',
+              color: '#1976d2'
+            }
+          ];
+          this.lista_valoracion = res.detalles;
+          this.totalRegistros = res.totalElements;
+          this.cargando = false;
+        },
+        error: (err) => {
+          console.error('Error consultando valoración', err);
+          this.cargando = false;
+        }
       });
   }
 
@@ -171,25 +192,33 @@ export class MonitorstockComponent {
     }
 
     this.lista_stockminimo = [];
+    this.cargando = true;
 
     this.service.monitorstockminimo(this.paginaActual, this.pageSize, filtrosRecibidos)
-      .subscribe(res => {
-        this.kpisData['stockminimo'] = [
-          {
-            titulo: 'Artículos en Alerta',
-            valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
-            icono: 'warning',
-            color: '#c62828'
-          },
-          {
-            titulo: 'Unidades Faltantes',
-            valor: new Intl.NumberFormat('es-CO').format(res.totalFaltante),
-            icono: 'trending_down',
-            color: '#ef6c00'
-          }
-        ];
-        this.lista_stockminimo = res.detalles;
-        this.totalRegistros = res.totalElements;
+      .subscribe({
+        next: (res) => {
+          this.kpisData['stockminimo'] = [
+            {
+              titulo: 'Artículos en Alerta',
+              valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
+              icono: 'warning',
+              color: '#c62828'
+            },
+            {
+              titulo: 'Unidades Faltantes',
+              valor: new Intl.NumberFormat('es-CO').format(res.totalFaltante),
+              icono: 'trending_down',
+              color: '#ef6c00'
+            }
+          ];
+          this.lista_stockminimo = res.detalles;
+          this.totalRegistros = res.totalElements;
+          this.cargando = false;
+        },
+        error: (err) => {
+          console.error('Error consultando stock mínimo', err);
+          this.cargando = false;
+        }
       });
   }
 
@@ -208,25 +237,33 @@ export class MonitorstockComponent {
     }
 
     this.lista_vencimientos = [];
+    this.cargando = true;
 
     this.service.monitorvencimientos(this.paginaActual, this.pageSize, filtrosRecibidos)
-      .subscribe(res => {
-        this.kpisData['vencimientos'] = [
-          {
-            titulo: 'Lotes por Vencer',
-            valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
-            icono: 'event_busy',
-            color: '#c62828'
-          },
-          {
-            titulo: 'Unidades en Riesgo',
-            valor: new Intl.NumberFormat('es-CO').format(res.totalUnidadesEnRiesgo),
-            icono: 'inventory_2',
-            color: '#ef6c00'
-          }
-        ];
-        this.lista_vencimientos = res.detalles;
-        this.totalRegistros = res.totalElements;
+      .subscribe({
+        next: (res) => {
+          this.kpisData['vencimientos'] = [
+            {
+              titulo: 'Lotes por Vencer',
+              valor: new Intl.NumberFormat('es-CO').format(res.totalElements),
+              icono: 'event_busy',
+              color: '#c62828'
+            },
+            {
+              titulo: 'Unidades en Riesgo',
+              valor: new Intl.NumberFormat('es-CO').format(res.totalUnidadesEnRiesgo),
+              icono: 'inventory_2',
+              color: '#ef6c00'
+            }
+          ];
+          this.lista_vencimientos = res.detalles;
+          this.totalRegistros = res.totalElements;
+          this.cargando = false;
+        },
+        error: (err) => {
+          console.error('Error consultando vencimientos', err);
+          this.cargando = false;
+        }
       });
   }
 

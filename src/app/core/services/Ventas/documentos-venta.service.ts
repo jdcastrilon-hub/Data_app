@@ -5,6 +5,7 @@ import { environment } from 'src/environments/environment';
 import { DocumentoVenta } from '../../models/Ventas/DocumentoVenta';
 import { PageResponse } from '../../models/core/PageResponse';
 import { DocumentoVentaListView } from '../../interfaces/Comercial/DocumentoVentaListView';
+import { Documentos_Combo } from '../../interfaces/Comercial/Documentos_Combo';
 import { LoginService } from '../core/login.service';
 
 interface ApiResponse<T = void> {
@@ -33,6 +34,17 @@ export class DocumentosVentaService {
     }
 
     return this.http.get<PageResponse<DocumentoVentaListView>>(this.url + "pagination", { params });
+  }
+
+  // Documentos activos de una sucursal filtrados por clase (ej. 'NotaCredito'),
+  // para el select de "Documento" de otros modulos transaccionales (idEmp viene
+  // de la sesion) - distinto del combo fijo a clase='Factura' de venta-directa/POS.
+  listCombo(idSucursal: number, clase: string): Observable<Documentos_Combo[]> {
+    const params = new HttpParams()
+      .set('id_emp', String(this.loginService.getIdEmpresaActual()))
+      .set('id_sucursal_emp', idSucursal)
+      .set('clase', clase);
+    return this.http.get<Documentos_Combo[]>(this.url + "listCombo", { params });
   }
 
   //Obtener documento de venta por su llave compuesta (idEmp viene de la sesion)

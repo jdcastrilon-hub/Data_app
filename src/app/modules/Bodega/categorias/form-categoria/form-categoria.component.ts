@@ -35,6 +35,14 @@ export class FormCategoriaComponent {
   selectedValue!: string;
   dataSource = new MatTableDataSource<FormGroup>();
 
+  // En creación todas las subcategorías son nuevas (ninguna tiene código
+  // todavía) - se oculta la columna entera en vez de mostrarla vacía fila por
+  // fila, para no confundir. En edición conviven filas ya asignadas y filas
+  // nuevas recién agregadas, así que ahí la columna se mantiene.
+  get columnasSubcategorias(): string[] {
+    return this.isEditMode ? ['id', 'name', 'actions'] : ['name', 'actions'];
+  }
+
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
 
@@ -155,7 +163,9 @@ export class FormCategoriaComponent {
     const subCat = this.fb.group({
       id: [data?.id || null],
       //codEmp: [data?.codEmp || ''],
-      codSubCategoria: [data?.codSubCategoria || '', Validators.required],
+      // Ya no lo escribe el usuario: lo asigna el backend (numerador propio
+      // de esta categoria) al guardar - queda vacio hasta entonces.
+      codSubCategoria: [data?.codSubCategoria || ''],
       nomSubCategoria: [data?.nomSubCategoria || '', Validators.required],
       tieneArticulos: [data?.tieneArticulos || false, Validators.required],
     });

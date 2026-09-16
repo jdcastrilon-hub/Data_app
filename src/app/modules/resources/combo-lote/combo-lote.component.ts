@@ -9,9 +9,6 @@ import { LoteDisponible } from 'src/app/core/interfaces/Bodega/LoteDisponible';
 import { ArticuloService } from 'src/app/core/services/Bodega/articulo.service';
 import { ModalCrearLoteComponent } from 'src/app/modules/resources/modal-crear-lote/modal-crear-lote.component';
 
-// Opcion especial usada para representar "crear nuevo lote" dentro del autocompletar.
-const OPCION_CREAR = '__crear_nuevo__';
-
 @Component({
   selector: 'combo-lote',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MatAutocompleteModule, MatInputModule],
@@ -32,7 +29,6 @@ export class ComboLoteComponent implements OnChanges {
   listaLotes: LoteDisponible[] = [];
   opcionesFiltradas: LoteDisponible[] = [];
   textoActual = '';
-  readonly OPCION_CREAR = OPCION_CREAR;
 
   constructor(private articuloService: ArticuloService, private dialog: MatDialog) { }
 
@@ -92,12 +88,6 @@ export class ComboLoteComponent implements OnChanges {
 
   onSelected(event: MatAutocompleteSelectedEvent): void {
     const seleccion = event.option.value;
-
-    if (seleccion === OPCION_CREAR) {
-      this.abrirCrearLote();
-      return;
-    }
-
     this.bloquearSeleccion(seleccion);
     this.loteSeleccionado.emit(seleccion);
   }
@@ -116,33 +106,48 @@ export class ComboLoteComponent implements OnChanges {
   // Red de seguridad: si el usuario escribio texto libre y nunca eligio una
   // opcion del listado, se descarta al salir del campo (nunca llego a existir
   // un idLote real detras de ese texto).
+  // Se difiere un tick: el mousedown sobre una opcion (incluida "+ Crear lote")
+  // le quita el foco al input y dispara este blur ANTES de que el click termine
+  // de seleccionar la opcion - si esta logica corre en sincrono, borra
+  // textoActual/opcionesFiltradas en pleno clic y el @if de la opcion la saca
+  // del DOM antes de que optionSelected llegue a emitirse (sin ningun error
+  // visible, que era justo el sintoma reportado).
   onBlurInput(): void {
-    const valor = this.searchControl.value;
-    if (typeof valor === 'string' && valor.length > 0) {
-      this.searchControl.setValue('', { emitEvent: false });
-      this.textoActual = '';
-      this.opcionesFiltradas = this.listaLotes;
-    }
+    setTimeout(() => {
+      const valor = this.searchControl.value;
+      if (typeof valor === 'string' && valor.length > 0) {
+        this.searchControl.setValue('', { emitEvent: false });
+        this.textoActual = '';
+        this.opcionesFiltradas = this.listaLotes;
+      }
+    });
   }
 
   abrirCrearLote(): void {
-    const dialogRef = this.dialog.open(ModalCrearLoteComponent, {
-      width: '450px',
-      data: {
-        idArticulo: this.idArticulo,
-        codigoLotePrefill: this.textoActual
-      }
-    });
+    // Se difiere al siguiente tick: abrir el dialog en el mismo evento
+    // "optionSelected" compite con el cierre del propio panel del autocompletar
+    // (los dos manipulan el overlay de Angular Material a la vez) - sin esto,
+    // el dialog se crea y se destruye casi de inmediato, sin error visible
+    // (mismo ajuste ya usado en form-compra-directa.component.ts::enfocarCosto).
+    setTimeout(() => {
+      const dialogRef = this.dialog.open(ModalCrearLoteComponent, {
+        width: '450px',
+        data: {
+          idArticulo: this.idArticulo,
+          codigoLotePrefill: this.textoActual
+        }
+      });
 
-    dialogRef.afterClosed().subscribe((nuevoLote: LoteDisponible) => {
-      if (nuevoLote) {
-        this.listaLotes = [...this.listaLotes, nuevoLote];
-        this.bloquearSeleccion(nuevoLote);
-        this.loteSeleccionado.emit(nuevoLote);
-      } else {
-        // El usuario cancelo la creacion: limpiamos el texto para no dejar un valor invalido.
-        this.searchControl.setValue('', { emitEvent: false });
-      }
+      dialogRef.afterClosed().subscribe((nuevoLote: LoteDisponible) => {
+        if (nuevoLote) {
+          this.listaLotes = [...this.listaLotes, nuevoLote];
+          this.bloquearSeleccion(nuevoLote);
+          this.loteSeleccionado.emit(nuevoLote);
+        } else {
+          // El usuario cancelo la creacion: limpiamos el texto para no dejar un valor invalido.
+          this.searchControl.setValue('', { emitEvent: false });
+        }
+      });
     });
   }
 

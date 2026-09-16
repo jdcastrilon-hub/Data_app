@@ -61,20 +61,19 @@ export class FormUnidadComponent {
       idEmp: [this.objeto.idEmp],
       codUnidad: [this.objeto.codUnidad, Validators.required],
       nomUnidad: [this.objeto.nomUnidad, Validators.required],
-      esPaquete: [this.objeto.esPaquete],
-      convertUnidad: [this.objeto.convertUnidad, Validators.required],
+      // Sin campo en el formulario: hoy nada en el sistema (compras, ventas,
+      // ajuste de stock) lee esPaquete/convertUnidad - el diseño real de
+      // conversion de unidades necesitaria vivir por articulo, no en el
+      // catalogo de Unidades. Quedan en un valor fijo hasta que exista ese
+      // diseño.
+      esPaquete: ['N'],
+      convertUnidad: [0],
       fechaMod: [this.objeto.fechaMod],
       logs: this.fb.array([]),
       id: [this.objeto.id],
     });
 
-    // No se usa formulario.disable(): los inputs usan [readonly] en la plantilla
-    // (se ven normales, no apagados/grises). El checkbox es la excepción: HTML no
-    // tiene un "readonly" real para checkboxes, así que ese control sí se deshabilita.
     this.isReadOnly = this.route.snapshot.url.some(segment => segment.path === 'view');
-    if (this.isReadOnly) {
-      this.formulario.get('esPaquete')?.disable();
-    }
 
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
@@ -96,7 +95,6 @@ export class FormUnidadComponent {
         this.isEditMode = false;
         this.titulo_form = "REGISTRO DE UNIDAD";
         this.objeto = new Unidad();
-        this.formulario.get('esPaquete')?.patchValue(false);
         this.formulario.get('idEmp')?.patchValue(this.loginService.getIdEmpresaActual());
       }
     });
@@ -113,8 +111,9 @@ export class FormUnidadComponent {
         this.formulario.get('idEmp')?.patchValue(data.idEmp);
         this.formulario.get('codUnidad')?.patchValue(data.codUnidad);
         this.formulario.get('nomUnidad')?.patchValue(data.nomUnidad);
-        this.formulario.get('esPaquete')?.patchValue(data.esPaquete === 'S');
-        this.formulario.get('convertUnidad')?.patchValue(data.convertUnidad);
+        // esPaquete/convertUnidad ya no se cargan desde el registro existente:
+        // quedan siempre en su valor por defecto ('N'/0) hasta que exista un
+        // diseño real de conversion de unidades.
         this.cargarLogsExistentes(data.logs);
       },
       error => {
@@ -140,11 +139,8 @@ export class FormUnidadComponent {
 
   enviarFormulario() {
     //Asignacion de campos en cabezal
-    const estadoEsPaquete = this.formulario.get('esPaquete')?.value;
-
     this.formulario.patchValue({
       fechaMod: new Date().toISOString(),
-      esPaquete: estadoEsPaquete ? 'S' : 'N',
     });
 
     if (this.formulario.invalid) {
@@ -190,7 +186,6 @@ export class FormUnidadComponent {
   resetCampos(): void {
     this.objeto = new Unidad();
     this.formDirective.resetForm(); // limpia valores + estado submitted/touched
-    this.formulario.get('esPaquete')?.patchValue(false);
     this.formulario.get('idEmp')?.patchValue(this.loginService.getIdEmpresaActual());
 
     const logsArray = this.formulario.get('logs') as FormArray;

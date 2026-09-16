@@ -1,4 +1,5 @@
-<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()"
+    (keydown.enter)="$event.preventDefault()">
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
@@ -26,35 +27,17 @@
                         fxLayoutGap="10px">
                         <div fxFlex="30" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Codigo Unidad</mat-label>
+                                <mat-label>Unidad de Medida</mat-label>
                                 <input matInput formControlName="codUnidad" [readonly]="isReadOnly">
                                 <mat-error>Codigo requerido</mat-error>
                             </mat-form-field>
                         </div>
-                        <div fxFlex="40" fxFlex.lt-md="100%">
+                        <div fxFlex="70" fxFlex.lt-md="100%">
                             <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Nombre Unidad</mat-label>
+                                <mat-label>Descripcion Unidad</mat-label>
                                 <input matInput formControlName="nomUnidad" [readonly]="isReadOnly">
                                 <mat-error>Nombre requerido</mat-error>
                             </mat-form-field>
-                        </div>
-                        <div fxFlex="30" fxFlex.lt-md="100%">
-                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                <mat-label>Conversion</mat-label>
-                                <input matInput type="number" formControlName="convertUnidad" [readonly]="isReadOnly">
-                                <mat-error>Conversion requerida</mat-error>
-                            </mat-form-field>
-                        </div>
-                    </div>
-
-                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
-                        fxLayoutGap="10px">
-                        <div fxFlex="30" fxFlex.lt-md="100%">
-                            <section class="example-section">
-                                <mat-checkbox formControlName="esPaquete" color="primary">
-                                    Es Paquete
-                                </mat-checkbox>
-                            </section>
                         </div>
                     </div>
 

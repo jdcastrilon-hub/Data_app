@@ -1,5 +1,14 @@
 <div class="bloque" [formGroup]="group">
-    <h4>Datos de la persona</h4>
+
+  <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="24px" class="tipo-persona-row">
+    <span class="tipo-persona-label">Tipo de Persona</span>
+    <mat-radio-group aria-label="Tipo de Persona" color="primary" [value]="esJuridica ? 'juridica' : 'natural'"
+      (change)="elegirTipoPersona($event.value)">
+      <mat-radio-button value="natural">Natural</mat-radio-button>
+      <mat-radio-button value="juridica">Juridica</mat-radio-button>
+    </mat-radio-group>
+  </div>
+
   <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
 
     <div fxFlex="10">
@@ -22,43 +31,40 @@
     <div fxFlex="20">
       <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
         <mat-label>Numero.</mat-label>
-        <input matInput formControlName="codigoTitular">
+        <input matInput formControlName="codigoTitular" (blur)="onBlurNumero()">
+        @if (permitirBusquedaPersona) {
+        <button mat-icon-button matSuffix type="button" (click)="buscarPersona.emit()"
+          matTooltip="Buscar persona existente">
+          <mat-icon>search</mat-icon>
+        </button>
+        }
         <mat-error>Codigo requerido</mat-error>
       </mat-form-field>
     </div>
 
-    <div fxFlex="25">
+    <div [fxFlex]="esJuridica ? 70 : 35">
       <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-        <mat-label>Nombre</mat-label>
+        <mat-label>{{etiquetaNombre}}</mat-label>
         <input matInput formControlName="nombres">
-        <mat-error>Codigo requerido</mat-error>
+        <mat-error>Campo requerido</mat-error>
       </mat-form-field>
     </div>
 
-    <div fxFlex="25">
+    @if (!esJuridica) {
+    <div fxFlex="35">
       <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
         <mat-label>Apellido</mat-label>
         <input matInput formControlName="apellidos">
         <mat-error>Codigo requerido</mat-error>
       </mat-form-field>
     </div>
-
-    <div fxFlex="20">
-      <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
-        <mat-label>Fecha Nacimiento</mat-label>
-        <input matInput [matDatepicker]="picker" placeholder="dd/mm/yyyy" formControlName="fechaNacimiento">
-        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-        @if (group.get('fechaNacimiento')?.hasError('menorDeEdad')) {
-        <mat-error>La persona debe ser mayor de edad</mat-error>
-        }
-      </mat-form-field>
-    </div>
+    }
 
   </div>
 
   <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
 
+    @if (!esJuridica) {
     <div fxFlex="10">
       <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
         <mat-label>Sexo</mat-label>
@@ -72,8 +78,9 @@
         }
       </mat-form-field>
     </div>
+    }
 
-    <div fxFlex="20">
+    <div [fxFlex]="esJuridica ? 22 : 20">
       <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
         <mat-label>Direccion</mat-label>
         <input matInput formControlName="direccion">
@@ -81,7 +88,7 @@
       </mat-form-field>
     </div>
 
-    <div fxFlex="25">
+    <div [fxFlex]="esJuridica ? 28 : 25">
       <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
         <mat-label>Telefono</mat-label>
         <input matInput formControlName="telefono">
@@ -89,7 +96,7 @@
       </mat-form-field>
     </div>
 
-    <div fxFlex="25">
+    <div [fxFlex]="esJuridica ? 28 : 25">
       <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
         <mat-label>Mail</mat-label>
         <input matInput formControlName="email">
@@ -97,7 +104,7 @@
       </mat-form-field>
     </div>
 
-    <div fxFlex="20">
+    <div [fxFlex]="esJuridica ? 22 : 20">
       <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
         <mat-label>Ciudad</mat-label>
         <mat-select [formControl]="SelecCiudadControl" required>

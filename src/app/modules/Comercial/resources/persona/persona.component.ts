@@ -1,14 +1,16 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { AbstractControl, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatDialogModule } from '@angular/material/dialog';
 import { CiudadCombo } from 'src/app/core/interfaces/Core/CiudadCombo';
 import { Persona } from 'src/app/core/models/Compras/Personas';
 import { TipoDocumento } from 'src/app/core/models/Compras/TipoDocumento';
 import { TipoDocumentoService } from 'src/app/core/services/Compras/tipo-documento.service';
 import { CiudadesService } from 'src/app/core/services/core/ciudades.service';
+import { PersonaService } from 'src/app/core/services/Compras/persona.service';
+import { PersonaSearch } from 'src/app/core/interfaces/Compras/PersonaSearch';
 import { modules_depencias } from 'src/app/modules/dependencias/modules_depencias.module';
 
 // Datos "resumen" que el padre puede querer reflejar en sus propios campos denormalizados
@@ -17,32 +19,16 @@ export interface PersonaResumen {
   nombreCompleto: string;
 }
 
-// La persona debe ser mayor de edad (aplica a proveedores/clientes/empleados por igual)
-export function mayorDeEdadValidator(edadMinima = 18): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    if (!control.value) {
-      return null; // el validator 'required' ya se encarga del caso vacío
-    }
-    const fechaNacimiento = new Date(control.value);
-    if (isNaN(fechaNacimiento.getTime())) {
-      return null;
-    }
-    const hoy = new Date();
-    let edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-    const aunNoCumpleAnios =
-      hoy.getMonth() < fechaNacimiento.getMonth() ||
-      (hoy.getMonth() === fechaNacimiento.getMonth() && hoy.getDate() < fechaNacimiento.getDate());
-    if (aunNoCumpleAnios) {
-      edad--;
-    }
-    return edad >= edadMinima ? null : { menorDeEdad: true };
-  };
-}
+// Codigo de tipo de documento que identifica una persona juridica en el catalogo
+// (m_tipodocumentos) - el resto de codigos (CC, CE, TI...) son persona natural.
+// Es una convencion, no una columna propia: ver docs/tecnica/... analisis de
+// Persona Natural/Juridica (Proveedores/Clientes).
+const CODIGO_TIPODOC_JURIDICA = 'NIT';
 
 @Component({
   selector: 'app-persona',
   imports: [MatDialogModule, modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
-    MatAutocompleteModule, MatDatepickerModule],
+    MatAutocompleteModule, MatRadioModule],
   templateUrl: './persona.component.html',
   styleUrl: './persona.component.scss'
 })
@@ -53,8 +39,20 @@ export class PersonaComponent implements OnInit, OnChanges {
   @Input({ required: true }) group!: FormGroup;
   @Input() disabled = false;
 
+  // Apagado por defecto: solo Proveedores/Clientes lo activan. Habilita el
+  // boton "Buscar persona" junto a Numero, y la validacion al perder el foco
+  // (¿ya existe una persona con este documento?) - Usuario/Mi Perfil siguen
+  // sin este comportamiento, sin que este componente cambie para ellos.
+  @Input() permitirBusquedaPersona = false;
+
   // Avisa al padre cuando cambian los datos que suele necesitar duplicar (ej. proveedor.codigoTitular/razonSocial)
   @Output() personaChange = new EventEmitter<PersonaResumen>();
+  // El usuario hizo clic en "Buscar persona" - el padre abre el modal de seleccion.
+  @Output() buscarPersona = new EventEmitter<void>();
+  // Al perder el foco de "Numero" se encontro una persona ya existente con ese
+  // documento (misma empresa) - el padre debe cargarla, igual que si se
+  // hubiera elegido desde el modal.
+  @Output() personaEncontradaPorDocumento = new EventEmitter<PersonaSearch>();
 
   // Valores por defecto - static porque crearFormGroup() (factory estatico,
   // usado por el padre para resetear el sub-formulario al registrar una
@@ -78,6 +76,14 @@ export class PersonaComponent implements OnInit, OnChanges {
   list_tipos: TipoDocumento[] = [];
   SelecTiposControl = new FormControl<TipoDocumento | null>(this.defaultTipoDoc, Validators.required);
 
+  // Tipo de Persona (Natural/Juridica) - no es un campo propio, se infiere del
+  // tipo de documento elegido (NIT = Juridica). Determina que campos aplican:
+  // Juridica no tiene Sexo ni separa Nombres/Apellidos (un solo campo, "Razon
+  // Social"). Ver docs/tecnica/... analisis Persona Natural/Juridica.
+  get esJuridica(): boolean {
+    return this.SelecTiposControl.value?.codigoTipoDocumento === CODIGO_TIPODOC_JURIDICA;
+  }
+
   //Tipos de sexo
   defaultSexo = PersonaComponent.DEFAULT_SEXO;
   list_sexos: string[] = ['M', 'F'];
@@ -91,6 +97,7 @@ export class PersonaComponent implements OnInit, OnChanges {
   constructor(
     private tipoService: TipoDocumentoService,
     private ciudadService: CiudadesService,
+    private personaService: PersonaService,
   ) { }
 
   // Factory reutilizable: cualquier formulario padre (proveedor/cliente/empleado) arma
@@ -107,22 +114,15 @@ export class PersonaComponent implements OnInit, OnChanges {
       telefono: new FormControl(data?.telefono ?? ''),
       email: new FormControl(data?.email ?? ''),
       idCiudad: new FormControl(data?.idCiudad ?? PersonaComponent.DEFAULT_CIUDAD.idCiudad, Validators.required),
-      fechaNacimiento: new FormControl(data?.fechaNacimiento ?? null, [Validators.required, mayorDeEdadValidator()]),
       fechaMod: new FormControl(data?.fechaMod ?? null),
       nombreCompleto: new FormControl(data?.nombreCompleto ?? ''),
     });
   }
 
-  // Convierte el valor crudo del FormGroup de persona al formato que espera el API
-  // (fechaNacimiento como 'YYYY-MM-DD' y fechaMod actualizada).
+  // Convierte el valor crudo del FormGroup de persona al formato que espera el API.
   static aPayload(raw: any): any {
-    const fechaNacimiento = raw.fechaNacimiento
-      ? new Date(raw.fechaNacimiento).toISOString().split('T')[0]
-      : null;
-
     return {
       ...raw,
-      fechaNacimiento,
       fechaMod: new Date().toISOString(),
     };
   }
@@ -154,6 +154,10 @@ export class PersonaComponent implements OnInit, OnChanges {
       if (match && this.SelecTiposControl.value?.id !== id) {
         this.SelecTiposControl.setValue(match, { emitEvent: false });
       }
+      // El tipo de documento es lo que determina Natural/Juridica: cualquier
+      // cambio (por el usuario o por cargar un registro existente) recalcula
+      // que campos aplican.
+      this.aplicarConsecuenciasTipoPersona();
     });
     this.group.get('sexo')?.valueChanges.subscribe(sexo => {
       if (sexo && this.SelecSexoControl.value !== sexo) {
@@ -181,6 +185,46 @@ export class PersonaComponent implements OnInit, OnChanges {
     }
   }
 
+  // El usuario eligio Natural o Juridica en el selector: busca el primer tipo
+  // de documento del catalogo que corresponda (NIT para Juridica, cualquier
+  // otro para Natural) y lo selecciona - el resto de ajustes (ocultar
+  // Sexo/Apellidos, etc.) los dispara la suscripcion a idTipoDoc.
+  elegirTipoPersona(tipo: 'natural' | 'juridica'): void {
+    const candidato = this.list_tipos.find(t =>
+      tipo === 'juridica' ? t.codigoTipoDocumento === CODIGO_TIPODOC_JURIDICA : t.codigoTipoDocumento !== CODIGO_TIPODOC_JURIDICA
+    );
+    if (candidato) {
+      this.SelecTiposControl.setValue(candidato);
+    }
+  }
+
+  // Ajusta los campos que solo aplican a Natural (Sexo, Apellidos) segun el
+  // tipo de documento vigente. Juridica: se limpian y dejan de ser
+  // obligatorios (no se muestran en la plantilla). Natural: vuelven a ser
+  // obligatorios, con un valor por defecto para Sexo si quedo vacio.
+  private aplicarConsecuenciasTipoPersona(): void {
+    const apellidosCtrl = this.group.get('apellidos');
+    const sexoCtrl = this.group.get('sexo');
+
+    if (this.esJuridica) {
+      apellidosCtrl?.clearValidators();
+      apellidosCtrl?.setValue('', { emitEvent: false });
+      sexoCtrl?.clearValidators();
+      sexoCtrl?.setValue(null, { emitEvent: false });
+      this.SelecSexoControl.setValue(null, { emitEvent: false });
+    } else {
+      apellidosCtrl?.setValidators(Validators.required);
+      sexoCtrl?.setValidators(Validators.required);
+      if (!sexoCtrl?.value) {
+        sexoCtrl?.setValue(PersonaComponent.DEFAULT_SEXO, { emitEvent: false });
+        this.SelecSexoControl.setValue(PersonaComponent.DEFAULT_SEXO, { emitEvent: false });
+      }
+    }
+    apellidosCtrl?.updateValueAndValidity({ emitEvent: false });
+    sexoCtrl?.updateValueAndValidity({ emitEvent: false });
+    this.actualizarResumen();
+  }
+
   private aplicarEstadoDisabled(): void {
     const controles = [this.SelecTiposControl, this.SelecSexoControl, this.SelecCiudadControl];
     if (this.disabled) {
@@ -192,10 +236,40 @@ export class PersonaComponent implements OnInit, OnChanges {
     }
   }
 
+  // Nombre/Razon Social visible para el usuario ("Nombre" en Natural, "Razon
+  // Social" en Juridica) - un solo campo (nombres) hace ambas veces.
+  get etiquetaNombre(): string {
+    return this.esJuridica ? 'Razon Social' : 'Nombre';
+  }
+
+  // Al terminar de escribir el documento (perder el foco), se valida si ya
+  // existe una persona con ese documento exacto en la empresa activa -
+  // decision explicita del usuario: mejor detectarlo aqui que dejar que
+  // llene 5-8 campos mas para enterarse solo al guardar. Excepcion puntual al
+  // criterio general de "una sola llamada de guardado" del proyecto.
+  onBlurNumero(): void {
+    if (!this.permitirBusquedaPersona || this.disabled) {
+      return;
+    }
+    const valor = this.group.get('codigoTitular')?.value?.trim();
+    if (!valor || valor.length < 3) {
+      return;
+    }
+    this.personaService.PersonaSearch(valor).subscribe({
+      next: (resultados) => {
+        const coincidenciaExacta = resultados.find(p => p.codTit === valor);
+        if (coincidenciaExacta) {
+          this.personaEncontradaPorDocumento.emit(coincidenciaExacta);
+        }
+      },
+      error: (err) => console.error('Error validando el documento', err)
+    });
+  }
+
   private actualizarResumen(): void {
     const nombres = this.group.get('nombres')?.value ?? '';
     const apellidos = this.group.get('apellidos')?.value ?? '';
-    const nombreCompleto = `${nombres} ${apellidos}`.trim();
+    const nombreCompleto = this.esJuridica ? nombres.trim() : `${nombres} ${apellidos}`.trim();
 
     this.group.get('nombreCompleto')?.setValue(nombreCompleto, { emitEvent: false });
 
@@ -216,6 +290,9 @@ export class PersonaComponent implements OnInit, OnChanges {
           this.SelecTiposControl.setValue(seleccionado, { emitEvent: false });
           this.group.get('idTipoDoc')?.setValue(seleccionado.id, { emitEvent: false });
         }
+        // El combo recien llego: recalcula Natural/Juridica ahora que se
+        // puede resolver el codigo del tipo de documento vigente.
+        this.aplicarConsecuenciasTipoPersona();
       },
       error: (err) => {
         console.error('Error cargando tipos de documento', err);

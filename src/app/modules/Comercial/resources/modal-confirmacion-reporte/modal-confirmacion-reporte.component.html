@@ -1,0 +1,22 @@
+<h2 mat-dialog-title>{{ data.titulo }}</h2>
+
+<mat-dialog-content>
+    @if (data.subtitulo) {
+        <p class="subtitulo">{{ data.subtitulo }}</p>
+    }
+    @if (errorMensaje) {
+        <p class="mensaje-error">{{ errorMensaje }}</p>
+    }
+</mat-dialog-content>
+
+<mat-dialog-actions alignment="end">
+    <button mat-button (click)="cerrar()">Cerrar</button>
+    @for (accion of data.acciones; track accion.label) {
+        <button mat-raised-button color="primary" [disabled]="!!generando" (click)="ejecutar(accion)">
+            @if (generando === accion.label) {
+                <mat-spinner diameter="18" style="display: inline-block; margin-right: 8px; vertical-align: middle;"></mat-spinner>
+            }
+            {{ accion.label }}
+        </button>
+    }
+</mat-dialog-actions>

@@ -18,6 +18,12 @@ export class ComboArticuloComponent implements OnInit, ControlValueAccessor {
   //Parametros de entrada
   input_objeto = input<any>(null);
   editMode = input<boolean>(false);
+  // Por defecto busca/lista por codigo interno de stock + nombre (uso original:
+  // elegir el articulo padre para asignarle un codigo de barra nuevo, ver
+  // modal-codigobarra). En true, busca y muestra el codigo de barra real
+  // (mismo endpoint que ya usa articulo-autocomplet) - pensado para filtros de
+  // Monitor, donde el usuario siempre trabaja con el codigo de barra en mano.
+  porCodigoBarra = input<boolean>(false);
 
   //salidas
   articuloSeleccionado = output<ArticuloSearch>();
@@ -39,7 +45,9 @@ export class ComboArticuloComponent implements OnInit, ControlValueAccessor {
       distinctUntilChanged(),
       switchMap(value => {
         if (typeof value === 'string' && value.length > 2) {
-          return this.articuloService.SearchArticulo(value);
+          return this.porCodigoBarra()
+            ? this.articuloService.SearchCodigoBarra(value)
+            : this.articuloService.SearchArticulo(value);
         }
         return of([]);
       })

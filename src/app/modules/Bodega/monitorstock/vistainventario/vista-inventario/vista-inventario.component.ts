@@ -30,6 +30,7 @@ export class VistaInventarioComponent {
   @Input() totalRegistros: number = 0; // Total que viene del API (ej: 500 filas)
   @Input() pageSize: number = 5; // Total que viene del API (ej: 500 filas)
   @Input() filtrosActuales: any;
+  @Input() cargando: boolean = false;
   @Output() paginacion = new EventEmitter<PageEvent>();
 
   exportando = false;

@@ -1,0 +1,60 @@
+<mat-card appearance="raised">
+    <mat-card-header class="mat-header">
+        <mat-card-title>
+            <span>CONFIGURACIÓN DE PRÉSTAMOS</span>
+        </mat-card-title>
+    </mat-card-header>
+    <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+    <mat-card-content class="mat-content">
+
+        <div class="bloque">
+            <h3>Periodicidades</h3>
+            <p class="ayuda">
+                Marca las periodicidades de cuota que esta empresa usa. Las no marcadas
+                no aparecerán al originar un préstamo.
+            </p>
+            <div class="lista-check">
+                @for (p of objeto.catalogoPeriodicidades; track p.id) {
+                <mat-checkbox
+                    [checked]="periodicidadesSel.has(p.id)"
+                    (change)="toggle(periodicidadesSel, p.id, $event.checked)">
+                    {{ p.nombre }} <span class="detalle">({{ p.dias }} días)</span>
+                </mat-checkbox>
+                }
+            </div>
+            @if (periodicidadesSel.size === 0) {
+            <p class="alerta">Sin ninguna periodicidad activa no se podrá originar un préstamo.</p>
+            }
+        </div>
+
+        <div class="bloque">
+            <h3>Fórmulas de cálculo de cuota</h3>
+            <p class="ayuda">
+                Marca las fórmulas que esta empresa maneja. Las no marcadas no aparecerán
+                al originar un préstamo.
+            </p>
+            <div class="lista-check">
+                @for (f of objeto.catalogoFormulas; track f.id) {
+                <mat-checkbox
+                    [checked]="formulasSel.has(f.id)"
+                    (change)="toggle(formulasSel, f.id, $event.checked)">
+                    {{ f.nombre }}
+                    @if (f.generaInteresMora) {
+                    <span class="detalle">· genera interés de mora</span>
+                    }
+                </mat-checkbox>
+                }
+            </div>
+            @if (formulasSel.size === 0) {
+            <p class="alerta">Sin ninguna fórmula activa no se podrá originar un préstamo.</p>
+            }
+        </div>
+
+    </mat-card-content>
+
+    <mat-card-actions class="mat-accion-botones">
+        <button mat-raised-button color="primary" type="button"
+            [disabled]="guardando || !puedeEditar" (click)="guardar()">Guardar</button>
+    </mat-card-actions>
+</mat-card>

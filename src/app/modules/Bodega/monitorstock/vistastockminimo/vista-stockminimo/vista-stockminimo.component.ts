@@ -27,6 +27,7 @@ export class VistaStockminimoComponent {
   @Input() totalRegistros: number = 0;
   @Input() pageSize: number = 5;
   @Input() filtrosActuales: any;
+  @Input() cargando: boolean = false;
   @Output() paginacion = new EventEmitter<PageEvent>();
 
   exportando = false;

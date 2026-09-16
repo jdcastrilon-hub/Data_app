@@ -1,0 +1,88 @@
+<mat-card appearance="raised">
+  <div class="bloque">
+    <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="8px grid">
+
+      <div fxFlex="22">
+        <mat-form-field class="form-field-compacto form-field-date" appearance="outline">
+          <mat-label>Rango de Fechas</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate [(ngModel)]="filtro().fechaInicial">
+            <input matEndDate [(ngModel)]="filtro().fechaFinal">
+          </mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+          <mat-hint>Vacio = saldo actual, con fecha = neto del periodo</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div fxFlex="16">
+        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+          <mat-label>Tipo de Cuenta</mat-label>
+          <mat-select [formControl]="SelectTipoCuentaControl">
+            <mat-option value="TODAS">Todas</mat-option>
+            <mat-option value="CAJA">Caja</mat-option>
+            <mat-option value="BANCO">Banco</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      @if (SelectTipoCuentaControl.value === 'CAJA') {
+      <div fxFlex="18">
+        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+          <mat-label>Caja</mat-label>
+          <mat-select [formControl]="SelectCajaControl">
+            <mat-option value="TODAS">Todas las Cajas</mat-option>
+            @for (obj_caja of list_cajas; track obj_caja) {
+            <mat-option [value]="obj_caja">{{obj_caja.nomCaja}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      }
+
+      @if (SelectTipoCuentaControl.value === 'BANCO') {
+      <div fxFlex="18">
+        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+          <mat-label>Banco</mat-label>
+          <mat-select [formControl]="SelectBancoControl">
+            <mat-option value="TODAS">Todos los Bancos</mat-option>
+            @for (obj_banco of list_bancos; track obj_banco) {
+            <mat-option [value]="obj_banco">{{obj_banco.nomBanco}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      }
+
+      <div fxFlex="16">
+        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+          <mat-label>Medio de Pago</mat-label>
+          <mat-select [formControl]="SelectMedioPagoControl">
+            <mat-option [value]="null">Todos</mat-option>
+            @for (obj_medio of list_mediospago; track obj_medio) {
+            <mat-option [value]="obj_medio">{{obj_medio.tipo}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div fxFlex="16">
+        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+          <mat-label>Vista</mat-label>
+          <mat-select [formControl]="SelectVistaControl">
+            <mat-option [value]="null">Todas</mat-option>
+            @for (obj_vista of list_vistas; track obj_vista) {
+            <mat-option [value]="obj_vista">{{obj_vista}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="btn-consultar-wrapper" fxFlex="0 0 auto" fxLayoutAlign="start start">
+        <button mat-flat-button color="primary" (click)="enviarConsulta()">
+          <mat-icon>search</mat-icon> Consultar
+        </button>
+      </div>
+    </div>
+  </div>
+</mat-card>

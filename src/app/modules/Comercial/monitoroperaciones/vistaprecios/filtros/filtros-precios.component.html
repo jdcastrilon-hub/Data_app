@@ -81,7 +81,7 @@
       <div class="bloque">
         <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="8px">
           <div fxFlex="50">
-            <combo-articulo (articuloSeleccionado)="agregarArticulo($event)"></combo-articulo>
+            <combo-articulo [porCodigoBarra]="true" (articuloSeleccionado)="agregarArticulo($event)"></combo-articulo>
           </div>
         </div>
 

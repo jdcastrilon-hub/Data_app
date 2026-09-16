@@ -1,4 +1,5 @@
-<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()"
+    (keydown.enter)="$event.preventDefault()">
     <mat-card appearance="raised">
          <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
@@ -93,8 +94,9 @@
                                     </articulo-autocomplet>
 
                                     <button mat-icon-button color="warn" type="button" *ngIf="!isReadOnly"
-                                        (click)="eliminarLineaDetalles(i)">
-                                        <mat-icon>delete_outline</mat-icon>
+                                        (click)="eliminarLineaDetalles(i)" matTooltip="Quitar artículo"
+                                        matTooltipPosition="above">
+                                        <mat-icon>close</mat-icon>
                                     </button>
                                 </div>
                             </td>
@@ -135,7 +137,7 @@
                         <ng-container matColumnDef="cantidad">
                             <th mat-header-cell *matHeaderCellDef>Cantidad</th>
                             <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                                <input matInput formControlName="cantidad" placeholder="Nombre"  [readonly]="isReadOnly"/>
+                                <input #inputCantidad matInput formControlName="cantidad" placeholder="Nombre"  [readonly]="isReadOnly"/>
                                 <mat-error *ngIf="row.get('cantidad')?.hasError('required')">
                                     La cantidad es obligatoria.
                                 </mat-error>

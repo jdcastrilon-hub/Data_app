@@ -49,6 +49,15 @@ export class FormMediopagoComponent {
 
   displayedColumns: string[] = ['formaPago', 'valor', 'acciones'];
 
+  // Sin esto, mat-table rastrea las filas por identidad de objeto - como
+  // actualizarValor()/actualizarMedio() reemplazan la linea editada por un
+  // objeto nuevo en cada cambio, la fila se destruye y se vuelve a crear en
+  // cada tecla, perdiendo el foco del input. Rastrear por indice (estable
+  // mientras no se agregue/quite una fila) evita esa recreacion.
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   constructor() {
     // Precarga las lineas cuando llegan (edicion) - solo una vez que traen datos.
     effect(() => {
@@ -78,6 +87,15 @@ export class FormMediopagoComponent {
     ]);
   }
 
+  // Se llama desde el formulario padre (resetCampos()) tras un guardado exitoso.
+  // El componente no se destruye/recrea entre ventas si "Pago Mixto" sigue
+  // seleccionado (el @if del padre no cambia), asi que su estado interno
+  // (lineasPago) sobrevive al reset del formulario a menos que se limpie aca.
+  resetear() {
+    const primerMedio = this.mediospago()[0];
+    this.lineasPago.set([{ idMediopago: primerMedio?.id ?? 0, tipo: primerMedio?.tipo ?? '', valor: 0 }]);
+  }
+
   eliminarLinea(index: number) {
     if (this.lineasPago().length > 1) {
       this.lineasPago.update(lineas => lineas.filter((_, i) => i !== index));
@@ -87,9 +105,12 @@ export class FormMediopagoComponent {
     }
   }
 
-  actualizarMedio(index: number, medio: MedioPago) {
+  // El <select> del template emite solo el id numerico (option [ngValue]="medio.id"),
+  // no el objeto MedioPago completo - hay que buscar el tipo correspondiente aca.
+  actualizarMedio(index: number, idMediopago: number) {
+    const medio = this.mediospago().find(m => m.id === idMediopago);
     this.lineasPago.update(lineas => lineas.map((l, i) =>
-      i === index ? { ...l, idMediopago: medio.id, tipo: medio.tipo } : l
+      i === index ? { ...l, idMediopago, tipo: medio?.tipo ?? '' } : l
     ));
   }
 
@@ -97,6 +118,31 @@ export class FormMediopagoComponent {
     this.lineasPago.update(lineas => lineas.map((l, i) =>
       i === index ? { ...l, valor: Number(valor) || 0 } : l
     ));
+  }
+
+  // Formatea "Valor" con separador de miles en vivo mientras se escribe - mismo
+  // patron ya usado en "Base"/"Valor Ingreso"/"Importe". No se usa [ngModel] aca
+  // (un input type=text con comas se leeria como texto crudo, no numero) - se
+  // parsea el valor directo desde el evento nativo y se llama actualizarValor().
+  onValorInput(event: Event, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const soloDigitos = input.value.replace(/\D/g, '');
+    const valorNumerico = soloDigitos ? Number(soloDigitos) : 0;
+    this.actualizarValor(index, valorNumerico);
+    input.value = soloDigitos ? valorNumerico.toLocaleString('es-CO') : '';
+  }
+
+  // Formatea el valor de una fila recien agregada o precargada en edicion.
+  formatearValor(valor: number): string {
+    return valor ? valor.toLocaleString('es-CO') : '';
+  }
+
+  // La fila vacia recien agregada no debe verse en rojo antes de que el usuario
+  // la toque - mismo criterio ya usado en otras grillas (ver validarCantidadPositiva
+  // de venta-directa).
+  filasTocadas = new Set<number>();
+  marcarTocado(index: number): void {
+    this.filasTocadas.add(index);
   }
 
   // Suma de lo que el usuario ha distribuido entre las lineas.

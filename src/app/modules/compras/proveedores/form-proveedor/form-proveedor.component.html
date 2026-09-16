@@ -21,60 +21,62 @@
 
             <mat-tab label="Datos Generales" style="background-color: brown;">
                 <div class="bloque">
-                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
-                        <div fxFlex="40">
-                            <combo-persona formControlName="searchPersona" [mostrarOpcionCrear]="true"
-                                (personaSelecionado)="onPersonaChange($event)"
-                                (crearNuevo)="habilitarNuevaPersona($event)"></combo-persona>
-                        </div>
+                    <div class="titulo-con-boton">
+                        <h4>Informacion del Proveedor</h4>
+                        @if (estadoPersona === 'existente' && !isEditMode && !isReadOnly) {
+                        <button mat-button color="primary" type="button" (click)="cambiarPersona()">
+                            <mat-icon>close</mat-icon> Cambiar persona
+                        </button>
+                        }
                     </div>
+                    @if (estadoPersona === 'existente' && !isEditMode && !isReadOnly) {
+                    <p class="nota-persona-existente">
+                        Estos datos pertenecen a una persona ya registrada (puede estar vinculada a otro
+                        cliente, proveedor o usuario) - para corregirlos, guarda primero y luego edita el
+                        proveedor.
+                    </p>
+                    }
 
                     <app-persona [group]="personaGroup" [disabled]="personaSubformDeshabilitado"
-                        (personaChange)="onPersonaSubformChange($event)"></app-persona>
-                    <br />
+                        [permitirBusquedaPersona]="!isEditMode && estadoPersona !== 'existente'"
+                        (personaChange)="onPersonaSubformChange($event)"
+                        (buscarPersona)="abrirModalPersona()"
+                        (personaEncontradaPorDocumento)="onPersonaEncontrada($event)"></app-persona>
 
-                    <div class="bloque_interno">
-                        <h4>Datos del proveedor</h4>
-                        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
-                            <div fxFlex="25">
-                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                    <mat-label>Documento</mat-label>
-                                    <input matInput formControlName="codigoTitular" [readonly]="isReadOnly">
-                                    <mat-error>Codigo requerido</mat-error>
-                                </mat-form-field>
-                            </div>
-                            <div fxFlex="30">
-                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                    <mat-label>Razon Social</mat-label>
-                                    <input matInput formControlName="razonSocial" [readonly]="isReadOnly">
-                                    <mat-error>Codigo requerido</mat-error>
-                                </mat-form-field>
-                            </div>
-                            <div fxFlex="30">
-                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                    <mat-label>Regimen</mat-label>
-                                    <input matInput formControlName="regimen" [readonly]="isReadOnly">
-                                    <mat-error>Codigo requerido</mat-error>
-                                </mat-form-field>
-                            </div>
-                            <div fxFlex="15">
-                                <section class="example-section">
-                                    <mat-checkbox formControlName="activo" color="primary">
-                                        Activo
-                                    </mat-checkbox>
-                                </section>
-                            </div>
+                    <div fxLayout="row" fxLayoutAlign="start stretch" fxLayoutGap="5px">
+                        <div fxFlex="30">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Regimen</mat-label>
+                                <mat-select formControlName="regimen">
+                                    <mat-option value="Regimen Ordinario">Regimen Ordinario</mat-option>
+                                    <mat-option value="Regimen Simple">Regimen Simple</mat-option>
+                                </mat-select>
+                                <mat-error>Debe seleccionar un regimen</mat-error>
+                            </mat-form-field>
                         </div>
+                        <div fxFlex="18">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="activo" color="primary">
+                                    Activo
+                                </mat-checkbox>
+                            </section>
+                        </div>
+                        <div fxFlex="22">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="responsableIva" color="primary">
+                                    Responsable IVA
+                                </mat-checkbox>
+                            </section>
+                        </div>
+                        <div fxFlex="30"></div>
+                    </div>
 
-                        <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
-                            <div fxFlex="50">
-                                <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                                    <mat-label>Observaciones</mat-label>
-                                    <input matInput formControlName="observacion" [readonly]="isReadOnly">
-                                    <mat-error>Codigo requerido</mat-error>
-                                </mat-form-field>
-                            </div>
-                            <div fxFlex="50"></div>
+                    <div fxLayout="row" fxLayoutAlign="space-between stretch" fxLayoutGap="5px">
+                        <div fxFlex="100">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Observaciones</mat-label>
+                                <input matInput formControlName="observacion" [readonly]="isReadOnly">
+                            </mat-form-field>
                         </div>
                     </div>
                     <br />

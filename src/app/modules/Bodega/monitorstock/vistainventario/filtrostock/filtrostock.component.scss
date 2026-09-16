@@ -16,6 +16,14 @@
     background-color: #fcfcfc;
 }
 
+// Alinea el boton "Consultar" contra la caja visible del mat-form-field vecino
+// (el form-field reserva espacio invisible debajo para hint/error que aqui no
+// se usa, asi que centrarlo contra su alto total lo deja mas abajo de lo que
+// se ve) - mismo ajuste ya usado en filtroscompras/filtrosventas.
+.btn-consultar-wrapper {
+    margin-top: 4px;
+}
+
 // Contenedor de botones de acción
 .actions {
     display: flex;

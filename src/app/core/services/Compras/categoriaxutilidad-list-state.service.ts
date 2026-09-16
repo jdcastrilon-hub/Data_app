@@ -1,0 +1,14 @@
+import { Injectable } from '@angular/core';
+
+/**
+ * Recuerda el filtro/pagina en la que se quedo la lista de Utilidad x Categoria,
+ * para que al volver desde "ver"/"editar"/"nuevo" se restaure el mismo estado.
+ */
+@Injectable({
+  providedIn: 'root'
+})
+export class CategoriaxutilidadListStateService {
+  texto: string = '';
+  page: number = 0;
+  size: number = 10;
+}

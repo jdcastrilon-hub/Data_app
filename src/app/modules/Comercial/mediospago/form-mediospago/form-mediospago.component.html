@@ -38,6 +38,19 @@
                                 <input matInput type="number" formControlName="orden" [readonly]="isReadOnly">
                             </mat-form-field>
                         </div>
+
+                        <div fxFlex="30">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Banco</mat-label>
+                                <mat-select [formControl]="SelectBancoControl">
+                                    <mat-option [value]="null">Sin banco (Efectivo)</mat-option>
+                                    @for (obj_banco of list_bancos; track obj_banco) {
+                                    <mat-option [value]="obj_banco">{{obj_banco.nomBanco}}</mat-option>
+                                    }
+                                </mat-select>
+                                <mat-hint>Solo aplica si este medio de pago liquida en una cuenta bancaria</mat-hint>
+                            </mat-form-field>
+                        </div>
                     </div>
                     <br />
                 </div>

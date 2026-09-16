@@ -1,0 +1,99 @@
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <div class="titulo-izquierda">
+                    <button mat-icon-button color="primary" type="button" (click)="volver()">
+                        <mat-icon>list</mat-icon>
+                    </button>
+                    <span>{{titulo_form}}</span>
+                </div>
+                @if (isEditMode) {
+                <button mat-icon-button color="primary" type="button" (click)="verHistorialAuditoria()"
+                    title="Ver historial de auditoría">
+                    <mat-icon>info</mat-icon>
+                </button>
+                }
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="Datos Generales">
+
+                <div class="bloque">
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        @if (isEditMode) {
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Codigo Motivo</mat-label>
+                                <input matInput formControlName="codMotivo" readonly>
+                            </mat-form-field>
+                        </div>
+                        }
+                        <div [fxFlex]="isEditMode ? 40 : 55" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Nombre Motivo</mat-label>
+                                <input matInput formControlName="nomMotivo" [readonly]="isReadOnly">
+                                <mat-error>Nombre requerido</mat-error>
+                            </mat-form-field>
+                        </div>
+                        <div fxFlex="20" fxFlex.lt-md="100%">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="devuelveDinero" color="primary">
+                                    Devuelve Dinero
+                                </mat-checkbox>
+                            </section>
+                        </div>
+                        <div fxFlex="15" fxFlex.lt-md="100%">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="afectaStock" color="primary">
+                                    Afecta Stock
+                                </mat-checkbox>
+                            </section>
+                        </div>
+                        <div fxFlex="15" fxFlex.lt-md="100%">
+                            <section class="example-section">
+                                <mat-checkbox formControlName="activo" color="primary">
+                                    Activo
+                                </mat-checkbox>
+                            </section>
+                        </div>
+                    </div>
+                    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between stretch"
+                        fxLayoutGap="10px">
+                        <div fxFlex="40" fxFlex.lt-md="100%">
+                            <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                                <mat-label>Código DIAN (opcional)</mat-label>
+                                <mat-select formControlName="codigoDian">
+                                    <mat-option [value]="null">Sin asignar</mat-option>
+                                    @for (opcion of list_codigosDian; track opcion.valor) {
+                                    <mat-option [value]="opcion.valor">{{opcion.nombre}}</mat-option>
+                                    }
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                    <div class="aviso-devuelve-dinero">
+                        Si "Devuelve Dinero" está marcado, una nota crédito con este motivo exigirá caja/turno
+                        (igual que factura). Si no, el importe queda como saldo a favor del cliente.
+                        Si "Afecta Stock" NO está marcado, la nota no reingresa mercancía a bodega (ajuste
+                        puramente de valor). "Código DIAN" es solo de referencia, para cuando se conecte
+                        facturación electrónica.
+                    </div>
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+        <br>
+
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="submit" *ngIf="!isReadOnly">Guardar</button>
+            <br>
+            <button mat-raised-button color="warn" type="button" *ngIf="!isReadOnly" (click)="volver()">Cancelar</button>
+        </mat-card-actions>
+
+    </mat-card>
+
+</form>

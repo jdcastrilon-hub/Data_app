@@ -1,4 +1,5 @@
-<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()">
+<form [formGroup]="formulario" #formDirective="ngForm" (ngSubmit)="enviarFormulario()"
+    (keydown.enter)="$event.preventDefault()">
     <mat-card appearance="raised">
         <mat-card-header class="mat-header">
             <mat-card-title class="titulo-con-boton">
@@ -51,16 +52,18 @@
 
                     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 tabla-compacta"
                         formArrayName="subCategorias">
+                        @if (isEditMode) {
                         <ng-container matColumnDef="id">
                             <th mat-header-cell *matHeaderCellDef>SubCategoria</th>
                             <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                                <input matInput formControlName="codSubCategoria" placeholder="Código" [readonly]="isReadOnly" />
-                                <mat-error
-                                    *ngIf="row.get('codSubCategoria')?.hasError('required') && (row.get('codSubCategoria')?.touched || row.get('codSubCategoria')?.dirty)">
-                                    Codigo SubCategoria Obligatorio
-                                </mat-error>
+                                @if (row.get('codSubCategoria')?.value) {
+                                <input matInput formControlName="codSubCategoria" readonly />
+                                } @else {
+                                <span class="codigo-pendiente">Se asigna al guardar</span>
+                                }
                             </td>
                         </ng-container>
+                        }
                         <ng-container matColumnDef="name">
                             <th mat-header-cell *matHeaderCellDef>Descripcion</th>
                             <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
@@ -84,8 +87,8 @@
                                 }
                             </td>
                         </ng-container>
-                        <tr mat-header-row *matHeaderRowDef="['id', 'name','actions']"></tr>
-                        <tr mat-row *matRowDef="let row; columns: ['id', 'name','actions'];"></tr>
+                        <tr mat-header-row *matHeaderRowDef="columnasSubcategorias"></tr>
+                        <tr mat-row *matRowDef="let row; columns: columnasSubcategorias;"></tr>
                     </table>
                 </div>
             </mat-tab>

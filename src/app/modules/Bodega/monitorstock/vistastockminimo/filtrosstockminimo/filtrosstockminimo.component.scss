@@ -14,3 +14,9 @@
     padding: 16px 16px 0px 16px;
     background-color: #fcfcfc;
 }
+
+// Alinea el boton "Consultar" contra la caja visible del mat-form-field vecino
+// (mismo ajuste ya usado en filtroscompras/filtrosventas).
+.btn-consultar-wrapper {
+    margin-top: 4px;
+}

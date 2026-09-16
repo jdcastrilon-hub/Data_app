@@ -3,7 +3,9 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { PersonaSearch } from '../../interfaces/Compras/PersonaSearch';
+import { PersonaPaginacion } from '../../interfaces/Compras/PersonaPaginacion';
 import { Persona } from '../../models/Compras/Personas';
+import { PageResponse } from '../../models/core/PageResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +21,20 @@ export class PersonaService {
     const params = new HttpParams()
       .set('query', String(query));
     return this.http.get<PersonaSearch[]>(this.url + "personaSearch", { params });
+  }
+
+  // Listado para el modal "Seleccionar persona" (Proveedores/Clientes): top de
+  // la empresa activa, filtrable por documento o nombre.
+  listPaginacion(page: number, size: number, texto?: string): Observable<PageResponse<PersonaPaginacion>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    if (texto) {
+      params = params.set('texto', texto);
+    }
+
+    return this.http.get<PageResponse<PersonaPaginacion>>(this.url + "pagination", { params });
   }
 
   //Trae el detalle completo de una persona (para cargar sus datos al seleccionarla)

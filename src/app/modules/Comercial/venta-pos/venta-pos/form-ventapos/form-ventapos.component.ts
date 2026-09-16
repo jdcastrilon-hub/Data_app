@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { ArticuloAutocompletComponent } from 'src/app/modules/resources/articulo-autocomplet/articulo-autocomplet.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -26,11 +26,7 @@ import { combineLatest, startWith } from 'rxjs';
 import { AbrirturnoService } from 'src/app/core/services/Ventas/abrirturno.service';
 import { ValidacionAbrirTurno } from 'src/app/core/interfaces/Comercial/ValidacionAbrirTurno';
 import { ModalValturnoComponent } from 'src/app/modules/resources/modal-valturno/modal-valturno.component';
-// Importación de pdfmake y sus fuentes
-import pdfMake from 'pdfmake/build/pdfmake';
-import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-import { FacturaPosService } from 'src/app/core/reports/Comercial/factura-pos.service';
-import { ModalPdfticketComponent } from '../../../resources/modal-pdfticket/modal-pdfticket.component';
+import { FacturaReporteService } from 'src/app/core/reports/Comercial/factura-reporte.service';
 import { FormMediopagoComponent, LineaPago } from '../../../resources/form-mediopago/form-mediopago.component';
 import { LoginService } from 'src/app/core/services/core/login.service';
 import { MediospagoService } from 'src/app/core/services/Ventas/mediospago.service';
@@ -38,11 +34,6 @@ import { MediospagoService } from 'src/app/core/services/Ventas/mediospago.servi
 // Sentinel de UI, nunca se manda al backend como id_mediopago real - solo
 // activa la grilla de lineas de pago (form-mediopago) cuando se selecciona.
 const PAGO_MIXTO_SENTINEL: MedioPago = { id: -1, tipo: 'Pago Mixto' };
-
-// Acceso correcto usando corchetes para cumplir con las reglas estrictas de TypeScript
-const fonts = pdfFonts as any;
-(pdfMake as any).vfs = fonts['pdfMake'] ? fonts['pdfMake'].vfs : fonts.vfs;
-
 
 
 @Component({
@@ -68,6 +59,13 @@ export class FormVentaposComponent {
   // esta cerrado - el formulario se fuerza a solo-lectura (ver ModoEdicion) y este
   // flag es lo que hace visible el aviso explicando por que.
   turnoCerrado: boolean = false;
+  // Se pone en true la primera vez que se intenta guardar; recien ahi se pintan
+  // en rojo los campos obligatorios sin llenar (combo-cliente, ver mostrarError).
+  intentoGuardar: boolean = false;
+  // Indice de pestana activa (0=Datos Generales, 1=Medio de Pago y Totales) -
+  // controlado por codigo para poder saltar a la pestana de pago cuando el
+  // guardado falla por no haber distribuido el pago mixto (ver enviarFormulario).
+  selectedTabIndex: number = 0;
 
   //tabla de articulos
   //detalle: CompraDetalle[] = [];
@@ -112,13 +110,17 @@ export class FormVentaposComponent {
 
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
+  @ViewChild('impIgresoInput') impIgresoInputRef!: ElementRef<HTMLInputElement>;
+  // Solo existe mientras "Pago Mixto" esta seleccionado (el @if del template lo
+  // monta/desmonta) - opcional porque puede no estar presente al momento del reset.
+  @ViewChild(FormMediopagoComponent) formMediopagoRef?: FormMediopagoComponent;
 
   constructor(private fb: FormBuilder,
     private logAuditoria: AuditoriaService,
     private VentasService: VentaServiceService,
     private serviceIni: ServiciosiniService,
     private turnoService: AbrirturnoService,
-    private reporteService: FacturaPosService,
+    private reporteService: FacturaReporteService,
     private notificacion: NotificacionesService,
     private route: ActivatedRoute,
     private dialog: MatDialog,
@@ -142,7 +144,10 @@ export class FormVentaposComponent {
       idTrans: this.objeto.idTrans,
       idEmp: this.objeto.idEmp,
       idSucursalEmp: this.objeto.idSucursalEmp,
-      idCliente: this.objeto.idCliente,
+      // min(1): idCliente arranca en 0 (sin seleccionar) y Validators.required NO
+      // rechaza 0 (solo null/undefined/''), min(1) si lo hace - mismo criterio
+      // que venta-directa.
+      idCliente: [this.objeto.idCliente, [Validators.required, Validators.min(1)]],
       fecDoc: [new Date(), Validators.required],
       idBodega: this.objeto.idBodega,
       idEstado: this.objeto.idEstado,
@@ -221,6 +226,21 @@ export class FormVentaposComponent {
       }
     });
 
+    // Se registra ANTES del if/else de modo nuevo/edicion (antes solo se suscribia
+    // dentro de la rama "Nuevo") - en modo edicion/vista, ModoEdicion() setea
+    // SelecmediosControl via setValue() y esta suscripcion tiene que estar activa
+    // para que "mostrarCampos" (que oculta/muestra el bloque VUELTO) refleje el
+    // medio de pago real de la venta cargada, no el valor por defecto (false).
+    this.SelecmediosControl.valueChanges.subscribe(objPago => {
+      if (objPago) {
+        if (objPago.tipo === 'Efectivo') {
+          this.mostrarCampos = false;
+        } else {
+          this.mostrarCampos = true;
+        }
+      }
+    });
+
     //Validacion si es modo edicion o nuevo
     this.route.paramMap.subscribe(params => {
       const id = params.get('id'); // Obtener el valor del parámetro 'id'
@@ -242,21 +262,6 @@ export class FormVentaposComponent {
         //this.cargarSucursales();
         this.agregarLineaVacia();
         this.ValidarColumnas(this.defaultdcto);
-
-        //Subcribir el tipo de documento
-        this.SelecmediosControl.valueChanges.subscribe(objPago => {
-
-          if (objPago) {
-            if (objPago.tipo === 'Efectivo') {
-              this.mostrarCampos = false;
-            } else {
-              this.mostrarCampos = true;
-            }
-
-          }
-        });
-
-
       }
     })
 
@@ -302,6 +307,7 @@ export class FormVentaposComponent {
           porcDescuento: data.porcDescuento
         });
         this.formulario.get('nroDocum')?.patchValue(data.nroDocum);
+        this.formatearImpIgresoVisible(data.impIgreso);
 
         // Carga el combo real de medios de pago (antes esto solo pasaba en modo
         // "Nuevo", via validarTurno() - en edicion "Forma Pago" quedaba vacio
@@ -790,6 +796,28 @@ Receptores
 
     if (articulo != null) {
 
+      // Si el mismo articulo (mismo codigo de barra) ya esta cargado en otra fila,
+      // no se vuelve a consultar la API: se suma 1 a la cantidad de esa fila (el
+      // recalculo de neto/impuesto/total ya es reactivo, ver la suscripcion
+      // combineLatest en agregarLineaVacia) y esta fila (la que disparo el
+      // escaneo/seleccion) se limpia para seguir siendo la fila vacia de captura.
+      // Especialmente relevante en POS, donde escanear el mismo producto dos
+      // veces es el caso comun, no la excepcion.
+      const indexExistente = this.detalles.controls.findIndex((fila, i) =>
+        i !== index &&
+        fila.get('idArticulo')?.value === articulo.idArticulo &&
+        fila.get('idCodBarra')?.value === articulo.idCodBarra
+      );
+
+      if (indexExistente >= 0) {
+        const filaExistente = this.detalles.at(indexExistente);
+        const cantidadActual = Number(filaExistente.get('cantidad')?.value) || 0;
+        filaExistente.get('cantidad')?.setValue(cantidadActual + 1);
+
+        this.detalles.at(index).get('search')?.setValue(null);
+        return;
+      }
+
       //Se cargar las variables de bodega y estado , para consultar por el inventario.
       const idBodega = this.formulario.value.idBodega;
       const idEstado = this.formulario.value.idEstado;
@@ -895,17 +923,55 @@ Receptores
     }, 0));
   }
 
+  // Solo Efectivo (medio unico, no Pago Mixto) tiene sentido de "vuelto" - una
+  // transferencia o tarjeta siempre es por el monto exacto, no existe cambio.
+  get esEfectivoSimple(): boolean {
+    return !this.esPagoMixto && this.SelecmediosControl.value?.tipo?.toLowerCase() === 'efectivo';
+  }
+
+  // Valor a considerar como "recibido": si es efectivo y el cajero escribio algo,
+  // se respeta (para calcular vuelto real); si lo dejo vacio, o el medio no es
+  // efectivo/es pago mixto (donde el campo ni se muestra), se asume pago exacto -
+  // el cliente entrego el dinero justo, sin necesidad de calcular cambio.
+  get impIngresoEfectivo(): number {
+    if (this.esEfectivoSimple) {
+      const ingreso = Number(this.formulario.get('impIgreso')?.value) || 0;
+      return ingreso > 0 ? ingreso : this.totalFinal;
+    }
+    return this.totalFinal;
+  }
+
+  /**
+   * Formatea "Valor Ingreso" con separador de miles (###.###.###) mientras se
+   * escribe - mismo patron ya usado en venta-directa/form-turnos/form-movimientocaja.
+   * El FormControl (impIgreso) siempre guarda el numero real sin puntos - el
+   * punto solo se aplica al valor mostrado en el input.
+   */
+  onImpIgresoInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const soloDigitos = input.value.replace(/\D/g, '');
+    const valorNumerico = soloDigitos ? Number(soloDigitos) : null;
+    this.formulario.get('impIgreso')?.setValue(valorNumerico);
+    input.value = soloDigitos ? Number(soloDigitos).toLocaleString('es-CO') : '';
+  }
+
+  //Aplica el mismo formato al cargar un valor existente (edicion/vista).
+  formatearImpIgresoVisible(valor: number | null | undefined): void {
+    if (!this.impIgresoInputRef) {
+      return;
+    }
+    this.impIgresoInputRef.nativeElement.value = valor ? Number(valor).toLocaleString('es-CO') : '';
+  }
+
   get vuelto(): number {
-    // 1. Obtenemos el valor que ingresó el cliente (por defecto 0 si está vacío)
-    const ingreso = Number(this.formulario.get('impIgreso')?.value) || 0;
+    const ingreso = this.impIngresoEfectivo;
     const total = this.totalFinal;
 
-    // 2. Si no ha ingresado suficiente dinero, el vuelto es 0
+    // Si no ha ingresado suficiente dinero, el vuelto es 0
     if (ingreso < total) {
       return 0;
     }
 
-    // 3. Retornamos la diferencia
     return ingreso - total;
   }
 
@@ -936,6 +1002,17 @@ Receptores
 
   // Método para agregar el log al FormArray
   agregarLogAuditoria() {
+    const logsArray = this.formulario.get('logs') as FormArray;
+
+    // Una venta nueva (aun no persistida) no tiene historia real todavia - si
+    // un intento anterior de guardar fallo (ej. error del backend) ya dejo una
+    // entrada "Nuevo" pegada aca (resetCampos() solo limpia tras un guardado
+    // EXITOSO), un reintento no debe acumular otra encima, se reemplaza. En
+    // edicion si se acumula: cada guardado exitoso es un evento real distinto.
+    if (!this.isEditMode) {
+      logsArray.clear();
+    }
+
     // 1. Obtienes el objeto de log ya completo y formateado del servicio
     const logData = this.logAuditoria.generarLog(!this.isEditMode ? 'Nuevo' : 'Edicion');
 
@@ -947,7 +1024,6 @@ Receptores
     });
 
     // 3. Lo añades al FormArray
-    const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.push(auditoriaGroup);
   }
 
@@ -955,6 +1031,7 @@ Receptores
     //Asignacion de campos en cabezal
     console.log("enviarFormulario")
     const fecha_envio = new Date()
+    this.intentoGuardar = true; // A partir de aca se pintan en rojo los campos obligatorios vacios (ej. combo-cliente)
 
     this.formulario.patchValue({
       idEmp: 1,
@@ -977,21 +1054,29 @@ Receptores
       nroDocum: this.objeto.nroDocum || 0,
       secuencia: this.objeto.secuencia || "",
       factura: this.objeto.factura || "",
-      // observaciones e impIgreso son campos que el usuario si escribe en el
-      // formulario (formControlName="observaciones"/"impIgreso") - repatchearlos
-      // aca con "this.objeto" (el valor viejo, cargado al entrar al formulario)
-      // pisaba silenciosamente lo que el usuario acababa de escribir/cambiar, justo
-      // antes de guardar. serie/nroDocum/secuencia/factura si se dejan asi porque
-      // no son editables por el usuario en POS y el backend los recalcula o ignora
-      // en /savepos y /edit respectivamente.
+      // impIgreso SI se resuelve aca (a diferencia de observaciones) para que un
+      // "Valor Ingreso" vacio -o de plano oculto, cuando el medio no es Efectivo-
+      // no viaje null al backend (imp_ingreso es NOT NULL en t_facturas): el
+      // getter ya respeta lo que el cajero haya escrito cuando aplica, y solo
+      // sustituye por el total cuando el campo ni se muestra. Mismo criterio que
+      // venta-directa. observaciones si se deja sin tocar aca porque el usuario
+      // lo escribe libremente y no tiene un valor "efectivo" equivalente que
+      // calcular - repatchearlo con "this.objeto" (el valor viejo) pisaria lo
+      // que el cajero acaba de escribir/cambiar justo antes de guardar.
+      impIgreso: this.impIngresoEfectivo,
       vista: 'VentaPOS',
       fechaMod: fecha_envio.toISOString()
     });
     console.log("Json original");
 
-    if (this.formulario.invalid) {
-      this.formulario.markAllAsTouched(); // Para mostrar errores visualmente
-      return; // Detiene la ejecución si el formulario no es válido
+    this.formulario.markAllAsTouched(); // Pinta en rojo todos los campos obligatorios vacios
+
+    // idCliente no tiene un <mat-error> visible propio (combo-cliente es un
+    // componente aparte, se pinta via [mostrarError]), asi que ademas se avisa
+    // con un mensaje explicito para que quede claro por que no se pudo guardar.
+    if (this.formulario.get('idCliente')?.invalid) {
+      this.notificacion.showError('Debes seleccionar un cliente antes de guardar.');
+      return;
     }
 
     // La fila vacia final del grid siempre existe (idArticulo 0/null); se exige
@@ -1016,7 +1101,14 @@ Receptores
     const sumaPagos = this.redondear2(detallesPago.reduce((acc, d) => acc + (d.importe || 0), 0));
     if (Math.abs(sumaPagos - this.totalFinal) > 0.01) {
       this.notificacion.showError('La suma de los medios de pago no coincide con el total de la venta.');
+      // Salta a "Medio de Pago y Totales" para que el usuario pueda distribuir
+      // el pago mixto sin tener que ir a buscar la pestana manualmente.
+      this.selectedTabIndex = 1;
       return;
+    }
+
+    if (this.formulario.invalid) {
+      return; // El resto de los campos obligatorios ya quedaron en rojo arriba
     }
 
     // El log de auditoria se agrega solo cuando ya se paso todas las validaciones,
@@ -1081,6 +1173,7 @@ Receptores
         },
         error: (err) => {
           console.error('Error al guardar:', err);
+          this.notificacion.showError(err.error?.message || 'No se pudo guardar la venta.');
         }
       });
 
@@ -1096,6 +1189,11 @@ Receptores
     //Limpiar el formulario
     this.objeto = new Ventas();
     this.formDirective.resetForm();
+    // Recien empieza un registro nuevo: todavia no se intento guardar, asi que no
+    // deben verse en rojo los campos obligatorios vacios (ver mostrarError), y
+    // se vuelve a la primera pestana.
+    this.intentoGuardar = false;
+    this.selectedTabIndex = 0;
     //reset grilla de logs
     const logsArray = this.formulario.get('logs') as FormArray;
     logsArray.clear();
@@ -1134,6 +1232,10 @@ Receptores
     }
     this.lineasPagoMixto = [];
     this.lineasPagoIniciales = [];
+    // Si "Pago Mixto" sigue seleccionado tras el reset, form-mediopago no se
+    // destruye/recrea via el @if del template - hay que pedirle explicitamente
+    // que limpie su grilla interna, sino arrastra las lineas de la venta anterior.
+    this.formMediopagoRef?.resetear();
   }
 
 
