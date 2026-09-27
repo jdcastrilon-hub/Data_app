@@ -25,6 +25,12 @@ export class ComboUsuarioComponent implements OnInit, ControlValueAccessor {
   //Parametros de entrada
   input_objeto = input<any>(null);
   editMode = input<boolean>(false);
+  // false (default) = modo grilla: cada seleccion agrega una fila y el campo
+  // se limpia de inmediato (roles/sucursales/cajas/conceptos, sin tocar ese
+  // comportamiento). true = selección única persistente, mismo patrón que
+  // combo-cliente: el nombre queda en el campo (deshabilitado) hasta que se
+  // limpia con la "X" - para un campo tipo "cobrador" de un solo valor.
+  seleccionUnica = input<boolean>(false);
 
   //salidas
   usuarioSelecionado = output<UsuarioSearch>();
@@ -81,15 +87,30 @@ export class ComboUsuarioComponent implements OnInit, ControlValueAccessor {
   onSelected(event: MatAutocompleteSelectedEvent) {
     const seleccion = event.option.value;
     this.searchControl.setValue(seleccion);
-    this.searchControl.setValue(null); // Se limpia de inmediato: cada seleccion agrega una fila a la grilla, no queda "elegido" en el campo
-    this.onChange(null);
+
+    if (this.seleccionUnica()) {
+      // Deja el nombre en el campo (deshabilitado) - mismo patron que combo-cliente.
+      this.searchControl.disable();
+      this.onChange(seleccion);
+    } else {
+      // Se limpia de inmediato: cada seleccion agrega una fila a la grilla, no queda "elegido" en el campo.
+      this.searchControl.setValue(null);
+      this.onChange(null);
+    }
+
     this.usuarioSelecionado.emit(seleccion);
   }
 
   limpiarBusqueda(event: Event) {
     event.stopPropagation();
+    if (this.seleccionUnica()) {
+      this.searchControl.enable();
+    }
     this.searchControl.setValue(null);
     this.filteredOptions.set([]);
     this.onChange(null);
+    if (this.seleccionUnica()) {
+      this.usuarioSelecionado.emit(null as any);
+    }
   }
 }

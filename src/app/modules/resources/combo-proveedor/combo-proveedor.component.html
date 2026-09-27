@@ -1,5 +1,5 @@
 <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-    <mat-label>Proveedor</mat-label>
+    <mat-label>Proveedor{{ requerido() ? '*' : '' }}</mat-label>
     <input matInput type="text" placeholder="Documento o Nombre" [formControl]="searchControl"
         [matAutocomplete]="autoProveedor">
 
@@ -7,6 +7,10 @@
     <button mat-icon-button matSuffix (click)="limpiarProveedor($event)" type="button" >
         <mat-icon>close</mat-icon>
     </button>
+    }
+
+    @if (searchControl.hasError('required') && searchControl.touched) {
+    <mat-error>Debe seleccionar un proveedor</mat-error>
     }
 </mat-form-field>
 

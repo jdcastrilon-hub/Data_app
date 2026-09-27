@@ -403,12 +403,12 @@ articulo-autocomplet {
   text-align: center;
 }
 
-/* Markup (%): solo lectura, mas angosta que Precio Venta (no lleva input) */
+/* Markup (%): editable (ver onFocusMarkup/onBlurMarkup) - mas angosta que
+   Precio Venta, los valores tipicos (ej. "20,00") no necesitan tanto ancho. */
 .mat-column-markup {
-  width: 90px;
+  width: 100px;
   padding: 0 8px !important;
   text-align: center;
-  color: rgba(0, 0, 0, .6);
 }
 
 /* Cantidad / (%) Dcto: reducidas un 30% respecto a las 130px originales */
@@ -428,5 +428,39 @@ articulo-autocomplet {
 mat-cell input {
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Toggle "Sin IVA"/"Con IVA": como viene el costo en la factura fisica */
+.toggle-costo-iva {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  // Evita que el grupo se estire al ancho del contenedor (30%): sin esto
+  // "stretch" (default de align-items) lo ensancha hasta el final de la fila.
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.toggle-costo-iva-label {
+  font-size: 12px;
+  color: rgba(0, 0, 0, .6);
+}
+
+// El grupo por defecto se ve como un recuadro plano con la opcion activa en
+// gris - se suaviza el borde/esquinas y la opcion activa toma el color
+// primary del tema (indigo 500, ver theme-material.scss) en vez de gris.
+.toggle-costo-iva ::ng-deep .mat-button-toggle-group {
+  --mat-standard-button-toggle-shape: 18px;
+  --mat-standard-button-toggle-height: 32px;
+  --mat-standard-button-toggle-divider-color: transparent;
+  --mat-standard-button-toggle-selected-state-background-color: #3f51b5;
+  --mat-standard-button-toggle-selected-state-text-color: #fff;
+  border: 1px solid #c5c5c5;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.toggle-costo-iva ::ng-deep .mat-button-toggle + .mat-button-toggle {
+  border-left: 1px solid #c5c5c5;
 }
 

@@ -9,6 +9,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import {MatMenuModule} from '@angular/material/menu';
 import { ThemeService } from './core/services/core/theme.service';
+import { LoginService } from './core/services/core/login.service';
 
 @Component({
   selector: 'app-root',
@@ -26,5 +27,9 @@ import { ThemeService } from './core/services/core/theme.service';
 export class AppComponent {
   title = 'Data_app';
 
-  constructor(private themeService: ThemeService) { }
+  constructor(private themeService: ThemeService, private loginService: LoginService) {
+    // Recarga esta pestaña si la empresa activa (o la sesión) cambia en otra
+    // pestaña del mismo navegador — ver login.service.ts::sincronizarEntrePestañas.
+    this.loginService.sincronizarEntrePestañas();
+  }
 }

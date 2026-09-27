@@ -22,6 +22,9 @@ export class Compra {
     impDescuento !: number;
     impTotal !: number;
     observaciones !: string;
+    // Solo indica como se digito el costo de esta compra (neto o con IVA
+    // incluido) - costoUnit de cada linea sigue siendo siempre neto.
+    costoIncluyeIva!: boolean;
     impuesto1 !: string;
     valorImpuesto1 !: number;
     impuesto2 !: string;

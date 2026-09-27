@@ -104,6 +104,36 @@ export class LoginService {
   }
 
   /**
+   * Sincroniza pestañas cuando la sesión cambia en OTRA pestaña. El token y
+   * la empresa activa viven en localStorage, que es compartido por todas
+   * las pestañas del mismo origen — si el usuario cambia de empresa en la
+   * pestaña 1, la pestaña 2 sigue mostrando datos ya renderizados de la
+   * empresa vieja, pero el interceptor de auth usa el token NUEVO en su
+   * siguiente petición (lee localStorage fresco cada vez). Eso puede
+   * terminar guardando algo contra la empresa equivocada sin que el usuario
+   * se entere. El evento 'storage' del navegador solo se dispara en las
+   * pestañas que NO hicieron el cambio, así que esto nunca recarga la
+   * pestaña activa que originó el cambio.
+   *
+   * Se llama una sola vez desde AppComponent. Recarga también si el token
+   * se borra en otra pestaña (logout) — mismo riesgo de estado
+   * desincronizado, la pestaña recargada cae sola al login vía authGuard.
+   */
+  sincronizarEntrePestañas(): void {
+    const idEmpInicial = this.getIdEmpresaActual();
+
+    window.addEventListener('storage', (event: StorageEvent) => {
+      if (event.key === 'empresa' && this.getIdEmpresaActual() !== idEmpInicial) {
+        window.location.reload();
+      }
+
+      if (event.key === 'token' && event.newValue === null) {
+        window.location.reload();
+      }
+    });
+  }
+
+  /**
    * Cierra la sesión limpiando el almacenamiento
    */
   logout(): void {

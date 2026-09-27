@@ -1,0 +1,71 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon>receipt_long</mat-icon> Cuotas — Préstamo {{ data.nroDocum }} - {{ data.nomCliente }}
+</h2>
+
+<mat-dialog-content class="mat-typography">
+
+  @if (cargando) {
+  <div fxLayout="row" fxLayoutAlign="center center" class="cargando-container">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+  }
+
+  @if (!cargando) {
+  <table mat-table [dataSource]="cuotas" class="mat-elevation-z1">
+    <ng-container matColumnDef="numCuota">
+      <th mat-header-cell *matHeaderCellDef>Cuota</th>
+      <td mat-cell *matCellDef="let c">{{ c.numCuota }} / {{ numCuotas }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="fecVenc">
+      <th mat-header-cell *matHeaderCellDef>Vence</th>
+      <td mat-cell *matCellDef="let c">{{ c.fecVenc | date:'dd/MM/yyyy' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="valorCuota">
+      <th mat-header-cell *matHeaderCellDef>Valor</th>
+      <td mat-cell *matCellDef="let c">{{ c.valorCuota | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="saldoCuota">
+      <th mat-header-cell *matHeaderCellDef>Saldo</th>
+      <td mat-cell *matCellDef="let c">{{ c.saldoCuota | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="idEstado">
+      <th mat-header-cell *matHeaderCellDef>Estado</th>
+      <td mat-cell *matCellDef="let c">{{ c.idEstado }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="diasVencida">
+      <th mat-header-cell *matHeaderCellDef>Mora</th>
+      <td mat-cell *matCellDef="let c">
+        @if (diasVencida(c) > 0) {
+        <span class="vencida">Vencida hace {{ diasVencida(c) }} días</span>
+        } @else {
+        -
+        }
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnasCuotas"></tr>
+    <tr mat-row *matRowDef="let row; columns: columnasCuotas;"></tr>
+  </table>
+
+  @if (cuotas.length === 0) {
+  <p>Este préstamo no tiene cuotas registradas.</p>
+  }
+
+  @if (cuotas.length > 0) {
+  <div class="resumen-totales" fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="20px">
+    <span>Total cuotas: <strong>{{ totalValor | currency:'COP':'symbol-narrow':'1.2-2' }}</strong></span>
+    <span>Saldo: <strong>{{ totalSaldo | currency:'COP':'symbol-narrow':'1.2-2' }}</strong></span>
+  </div>
+  }
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

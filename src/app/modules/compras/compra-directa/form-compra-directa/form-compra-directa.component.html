@@ -36,7 +36,7 @@
                     </mat-form-field>
                 </div>
                 <div fxFlex="40">
-                    <combo-proveedor formControlName="searchProveedor"
+                    <combo-proveedor formControlName="searchProveedor" [requerido]="true"
                         (proveedorSelecionado)="onProveedorChange($event)"></combo-proveedor>
 
                 </div>
@@ -85,17 +85,23 @@
                 </div>
                 <div fxFlex="15">
                     <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                        <mat-label>Remito*</mat-label>
+                        <mat-label>Factura*</mat-label>
                         <input matInput placeholder="Numero de Remito" formControlName="remito">
-                        <mat-error>El remito es obligatorio</mat-error>
+                        <mat-error>La Factura O Remito es obligatorio</mat-error>
                     </mat-form-field>
                 </div>
                 <div fxFlex="50">
                     <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
-                        <mat-label>Observacion*</mat-label>
+                        <mat-label>Observacion</mat-label>
                         <input matInput placeholder="Observaciones" formControlName="observaciones">
-                        <mat-error>La observación es obligatoria</mat-error>
                     </mat-form-field>
+                </div>
+                <div fxFlex="30" class="toggle-costo-iva">
+                    <span class="toggle-costo-iva-label">Costo de la factura:</span>
+                    <mat-button-toggle-group formControlName="costoIncluyeIva" aria-label="Como viene el costo en la factura">
+                        <mat-button-toggle [value]="false">Sin IVA</mat-button-toggle>
+                        <mat-button-toggle [value]="true">Con IVA</mat-button-toggle>
+                    </mat-button-toggle-group>
                 </div>
             </div>
 
@@ -160,17 +166,19 @@
                 </ng-container>
 
                 <ng-container matColumnDef="costo">
-                    <th mat-header-cell *matHeaderCellDef class="text-right">Costo</th>
+                    <th mat-header-cell *matHeaderCellDef class="text-right">
+                        {{ formulario.get('costoIncluyeIva')?.value ? 'Costo (con IVA)' : 'Costo (sin IVA)' }}
+                    </th>
                     <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
-                        <input #inputCosto matInput formControlName="costoUnit" placeholder="Nombre" class="text-right"
+                        <input #inputCosto matInput formControlName="costoIngresado" placeholder="Ingrese Costo" class="text-right"
                             (focus)="onFocusCosto($event, row)" (blur)="onBlurCosto($event, row)" />
 
 
-                        <mat-error *ngIf="row.get('costoUnit')?.hasError('required')">
-                            La cantidad es obligatoria.
+                        <mat-error *ngIf="formDirective.submitted && row.get('costoIngresado')?.hasError('required')">
+                            El costo es obligatorio.
                         </mat-error>
-                        <mat-error *ngIf="row.get('costoUnit')?.hasError('min')">
-                            La cantidad debe ser mayor a 0.
+                        <mat-error *ngIf="formDirective.submitted && row.get('costoIngresado')?.hasError('mayorACero')">
+                            El costo debe ser mayor a 0.
                         </mat-error>
                     </td>
                     <td mat-footer-cell *matFooterCellDef></td>
@@ -180,13 +188,14 @@
                     <th mat-header-cell *matHeaderCellDef class="text-right">Cantidad</th>
                     <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
 
-                        <input matInput formControlName="cantidad" placeholder="Nombre" class="text-right" />
+                        <input matInput formControlName="cantidad" placeholder="Ingrese Cantidad" class="text-right"
+                            (focus)="seleccionarTexto($event)" />
 
 
-                        <mat-error *ngIf="row.get('cantidad')?.hasError('required')">
+                        <mat-error *ngIf="formDirective.submitted && row.get('cantidad')?.hasError('required')">
                             La cantidad es obligatoria.
                         </mat-error>
-                        <mat-error *ngIf="row.get('cantidad')?.hasError('min')">
+                        <mat-error *ngIf="formDirective.submitted && row.get('cantidad')?.hasError('mayorACero')">
                             La cantidad debe ser mayor a 0.
                         </mat-error>
                     </td>
@@ -199,12 +208,13 @@
                     <th mat-header-cell *matHeaderCellDef>(%) Dcto</th>
                     <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
 
-                        <input matInput type="number" placeholder="0" class="text-right" formControlName="porc_dcto" />
+                        <input matInput type="number" placeholder="0" class="text-right" formControlName="porc_dcto"
+                            (focus)="seleccionarTexto($event)" (blur)="onBlurDcto(row)" />
 
-                        <mat-error *ngIf="row.get('porc_dcto')?.hasError('min')" style="font-size: 10px;">
+                        <mat-error *ngIf="formDirective.submitted && row.get('porc_dcto')?.hasError('min')" style="font-size: 10px;">
                             Mín 0%
                         </mat-error>
-                        <mat-error *ngIf="row.get('porc_dcto')?.hasError('max')" style="font-size: 10px;">
+                        <mat-error *ngIf="formDirective.submitted && row.get('porc_dcto')?.hasError('max')" style="font-size: 10px;">
                             Máx 100%
                         </mat-error>
                     </td>
@@ -212,7 +222,7 @@
                 </ng-container>
 
                 <ng-container matColumnDef="impuesto1">
-                    <th mat-header-cell *matHeaderCellDef>Imp. (IVA)</th>
+                    <th mat-header-cell *matHeaderCellDef>IVA</th>
                     <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
 
                         <select formControlName="objimpuesto1" class="input-tabla-select text-right"
@@ -268,7 +278,7 @@
                 </ng-container>
 
                 <ng-container matColumnDef="total">
-                    <th mat-header-cell *matHeaderCellDef>total</th>
+                    <th mat-header-cell *matHeaderCellDef>Total</th>
                     <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i">
                         <span>
                             {{ row.get('importeTotal')?.value | currency }}
@@ -282,10 +292,10 @@
 
                 <ng-container matColumnDef="markup">
                     <th mat-header-cell *matHeaderCellDef class="text-right">Markup (%)</th>
-                    <td mat-cell *matCellDef="let row" class="text-right">
-                        @if (row.get('porcMarkup')?.value != null) {
-                        {{ row.get('porcMarkup')?.value | number:'1.0-0' }}%
-                        }
+                    <td mat-cell *matCellDef="let row; let i = index" [formGroupName]="i" class="text-right">
+                        <input #inputMarkup matInput formControlName="porcMarkup" placeholder="0"
+                            class="text-right" (focus)="onFocusMarkup($event, row)"
+                            (blur)="onBlurMarkup($event, row)" />
                     </td>
                     <td mat-footer-cell *matFooterCellDef></td>
                 </ng-container>
@@ -297,10 +307,10 @@
                             class="text-right" (focus)="onFocusPrecioVenta($event, row)"
                             (blur)="onBlurPrecioVenta($event, row)" />
 
-                        <mat-error *ngIf="row.get('impPrecioVta')?.hasError('min')">
+                        <mat-error *ngIf="formDirective.submitted && row.get('impPrecioVta')?.hasError('min')">
                             No puede ser negativo.
                         </mat-error>
-                        <mat-error *ngIf="row.get('impPrecioVta')?.hasError('precioMenorAlCosto')">
+                        <mat-error *ngIf="formDirective.submitted && row.get('impPrecioVta')?.hasError('precioMenorAlCosto')">
                             No puede ser menor al costo.
                         </mat-error>
                     </td>

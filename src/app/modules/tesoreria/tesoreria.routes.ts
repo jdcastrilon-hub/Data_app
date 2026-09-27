@@ -16,9 +16,5 @@ export const TESORERIA_ROUTES: Routes = [
         path: 'bancos/edit/:id', loadComponent: () => import('./catalogos/bancos/form-banco/form-banco.component').then(m => m.FormBancoComponent), title: 'Editar banco',
         canActivate: [permisoGuard], data: { menuCodigo: 'TES_BANCO', accion: 'EDITAR' }
     },
-    {
-        path: 'confprestamo', loadComponent: () => import('./confprestamo/confprestamo.component').then(m => m.ConfPrestamoComponent), title: 'Configuración de Préstamos',
-        canActivate: [permisoGuard], data: { menuCodigo: 'TES_CONFPREST', accion: 'VER' }
-    },
     { path: 'monitortesoreria', loadComponent: () => import('./monitor/monitortesoreria.component').then(m => m.MonitortesoreriaComponent), title: 'Monitor de Tesorería' },
 ];

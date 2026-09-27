@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ConfPrestamo } from '../../models/Tesoreria/ConfPrestamo';
+import { ConfPrestamo } from '../../models/Prestamos/ConfPrestamo';
 
 interface ApiResponse<T = void> {
   status: 'success' | 'error';
@@ -15,7 +15,7 @@ interface ApiResponse<T = void> {
 })
 export class ConfprestamoService {
 
-  private url: string = `${environment.baseUrl}/tesoreria/confprestamo/`;
+  private url: string = `${environment.baseUrl}/prestamos/confprestamo/`;
 
   constructor(private http: HttpClient) { }
 

@@ -1,0 +1,236 @@
+<form [formGroup]="formulario" [class.en-modal]="enModal">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title class="titulo-con-boton">
+                <div class="titulo-izquierda">
+                    @if (!enModal) {
+                    <button mat-icon-button color="primary" type="button" routerLink="/prestamos">
+                        <mat-icon>list</mat-icon>
+                    </button>
+                    }
+                    <span>{{ titulo_form }}</span>
+                </div>
+                <div class="titulo-derecha">
+                    @if (isReadOnly) {
+                    <button mat-icon-button color="primary" type="button" (click)="verHistorialAuditoria()"
+                        title="Ver historial de auditoría">
+                        <mat-icon>info</mat-icon>
+                    </button>
+                    }
+                    @if (enModal) {
+                    <button mat-icon-button type="button" (click)="cerrarModal()" title="Cerrar">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                    }
+                </div>
+            </mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-content class="mat-content">
+        <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
+
+            <mat-tab label="General">
+
+            <div class="bloque" style="margin-top: 16px;">
+                <h3>Cliente y condiciones de préstamo</h3>
+                <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="10px grid">
+                    <div fxFlex="35" fxFlex.lt-md="100%">
+                        <combo-cliente formControlName="searchCliente" [editMode]="isReadOnly"
+                            (clienteSelecionado)="onClienteChange($event)"
+                            [mostrarError]="!!(formulario.get('idCliente')?.invalid && formulario.get('idCliente')?.touched)"></combo-cliente>
+                    </div>
+                    <div fxFlex="20" fxFlex.lt-md="100%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Fecha de desembolso</mat-label>
+                            <input matInput [matDatepicker]="pickerDesembolso" formControlName="fecDesembolso" required>
+                            <mat-datepicker-toggle matIconSuffix [for]="pickerDesembolso"></mat-datepicker-toggle>
+                            <mat-datepicker #pickerDesembolso></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="20" fxFlex.lt-md="100%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Fecha fin (calculada)</mat-label>
+                            <input matInput [value]="fecFinPreview ? (fecFinPreview | date:'dd/MM/yyyy') : ''" disabled>
+                        </mat-form-field>
+                    </div>
+                    @if (isReadOnly && objeto.idEstado) {
+                    <div fxFlex="15" fxFlex.lt-md="100%" class="campo-estado">
+                        <span class="status-badge" [ngClass]="objeto.idEstado === 'ACTIVO' ? 'active' : 'inactive'">
+                            {{ objeto.idEstado }}
+                        </span>
+                    </div>
+                    }
+                    <div fxFlex="100" class="salto-fila"></div>
+                    <div fxFlex="20" fxFlex.lt-md="50%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Capital</mat-label>
+                            <input matInput type="number" formControlName="capital" min="1" required>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="15" fxFlex.lt-md="50%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>N° cuotas</mat-label>
+                            <input matInput type="number" formControlName="numCuotas" min="1" max="99" required>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="15" fxFlex.lt-md="50%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Tasa % por período</mat-label>
+                            <input matInput type="number" formControlName="tasaPct" min="0" step="0.01" required>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="20" fxFlex.lt-md="50%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Valor cuota (calculado)</mat-label>
+                            <input matInput [value]="(objeto.valorCuota ?? valorCuotaPreview) | number:'1.2-2'" disabled>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="20" fxFlex.lt-md="50%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Periodicidad</mat-label>
+                            <mat-select formControlName="idPeriodicidad" required>
+                                @for (p of list_periodicidades; track p.id) {
+                                <mat-option [value]="p.id">{{ p.nombre }}</mat-option>
+                                }
+                            </mat-select>
+                            @if (list_periodicidades.length === 0) {
+                            <mat-hint class="alerta">Esta empresa no tiene periodicidades configuradas — ver Configuración de Préstamos.</mat-hint>
+                            }
+                        </mat-form-field>
+                    </div>
+                    @if (list_formulas.length > 1) {
+                    <div fxFlex="25" fxFlex.lt-md="50%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Fórmula de cálculo</mat-label>
+                            <mat-select formControlName="idFormula" required>
+                                @for (f of list_formulas; track f.id) {
+                                <mat-option [value]="f.id">{{ f.nombre }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    } @else if (list_formulas.length === 0) {
+                    <div fxFlex="25" fxFlex.lt-md="50%">
+                        <p class="alerta">Sin fórmulas configuradas — ver Configuración de Préstamos.</p>
+                    </div>
+                    }
+                    @if (list_monedas.length > 1) {
+                    <div fxFlex="15" fxFlex.lt-md="50%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Moneda</mat-label>
+                            <mat-select formControlName="idMoneda">
+                                @for (m of list_monedas; track m.id) {
+                                <mat-option [value]="m.id">{{ m.codigo }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <div class="bloque">
+                <h3>Salida de dinero</h3>
+                <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="10px grid">
+                    <div fxFlex="25" fxFlex.lt-md="100%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Medio de pago</mat-label>
+                            <mat-select formControlName="idMediopago" required>
+                                @for (mp of list_mediospago; track mp.id) {
+                                <mat-option [value]="mp.id">{{ mp.tipo }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    @if (medioPagoTieneBanco) {
+                    <div fxFlex="25" fxFlex.lt-md="100%" class="info-derivada">
+                        <mat-icon>account_balance</mat-icon>
+                        <span>Sale de: {{ medioPagoSeleccionado?.banco?.nomBanco }}</span>
+                    </div>
+                    } @else if (formulario.get('idMediopago')?.value) {
+                    <div fxFlex="25" fxFlex.lt-md="100%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline">
+                            <mat-label>Caja</mat-label>
+                            <mat-select formControlName="idCaja" required>
+                                @for (c of list_cajas; track c.idCaja) {
+                                <mat-option [value]="c.idCaja">{{ c.nomCaja }}</mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <div class="bloque">
+                <h3>Cobrador y observación</h3>
+                <div fxLayout="row wrap" fxLayoutAlign="start stretch" fxLayoutGap="10px grid">
+                    <div fxFlex="35" fxFlex.lt-md="100%">
+                        <combo-usuario formControlName="searchCobrador" [seleccionUnica]="true" [editMode]="isReadOnly"
+                            (usuarioSelecionado)="onCobradorChange($event)"></combo-usuario>
+                    </div>
+                    <div fxFlex="55" fxFlex.lt-md="100%">
+                        <mat-form-field class="form-field-compacto mat-form-field" appearance="outline" style="width: 100%;">
+                            <mat-label>Observación</mat-label>
+                            <input matInput formControlName="observacion">
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            </mat-tab>
+
+            <mat-tab label="Cuotas">
+                <div class="bloque bloque-tab">
+                    <h3>Cronograma de cuotas</h3>
+                    @if (objeto.cuotas && objeto.cuotas.length > 0) {
+                    <div class="table-scroll-container">
+                        <table mat-table [dataSource]="objeto.cuotas">
+                            <ng-container matColumnDef="numCuota">
+                                <th mat-header-cell *matHeaderCellDef>Cuota</th>
+                                <td mat-cell *matCellDef="let c">{{ c.numCuota }} / {{ objeto.numCuotas }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="fecVenc">
+                                <th mat-header-cell *matHeaderCellDef>Vence</th>
+                                <td mat-cell *matCellDef="let c">{{ c.fecVenc | date:'dd/MM/yyyy' }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="valorCuota">
+                                <th mat-header-cell *matHeaderCellDef class="text-right">Valor</th>
+                                <td mat-cell *matCellDef="let c" class="text-right">{{ c.valorCuota | number:'1.2-2' }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="saldoCuota">
+                                <th mat-header-cell *matHeaderCellDef class="text-right">Saldo</th>
+                                <td mat-cell *matCellDef="let c" class="text-right">{{ c.saldoCuota | number:'1.2-2' }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="idEstado">
+                                <th mat-header-cell *matHeaderCellDef>Estado</th>
+                                <td mat-cell *matCellDef="let c">{{ c.idEstado }}</td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="['numCuota','fecVenc','valorCuota','saldoCuota','idEstado']"></tr>
+                            <tr mat-row *matRowDef="let row; columns: ['numCuota','fecVenc','valorCuota','saldoCuota','idEstado'];"></tr>
+                        </table>
+                    </div>
+                    } @else {
+                    <p class="ayuda">El cronograma de cuotas se genera al guardar el préstamo.</p>
+                    }
+                </div>
+            </mat-tab>
+
+            <mat-tab label="Seguimientos">
+                <div class="bloque bloque-tab">
+                    <p class="ayuda">Próximamente.</p>
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+        </mat-card-content>
+
+        @if (!isReadOnly) {
+        <mat-card-actions class="mat-accion-botones">
+            <button mat-raised-button color="primary" type="button" [disabled]="guardando" (click)="guardar()">Guardar</button>
+            <button mat-raised-button color="warn" type="button" routerLink="/prestamos">Cancelar</button>
+        </mat-card-actions>
+        }
+    </mat-card>
+</form>

@@ -4,6 +4,7 @@ import { COMPRAS_ROUTES } from './modules/compras/compras.routes';
 import { COMERCIAL_ROUTES } from './modules/Comercial/comercial.routes';
 import { TESORERIA_ROUTES } from './modules/tesoreria/tesoreria.routes';
 import { ADMINISTRACION_ROUTES } from './modules/administracion/administracion.routes';
+import { PRESTAMOS_ROUTES } from './modules/prestamos/prestamos.routes';
 import { LoginComponent } from './core/login/login.component';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
 import { authGuard } from './core/guards/auth.guard';
@@ -27,6 +28,7 @@ export const routes: Routes = [
             ...COMERCIAL_ROUTES,
             ...TESORERIA_ROUTES,
             ...ADMINISTRACION_ROUTES,
+            ...PRESTAMOS_ROUTES,
             { path: 'login', component: LoginComponent, title: 'Iniciar sesión' },
             { path: 'no-autorizado', component: NoAutorizadoComponent, title: 'No autorizado' },
         ]

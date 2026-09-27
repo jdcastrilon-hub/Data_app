@@ -13,6 +13,7 @@ import { CompraDetalle } from '../../../../core/models/Compras/CompraDetalle';
 import { ArticuloSearch } from '../../../../core/models/Bodega/ArticuloSearch';
 import { ArticuloAutocompletComponent } from '../../../resources/articulo-autocomplet/articulo-autocomplet.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ComboProveedorComponent } from '../../../resources/combo-proveedor/combo-proveedor.component';
 import { combineLatest, startWith } from 'rxjs';
 import { CompraDisponible } from '../../../../core/interfaces/Compras/CompraDisponible';
@@ -39,7 +40,7 @@ import { ConfcomprasService } from 'src/app/core/services/Compras/confcompras.se
   standalone: true,
   imports: [modules_depencias, ReactiveFormsModule, FlexLayoutModule, FormsModule,
     RouterModule, MatDialogModule, ArticuloAutocompletComponent, MatDatepickerModule,
-    MatCheckboxModule, ComboProveedorComponent, ComboLoteComponent],
+    MatCheckboxModule, MatButtonToggleModule, ComboProveedorComponent, ComboLoteComponent],
   templateUrl: './form-compra-directa.component.html',
   styleUrl: './form-compra-directa.component.scss'
 })
@@ -58,7 +59,7 @@ export class FormCompraDirectaComponent {
   // Campos de cabecera agrupados por la pestaña donde viven, para poder saltar
   // automaticamente a la primera pestaña con un campo obligatorio faltante al guardar.
   private readonly camposPorPestana: string[][] = [
-    ['nroDocum', 'fecDoc', 'detalles'],   // Pestaña 0: Datos Generales
+    ['nroDocum', 'fecDoc', 'detalles', 'searchProveedor'],   // Pestaña 0: Datos Generales
     ['remito', 'observaciones'],          // Pestaña 1: Recepcion y Totales
   ];
 
@@ -67,7 +68,7 @@ export class FormCompraDirectaComponent {
   dataSource = new MatTableDataSource<FormGroup>();
   // Stock/Costo Anterior ya no son columnas propias: se muestran como etiqueta
   // debajo del nombre del articulo (ver celda "id" en el HTML).
-  todasLasColumnas: string[] = ['position', 'id', 'Lote', 'costo', 'cantidad', 'porc_dcto', 'impuesto1', 'neto', 'imp_dcto', 'imp1', 'total','markup','precioventa'];
+  todasLasColumnas: string[] = ['position', 'id', 'Lote', 'cantidad', 'costo', 'porc_dcto', 'impuesto1', 'neto', 'imp_dcto', 'imp1', 'total','markup','precioventa'];
   displayedColumns: string[] = [];
 
   // No existe un flag de "la empresa maneja lotes": se deriva de si al menos
@@ -106,12 +107,21 @@ export class FormCompraDirectaComponent {
   // Capturamos la referencia del formulario del HTML
   @ViewChild('formDirective') formDirective!: NgForm;
 
+  // combo-proveedor tiene su propio FormControl interno (ControlValueAccessor),
+  // separado del "searchProveedor" de este formulario - formulario.markAllAsTouched()
+  // no lo alcanza. Se le avisa directo (ver enviarFormulario) para que muestre
+  // su propio error visual.
+  @ViewChild(ComboProveedorComponent) comboProveedor!: ComboProveedorComponent;
+
   //Se refrencia el autoCompletar de articulos para cambiar de foco una vez se use.
   @ViewChildren('inputCosto') inputsCostos!: QueryList<ElementRef>;
 
   // Mismo mecanismo que "Costo": referencia a los inputs de "Precio Venta"
   // para aplicarles el formato visual ###.###.###,00 sin tocar el FormControl.
   @ViewChildren('inputPrecioVenta') inputsPrecioVenta!: QueryList<ElementRef>;
+
+  // Mismo mecanismo, aplicado a "Markup (%)" (ver onFocusMarkup/onBlurMarkup).
+  @ViewChildren('inputMarkup') inputsMarkup!: QueryList<ElementRef>;
 
   // Capturamos todos los triggers de la tabla
   @ViewChildren(ArticuloAutocompletComponent) articulosComps!: QueryList<ArticuloAutocompletComponent>;
@@ -160,7 +170,7 @@ export class FormCompraDirectaComponent {
       impNeto: this.objeto.impNeto,
       impDescuento: this.objeto.impDescuento,
       impTotal: this.objeto.impTotal,
-      observaciones: [this.objeto.observaciones, Validators.required],
+      observaciones: [this.objeto.observaciones],
       impuesto1: this.objeto.impuesto1,
       valorImpuesto1: this.objeto.valorImpuesto1,
       impuesto2: this.objeto.impuesto2,
@@ -170,13 +180,38 @@ export class FormCompraDirectaComponent {
       documento: this.objeto.documento,
       vista: this.objeto.vista,
       fechaMod: this.objeto.fechaMod,
+      // Solo indica como se digita el costo en ESTA compra (neto o con IVA
+      // incluido) - td_compras.costo_unit de cada linea sigue siendo siempre
+      // neto, esto no lo cambia. Ver cargarEstadoPorDefecto/agregarLineaVacia.
+      costoIncluyeIva: [this.objeto.costoIncluyeIva || false],
       detalles: this.fb.array([]),
       nuevoCodigoBarra: this.fb.array([]),
       // Lotes pendientes (reservados, aun no existen en m_lotes) creados en esta
       // edicion via combo-lote. Se materializan solo si se guarda la compra.
       nuevosLotes: this.fb.array([]),
       logs: this.fb.array([]),
-      searchProveedor: proveedor_filtro
+      // proveedor_filtro (mas abajo) siempre es un objeto no-null con
+      // idProveedor:0 como sentinela de "sin elegir" - Validators.required
+      // nunca lo detectaria (un objeto no es "vacio" para Angular). Se valida
+      // el idProveedor del propio objeto en su lugar.
+      searchProveedor: [proveedor_filtro, this.validarProveedorSeleccionado]
+    });
+
+    // Cuando cambia el toggle de cabecera "Sin IVA"/"Con IVA", se recalcula
+    // como se MUESTRA el costo ya tecleado en cada linea (costoIngresado) -
+    // costoUnit (el neto real, ya calculado) no se toca para nada. emitEvent:
+    // false a proposito: si emitiera, dispararia la suscripcion inversa de
+    // cada linea (costoIngresado->costoUnit, ver agregarLineaVacia) y
+    // reinterpretaria el numero ya tecleado bajo el modo nuevo, pisando el
+    // costo neto real - justo lo que NO debe pasar al cambiar el toggle.
+    this.formulario.get('costoIncluyeIva')?.valueChanges.subscribe((incluyeIva) => {
+      this.detalles.controls.forEach(fila => {
+        const costoUnit = fila.get('costoUnit')?.value || 0;
+        const tasa = fila.get('objimpuesto1')?.value?.porcentaje || 0;
+        const costoMostrado = incluyeIva ? costoUnit * (1 + tasa / 100) : costoUnit;
+        fila.get('costoIngresado')?.setValue(costoMostrado, { emitEvent: false });
+      });
+      this.formatearCostosVisibles();
     });
 
     // No se usa [readonly] por input (a diferencia de otras CRUDs): esta grilla dinamica
@@ -287,6 +322,11 @@ export class FormCompraDirectaComponent {
         this.formulario.get('remito')?.patchValue(data.remito);
         this.formulario.get('idEstado')?.patchValue(data.idEstado);
         this.formulario.get('observaciones')?.patchValue(data.observaciones);
+        // emitEvent:false - a esta altura "detalles" todavia esta vacio (se
+        // llena mas abajo), no hay nada que redisplayar todavia; la suscripcion
+        // inversa (ver ngOnInit) es solo para cuando el usuario cambia el
+        // toggle DESPUES de que la grilla ya esta cargada.
+        this.formulario.get('costoIncluyeIva')?.patchValue(data.costoIncluyeIva || false, { emitEvent: false });
         this.formulario.get('detalles')?.patchValue(data.detalles);
 
         //Cargarmos status al controlador del combo
@@ -369,10 +409,33 @@ export class FormCompraDirectaComponent {
           // Esto activará automáticamente los .valueChanges y calculos
           const nuevoDetalle = this.crearDetalleForm(stockData, det.linea, articuloFiltro);
 
+          // costoIngresado (lo que se muestra/edita) se calcula UNA VEZ segun
+          // como se cargo esta compra (data.costoIncluyeIva, ya patcheado
+          // arriba) - costoUnit (det.costoUnit) sigue siendo siempre el neto
+          // real. Estas lineas cargadas via ModoEdicion no llevan la
+          // suscripcion reactiva de agregarLineaVacia, asi que este calculo es
+          // estatico, igual criterio que el resto de los campos de este patchValue.
+          const incluyeIva = this.formulario.get('costoIncluyeIva')?.value;
+          const tasaLinea = detalleImpuesto.porcentaje || 0;
+          const costoIngresadoInicial = incluyeIva
+            ? (det.costoUnit || 0) * (1 + tasaLinea / 100)
+            : (det.costoUnit || 0);
+
+          // Markup implicito de esta linea ya guardada (costo con IVA vs
+          // Precio Venta grabado) - solo para MOSTRARLO al abrir la compra, no
+          // viene resuelto por config aca (esta linea no pasa por
+          // onArticuloChange). null si no tiene Precio Venta (nada que mostrar).
+          const costoConIvaLinea = (det.costoUnit || 0) * (1 + tasaLinea / 100);
+          const porcMarkupInicial = det.impPrecioVta && costoConIvaLinea > 0
+            ? Math.round(((det.impPrecioVta / costoConIvaLinea) - 1) * 100 * 100) / 100
+            : null;
+
           // 4. Seteamos los valores específicos de la edición que no son 0
           nuevoDetalle.patchValue({
             costoUnit: det.costoUnit,
+            costoIngresado: costoIngresadoInicial,
             impPrecioVta: det.impPrecioVta || 0,
+            porcMarkup: porcMarkupInicial,
             cantidad: det.cantidad,
             costoTotal: det.costoTotal,
             importeTotal: det.importeTotal,
@@ -409,8 +472,19 @@ export class FormCompraDirectaComponent {
           this.agregarCodigoBarraAlArray(nuevoscodigosbarra, nuevoscodigos.linea);
         })
 
-        //5. Actualizar infomacion de stock y costos
-        this.actualizarStocksMasivo();
+        // 5. Actualizar informacion de stock y costos - SOLO si la compra sigue
+        // en Borrador. Una compra Finalizada ya impacto stock/costos de verdad
+        // (sp_compradirecta): el "stock"/"costanterior" que trae cada linea
+        // (det.stock/det.costanterior, ya cargados arriba en el paso 3) es el
+        // valor HISTORICO real con el que se hizo esa compra, y no debe
+        // pisarse con el stock/costo actual - eso es lo que pasaba antes (bug
+        // reportado: al ver/editar una compra ya realizada, la grilla mostraba
+        // el stock de HOY, no el de cuando se compro). Una compra en Borrador
+        // si conviene refrescarla, porque todavia no se ha decidido nada y el
+        // stock/costo pudo cambiar desde que se guardo el borrador.
+        if (data.status === 'B') {
+          this.actualizarStocksMasivo();
+        }
         //6. agregar linea vacia (solo si se puede seguir editando) y validar columnas a mostrar
         if (!this.isReadOnly) {
           this.agregarLineaVacia();
@@ -418,6 +492,7 @@ export class FormCompraDirectaComponent {
         this.ValidarColumnas();
         this.formatearCostosVisibles();
         this.formatearPrecioVentaVisibles();
+        this.formatearMarkupVisibles();
 
         if (this.isReadOnly) {
           this.formulario.disable();
@@ -611,22 +686,85 @@ export class FormCompraDirectaComponent {
     // Suscribir los cambios que puede tomar los campos de cantidad y costo
     // Obtenemos referencias a los controles específicos
     const costoCtrl = nuevoDetalle.get('costoUnit');
+    const costoIngresadoCtrl = nuevoDetalle.get('costoIngresado');
     const cantidadCtrl = nuevoDetalle.get('cantidad');
     const impuesto1Ctrl = nuevoDetalle.get('objimpuesto1');
     const dctoCtrl = nuevoDetalle.get('porc_dcto');
     const precioVentaCtrl = nuevoDetalle.get('impPrecioVta');
+    const porcMarkupCtrl = nuevoDetalle.get('porcMarkup');
 
-    // "Editado manualmente": cualquier cambio REAL en Precio Venta (el usuario
-    // escribiendo) marca la fila para siempre - a partir de ahi el
-    // auto-calculo de mas abajo deja de tocarla. No usamos "valor === 0" para
-    // esto: al escribir el costo digito por digito ("1","10","100"...) cada
-    // digito dispara una sugerencia > 0, y comparar contra 0 bloqueaba la
-    // sugerencia despues del primer digito (bug real reportado). El auto-
-    // calculo siempre escribe con emitEvent:false, asi que esta suscripcion
-    // nunca se dispara a si misma - solo capta la escritura real del usuario.
-    let precioVentaEditadoManualmente = false;
-    precioVentaCtrl?.valueChanges.subscribe(() => {
-      precioVentaEditadoManualmente = true;
+    // Deriva costoUnit (siempre neto) desde costoIngresado (lo que el usuario
+    // escribe) cada vez que ese valor cambia, o cambia el impuesto de la
+    // linea (la tasa usada para la conversion). A proposito NO reacciona al
+    // toggle "costoIncluyeIva" de cabecera - ese caso lo maneja la suscripcion
+    // global (ver ngOnInit), que va en el sentido inverso: si el usuario
+    // cambia el toggle a mitad de captura, lo que se recalcula es como se
+    // MUESTRA el costo ya tecleado, nunca el costo neto real ya calculado
+    // (evita que cambiar el toggle por error reinterprete numeros ya buenos).
+    if (costoIngresadoCtrl && impuesto1Ctrl) {
+      combineLatest([
+        costoIngresadoCtrl.valueChanges.pipe(startWith(costoIngresadoCtrl.value)),
+        impuesto1Ctrl.valueChanges.pipe(startWith(impuesto1Ctrl.value))
+      ]).subscribe(([costoIngresado, objimpuesto1]) => {
+        const incluyeIva = this.formulario.get('costoIncluyeIva')?.value;
+        const tasa = objimpuesto1?.porcentaje || 0;
+        const neto = incluyeIva ? (costoIngresado || 0) / (1 + tasa / 100) : (costoIngresado || 0);
+        costoCtrl?.setValue(neto, { emitEvent: true }); // emitEvent:true - dispara el calculo de Neto/Dcto/IVA/Total mas abajo
+      });
+    }
+
+    // Triangulo Costo(con IVA) <-> Markup(%) <-> Precio Venta: los 3 estan
+    // ligados por una sola formula (precioVenta = costoConIva*(1+markup/100)),
+    // asi que cualquiera de los 2 primeros que cambie recalcula el tercero,
+    // manteniendolos siempre consistentes entre si. Markup ya no es solo
+    // informativo (antes venia fijo desde onArticuloChange) - el usuario lo
+    // puede editar directamente, y editar Precio Venta a mano recalcula el
+    // markup implicito (en vez de "congelar" Precio Venta como antes). Todo
+    // cruce se escribe con emitEvent:false para no encadenarse en loop.
+
+    // A) Costo o Markup cambian -> recalcular Precio Venta.
+    if (costoCtrl && impuesto1Ctrl && porcMarkupCtrl && precioVentaCtrl) {
+      combineLatest([
+        costoCtrl.valueChanges.pipe(startWith(costoCtrl.value)),
+        impuesto1Ctrl.valueChanges.pipe(startWith(impuesto1Ctrl.value)),
+        porcMarkupCtrl.valueChanges.pipe(startWith(porcMarkupCtrl.value)),
+      ]).subscribe(([costo, objimpuesto1, porcMarkup]) => {
+        if (porcMarkup == null || porcMarkup === '') {
+          return;
+        }
+        // El markup se aplica sobre el costo CON IVA (no el neto): es el
+        // costo real que el usuario tiene disponible para vender, decision
+        // explicita del negocio - validarPrecioVenta (el piso "no menor al
+        // costo") sigue comparando contra el neto, eso no cambio.
+        const costoConIva = (costo || 0) * (1 + ((objimpuesto1?.porcentaje || 0) / 100));
+        const precioSugerido = costoConIva * (1 + (Number(porcMarkup) / 100));
+        precioVentaCtrl.setValue(Math.round(precioSugerido * 100) / 100, { emitEvent: false });
+        // setValue no formatea la vista (eso lo hace onBlur al escribir a
+        // mano) - como esto pasa mientras el usuario sigue escribiendo el
+        // costo o el markup (ese input no tiene el foco de Precio Venta), hay
+        // que refrescar el texto mostrado a mano.
+        if (this.mostrarPrecioVenta) {
+          this.formatearPrecioVentaVisibles();
+        }
+      });
+    }
+
+    // B) El usuario edita Precio Venta directamente -> recalcular el Markup
+    // implicito (para que quede consistente con lo que acaba de escribir, en
+    // vez de mostrar un % desactualizado). Se escribe con emitEvent:false, asi
+    // que no dispara de vuelta el punto A.
+    precioVentaCtrl?.valueChanges.subscribe((precioVenta) => {
+      const costo = costoCtrl?.value || 0;
+      const objimpuesto1 = impuesto1Ctrl?.value;
+      const costoConIva = (costo || 0) * (1 + ((objimpuesto1?.porcentaje || 0) / 100));
+      if (costoConIva <= 0) {
+        return;
+      }
+      const markupImplicito = ((precioVenta || 0) / costoConIva - 1) * 100;
+      porcMarkupCtrl?.setValue(Math.round(markupImplicito * 100) / 100, { emitEvent: false });
+      if (this.mostrarPrecioVenta) {
+        this.formatearMarkupVisibles();
+      }
     });
 
     //subcripcion para columna neto.
@@ -651,28 +789,9 @@ export class FormCompraDirectaComponent {
         nuevoDetalle.get('importeTotal')?.setValue((neto - imp_dcto + valorImpu1), { emitEvent: false });
         // El costo cambio: re-evaluar "Precio Venta" (validarPrecioVenta compara
         // contra costoUnit) sin esto quedaria validado contra un costo viejo.
+        // La sugerencia de Precio Venta a partir del Markup vive aparte (ver
+        // triangulo Costo<->Markup<->Precio Venta, arriba en este metodo).
         nuevoDetalle.get('impPrecioVta')?.updateValueAndValidity({ emitEvent: false });
-
-        // Sugerencia de Precio Venta (markup): "porcMarkup" ya viene resuelto
-        // desde onArticuloChange (jerarquia subcategoria->categoria->general,
-        // se busca una sola vez al elegir el articulo, ver ese metodo) - aca
-        // solo se aplica la formula cada vez que el costo cambia, porque
-        // normalmente se digita despues de elegir el articulo. Se actualiza en
-        // cada digito hasta que el usuario toque Precio Venta directamente
-        // (ver precioVentaEditadoManualmente arriba).
-        const porcMarkup = nuevoDetalle.get('porcMarkup')?.value;
-        if (porcMarkup != null && !precioVentaEditadoManualmente) {
-          const precioSugerido = (costo || 0) * (1 + (porcMarkup / 100));
-          precioVentaCtrl?.setValue(Math.round(precioSugerido * 100) / 100, { emitEvent: false });
-          // setValue no formatea la vista (eso lo hace onBlur al escribir a
-          // mano) - como esto pasa mientras el usuario sigue escribiendo el
-          // costo (el campo Precio Venta no tiene el foco), hay que refrescar
-          // el texto mostrado a mano.
-          if (this.mostrarPrecioVenta) {
-            this.formatearPrecioVentaVisibles();
-          }
-        }
-
       });
     }
     // añadir al FormGroup general
@@ -695,7 +814,22 @@ export class FormCompraDirectaComponent {
       idCodBarra: [data.idCodBarra, Validators.required],
       refCompras: [data.nomArticulo],
       costanterior: 0,
-      costoUnit: [0, [Validators.required, Validators.min(0)]],
+      // costoUnit SIEMPRE es el costo NETO (sin IVA) - lo que ya usan
+      // p_costos, el promedio ponderado, el markup y validarPrecioVenta. Es un
+      // valor DERIVADO: se recalcula solo, a partir de "costoIngresado" (ver
+      // agregarLineaVacia) - por eso ya no lleva validadores propios, esos se
+      // movieron a costoIngresado, que es el campo que el usuario si edita.
+      costoUnit: [0],
+      // Lo que el usuario realmente escribe en la celda "Costo" - su
+      // significado depende de formulario.costoIncluyeIva (el toggle de
+      // cabecera "Sin IVA"/"Con IVA"): si esta en "Sin IVA" es identico a
+      // costoUnit; si esta en "Con IVA" es el costo con impuesto incluido tal
+      // como viene en la factura fisica, y se convierte a neto para poblar
+      // costoUnit. El mensaje ya decia "debe ser mayor a 0" pero
+      // Validators.min(0) permite exactamente 0 (solo bloquea negativos) -
+      // bug real reportado, una compra con costo 0 se guardaba sin error.
+      // validarMayorACero exige > 0 solo si la fila ya tiene articulo.
+      costoIngresado: [0, [Validators.required, this.validarMayorACero]],
       // Precio de venta (opcional): 0 = "sin precio para esta linea", valido.
       // Si es > 0, no puede ser menor al costo de la misma linea (ver
       // validarPrecioVenta) - la columna solo se muestra si mostrarPrecioVenta
@@ -706,8 +840,16 @@ export class FormCompraDirectaComponent {
       // onArticuloChange y se usa para sugerir "Precio Venta" cada vez que el
       // costo cambia (ver la suscripcion en agregarLineaVacia).
       porcMarkup: [null],
-      cantidad: [0, [Validators.required, Validators.min(0)]],
-      porc_dcto: [0, [Validators.required, Validators.min(0)]],
+      // Misma razon que costoUnit - una cantidad de 0 unidades no es una
+      // compra real, pero solo aplica una vez que la fila tiene articulo.
+      cantidad: [0, [Validators.required, this.validarMayorACero]],
+      // Sin Validators.required a proposito: el descuento es opcional (0 = sin
+      // descuento). Antes exigia un valor y, si el usuario lo dejaba en
+      // blanco, el formulario quedaba invalido sin mostrar ningun mensaje
+      // (bug real reportado - "internamente genera error pero el usuario no
+      // se entera"). Ahora un campo vacio simplemente se trata como 0 (ver
+      // enviarFormulario, que lo normaliza antes de enviar al backend).
+      porc_dcto: [0, [Validators.min(0)]],
       imp_dcto: 0,
       idLote: [0, this.validarLoteRequerido],
       // Solo indica si la celda "Lote" debe mostrar el combo (no se envia al backend, ver enviarFormulario)
@@ -769,6 +911,36 @@ export class FormCompraDirectaComponent {
       return null;
     }
     return Number(control.value) > 0 ? null : { loteRequerido: true };
+  };
+
+  /**
+   * Validador: debe haber un proveedor real seleccionado. El valor de
+   * searchProveedor siempre es un objeto (nunca null), con idProveedor:0 como
+   * sentinela de "todavia sin elegir" - Validators.required no serviria aca
+   * porque un objeto nunca es "vacio" para Angular.
+   */
+  validarProveedorSeleccionado = (control: AbstractControl): ValidationErrors | null => {
+    const valor = control.value;
+    return valor && valor.idProveedor ? null : { proveedorRequerido: true };
+  };
+
+  /**
+   * Validador: Costo/Cantidad deben ser > 0, pero SOLO una vez que la fila
+   * tiene un articulo real seleccionado (idArticulo != 0). Sin esta condicion,
+   * la fila vacia que siempre queda al final de la grilla (para seguir
+   * agregando articulos, idArticulo=0) quedaria invalida para siempre y
+   * bloquearia el guardado de TODA la compra, sin importar si el resto de
+   * filas esta bien. Se llama con updateValueAndValidity() apenas se elige un
+   * articulo (ver onArticuloChange), porque Angular no revalida un control
+   * solo porque un hermano (idArticulo) cambio de valor.
+   */
+  validarMayorACero = (control: AbstractControl): ValidationErrors | null => {
+    const fila = control.parent;
+    const idArticulo = fila?.get('idArticulo')?.value;
+    if (!idArticulo) {
+      return null;
+    }
+    return Number(control.value) > 0 ? null : { mayorACero: true };
   };
 
   /**
@@ -860,6 +1032,15 @@ export class FormCompraDirectaComponent {
               porcMarkup: stockData.porc_utilidad ?? null
             });
             fila.get('idLote')?.updateValueAndValidity();
+            // idArticulo acaba de pasar de 0 a un valor real - costoIngresado
+            // (el campo que el usuario edita, con validarMayorACero) y
+            // cantidad dependen de idArticulo (un hermano), y Angular no
+            // revalida un control solo porque un hermano cambio de valor. Sin
+            // esto, una fila recien elegida con costo/cantidad todavia en 0
+            // se seguiria viendo "valida" hasta que el usuario tocara alguno
+            // de esos dos campos a mano.
+            fila.get('costoIngresado')?.updateValueAndValidity();
+            fila.get('cantidad')?.updateValueAndValidity();
             // El costo aun no se ha digitado en este punto (costoUnit sigue en
             // su valor por defecto) - la sugerencia de Precio Venta se aplica
             // sola cuando el usuario lo escriba (ver suscripcion en
@@ -1071,27 +1252,33 @@ export class FormCompraDirectaComponent {
 
   // Al enfocar "Costo" se muestra el numero crudo (sin separadores), para que
   // sea facil de editar - el formato bonito solo aplica mientras no se escribe.
+  // Opera sobre "costoIngresado" (lo que el usuario ve/escribe), no sobre
+  // costoUnit (el neto real, derivado - ver agregarLineaVacia).
   onFocusCosto(event: FocusEvent, row: AbstractControl): void {
-    const valorCrudo = row.get('costoUnit')?.value;
-    (event.target as HTMLInputElement).value = valorCrudo != null ? String(valorCrudo) : '';
+    const input = event.target as HTMLInputElement;
+    const valorCrudo = row.get('costoIngresado')?.value;
+    input.value = valorCrudo != null ? String(valorCrudo) : '';
+    // Selecciona todo el texto para que escribir reemplace el valor en vez de
+    // insertarse antes/despues del "0" que ya esta ahi.
+    input.select();
   }
 
-  // Al perder el foco se formatea lo que se ve - el FormControl (costoUnit)
-  // no cambia, sigue con el numero crudo que ya usan los calculos de la fila.
+  // Al perder el foco se formatea lo que se ve - el FormControl (costoIngresado)
+  // no cambia, sigue con el numero crudo que dispara la conversion a costoUnit.
   onBlurCosto(event: FocusEvent, row: AbstractControl): void {
-    const valorCrudo = row.get('costoUnit')?.value;
+    const valorCrudo = row.get('costoIngresado')?.value;
     (event.target as HTMLInputElement).value = this.formatearCosto(valorCrudo);
   }
 
   // Aplica el formato visual a los "Costo" ya cargados (ej. al entrar en modo
-  // edicion) - sin esto, un valor que el usuario nunca toco se ve crudo hasta
-  // el primer foco/blur.
+  // edicion, o al cambiar el toggle "Sin IVA"/"Con IVA") - sin esto, un valor
+  // que el usuario nunca toco se ve crudo hasta el primer foco/blur.
   private formatearCostosVisibles(): void {
     setTimeout(() => {
       this.inputsCostos.toArray().forEach((inputRef, index) => {
         const fila = this.detalles.at(index);
         if (fila) {
-          inputRef.nativeElement.value = this.formatearCosto(fila.get('costoUnit')?.value);
+          inputRef.nativeElement.value = this.formatearCosto(fila.get('costoIngresado')?.value);
         }
       });
     }, 150);
@@ -1099,8 +1286,34 @@ export class FormCompraDirectaComponent {
 
   // Mismo mecanismo que "Costo" (ver arriba), aplicado a "Precio Venta".
   onFocusPrecioVenta(event: FocusEvent, row: AbstractControl): void {
+    const input = event.target as HTMLInputElement;
     const valorCrudo = row.get('impPrecioVta')?.value;
-    (event.target as HTMLInputElement).value = valorCrudo != null ? String(valorCrudo) : '';
+    input.value = valorCrudo != null ? String(valorCrudo) : '';
+    input.select();
+  }
+
+  // Handler generico para campos numericos simples de la grilla (Cantidad,
+  // (%) Dcto) que no tienen formato especial de miles/decimales - solo
+  // selecciona todo el texto al enfocar, para que escribir reemplace el valor
+  // en vez de insertarse antes/despues del "0" (input.select() funciona igual
+  // en inputs type="number" que en los de texto plano).
+  seleccionarTexto(event: FocusEvent): void {
+    (event.target as HTMLInputElement).select();
+  }
+
+  // El descuento es opcional (0 = sin descuento, ver crearDetalleForm - no
+  // tiene Validators.required a proposito). En vez de mostrarle un error al
+  // usuario por dejarlo en blanco, se normaliza solo a 0 al perder el foco -
+  // mas simple y directo que agregar mensajes de error para un campo que ni
+  // siquiera es obligatorio.
+  onBlurDcto(row: AbstractControl): void {
+    const ctrl = row.get('porc_dcto');
+    if (!ctrl) {
+      return;
+    }
+    if (ctrl.value === null || ctrl.value === undefined || ctrl.value === '') {
+      ctrl.setValue(0);
+    }
   }
 
   onBlurPrecioVenta(event: FocusEvent, row: AbstractControl): void {
@@ -1118,6 +1331,35 @@ export class FormCompraDirectaComponent {
         const fila = this.detalles.at(index);
         if (fila) {
           inputRef.nativeElement.value = this.formatearCosto(fila.get('impPrecioVta')?.value);
+        }
+      });
+    }, 150);
+  }
+
+  // Mismo mecanismo que "Costo"/"Precio Venta", aplicado a "Markup (%)": ya no
+  // es solo informativo, el usuario lo puede editar (ver el triangulo
+  // Costo<->Markup<->Precio Venta en agregarLineaVacia).
+  onFocusMarkup(event: FocusEvent, row: AbstractControl): void {
+    const input = event.target as HTMLInputElement;
+    const valorCrudo = row.get('porcMarkup')?.value;
+    input.value = valorCrudo != null ? String(valorCrudo) : '';
+    input.select();
+  }
+
+  onBlurMarkup(event: FocusEvent, row: AbstractControl): void {
+    const valorCrudo = row.get('porcMarkup')?.value;
+    (event.target as HTMLInputElement).value = this.formatearCosto(valorCrudo);
+  }
+
+  // Aplica el formato visual a "Markup (%)" cuando se recalcula desde el
+  // auto-calculo (el usuario edito Precio Venta a mano) y ese input no tiene
+  // el foco en ese momento - mismo criterio que formatearPrecioVentaVisibles.
+  private formatearMarkupVisibles(): void {
+    setTimeout(() => {
+      this.inputsMarkup?.toArray().forEach((inputRef, index) => {
+        const fila = this.detalles.at(index);
+        if (fila && fila.get('porcMarkup')?.value != null) {
+          inputRef.nativeElement.value = this.formatearCosto(fila.get('porcMarkup')?.value);
         }
       });
     }, 150);
@@ -1255,6 +1497,7 @@ export class FormCompraDirectaComponent {
 
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched(); // Para mostrar errores visualmente
+      this.comboProveedor?.marcarComoIntentado(); // Su FormControl interno queda fuera del arbol anterior
       this.irAPestanaConError();
       return; // Detiene la ejecución si el formulario no es válido
     }
@@ -1275,7 +1518,12 @@ export class FormCompraDirectaComponent {
       .filter((det: any) => det.idArticulo !== 0 && det.idArticulo !== null)
       .map((linea: any) => {
         // Desestructuración para quitar lo que no va al API
-        const { search, objimpuesto1, btoCrearCodBarra, porcMarkup, ...resto } = linea;
+        const { search, objimpuesto1, btoCrearCodBarra, porcMarkup, costoIngresado, ...resto } = linea;
+        // porc_dcto ya no es obligatorio en el formulario (ver crearDetalleForm) -
+        // si el usuario lo dejo en blanco, el control queda en null y el backend
+        // rechaza el guardado completo porque su schema no acepta null. Se
+        // normaliza aca, en el unico lugar donde se arma el payload real.
+        resto.porc_dcto = resto.porc_dcto ?? 0;
         return resto;
       });
 
@@ -1354,6 +1602,13 @@ export class FormCompraDirectaComponent {
     //actualizo referencias
     this.formulario.get('idBodega')?.patchValue(idBodega);
     this.formulario.get('idEstado')?.patchValue(idEstado);
+
+    // formDirective.resetForm() solo resetea el "searchProveedor" externo -
+    // el FormControl interno de combo-proveedor (deshabilitado en onSelected()
+    // al elegir un proveedor) es un objeto aparte, invisible para el reset del
+    // formulario padre. Sin esto, tras guardar una compra el campo Proveedor
+    // quedaba bloqueado para siempre (bug real reportado).
+    this.comboProveedor?.resetCampo();
   }
 
 

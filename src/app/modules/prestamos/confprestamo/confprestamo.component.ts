@@ -2,13 +2,13 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { modules_depencias } from '../../dependencias/modules_depencias.module';
-import { ConfPrestamo } from 'src/app/core/models/Tesoreria/ConfPrestamo';
-import { ConfprestamoService } from 'src/app/core/services/Tesoreria/confprestamo.service';
+import { ConfPrestamo } from 'src/app/core/models/Prestamos/ConfPrestamo';
+import { ConfprestamoService } from 'src/app/core/services/Prestamos/confprestamo.service';
 import { NotificacionesService } from 'src/app/core/services/core/notificaciones.service';
 import { PermisosStateService } from 'src/app/core/services/core/permisos-state.service';
 
 // Codigo del formulario en md_menu (matriz de permisos)
-const MENU_CODIGO = 'TES_CONFPREST';
+const MENU_CODIGO = 'PRE_CONFPREST';
 
 @Component({
   selector: 'app-confprestamo',
@@ -26,7 +26,7 @@ export class ConfPrestamoComponent {
   formulasSel = new Set<number>();
 
   guardando = false;
-  // Segun el permiso del rol sobre TES_CONFPREST - deshabilita Guardar si no
+  // Segun el permiso del rol sobre PRE_CONFPREST - deshabilita Guardar si no
   // lo tiene (igual rebotaria con 403 en el backend).
   puedeEditar = false;
 

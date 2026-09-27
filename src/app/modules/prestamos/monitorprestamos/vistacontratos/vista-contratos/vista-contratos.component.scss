@@ -1,0 +1,27 @@
+.mat-column-position {
+  width: 50px;
+  text-align: center;
+}
+
+.mat-column-acciones {
+  width: 96px;
+  white-space: nowrap;
+}
+
+// El panel de mat-menu se renderiza en un overlay fuera del componente,
+// por eso se necesita ::ng-deep para poder darle estilo.
+::ng-deep .menu-columnas {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 16px;
+}
+
+.saldo {
+  font-weight: 500;
+}
+
+// Mismo arreglo que monitorcompras: fuerza fondo transparente en el icon-button
+// de accion por fila (evita el recuadro gris ya visto en esas grillas).
+.btn-accion {
+  background: transparent !important;
+}

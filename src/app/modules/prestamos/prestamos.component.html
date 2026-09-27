@@ -1,0 +1,71 @@
+<main class="contenido">
+    <mat-card appearance="raised">
+        <mat-card-header class="mat-header">
+            <mat-card-title>PRÉSTAMOS A CLIENTES</mat-card-title>
+        </mat-card-header>
+        <div style="height: 1px; background-color: rgb(201, 199, 199); margin: 1px 0;"></div>
+
+        <mat-card-actions class="mat-accion" style="display: flex; align-items: center;">
+            @if (puedeCrear) {
+            <button mat-raised-button color="primary" routerLink="/prestamos/new">Nuevo</button>
+            }
+            <div style="flex: 1; display: flex; justify-content: center;">
+                <mat-form-field class="form-field-compacto" appearance="outline"
+                    style="width: 320px; margin-bottom: -1.25em;">
+                    <mat-label>Buscar por documento o cliente</mat-label>
+                    <input matInput [formControl]="buscadorControl" placeholder="Ej: 1, Pedro">
+                    <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+            </div>
+        </mat-card-actions>
+        <mat-card-content class="mat-content">
+            <div class="table-scroll-container">
+                <table mat-table [dataSource]="dataSource">
+                    <ng-container matColumnDef="nroDocum">
+                        <th mat-header-cell *matHeaderCellDef>Documento</th>
+                        <td mat-cell *matCellDef="let element">PRESTAMO-{{ element.nroDocum }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="cliente">
+                        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+                        <td mat-cell *matCellDef="let element">{{ element.clienteNombre }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="fecDesembolso">
+                        <th mat-header-cell *matHeaderCellDef>Desembolso</th>
+                        <td mat-cell *matCellDef="let element">{{ element.fecDesembolso | date: 'dd/MM/yyyy' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="capital">
+                        <th mat-header-cell *matHeaderCellDef class="text-right">Capital</th>
+                        <td mat-cell *matCellDef="let element" class="text-right">{{ element.capital | number: '1.0-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="valorCuota">
+                        <th mat-header-cell *matHeaderCellDef class="text-right">Valor cuota</th>
+                        <td mat-cell *matCellDef="let element" class="text-right">{{ element.valorCuota | number: '1.0-2' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="estado">
+                        <th mat-header-cell *matHeaderCellDef>Estado</th>
+                        <td mat-cell *matCellDef="let element">
+                            <span class="status-badge" [ngClass]="element.idEstado === 'ACTIVO' ? 'active' : 'inactive'">
+                                {{ element.idEstado }}
+                            </span>
+                        </td>
+                    </ng-container>
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                        <td mat-cell *matCellDef="let element">
+                            <button mat-icon-button (click)="visualizarPrestamo(element.idTrans)"
+                                matTooltip="Visualizar" matTooltipPosition="above">
+                                <mat-icon>description</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="Columnas"></tr>
+                    <tr mat-row *matRowDef="let row; columns: Columnas;"></tr>
+
+                </table>
+            </div>
+            <mat-paginator [length]="totalRegistros" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+                [pageIndex]="paginaActual" (page)="cambiarPagina($event)" showFirstLastButtons></mat-paginator>
+        </mat-card-content>
+    </mat-card>
+</main>

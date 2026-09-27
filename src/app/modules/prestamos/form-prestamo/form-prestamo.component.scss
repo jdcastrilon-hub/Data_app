@@ -1,0 +1,159 @@
+:host {
+  display: block;
+  background-color: #e2e2e2;
+  padding: 8px;
+}
+
+.titulo-con-boton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.titulo-izquierda {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.titulo-derecha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.campo-estado {
+  display: flex;
+  align-items: center;
+}
+
+.bloque {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    color: #333;
+  }
+}
+
+// Igual que .bloque, pero con espacio arriba porque va justo debajo de la
+// barra de tabs (fuera de un tab, el primer .bloque ya tenia ese aire por
+// venir despues del titulo de la tarjeta).
+.bloque-tab {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px;
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    color: #333;
+  }
+}
+
+.ayuda {
+  font-size: 12px;
+  color: #777;
+  margin: 0;
+}
+
+// Fuerza el salto a la siguiente fila del fxLayout="row wrap" (un elemento a
+// 100% de ancho ocupa la fila completa) - sin esto, Capital cabria en la
+// primera fila junto a Cliente/Fechas por sobrar espacio horizontal.
+.salto-fila {
+  flex-basis: 100%;
+  height: 0;
+}
+
+.etiqueta-tipo {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.info-derivada {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  color: #444;
+  font-size: 14px;
+
+  mat-icon {
+    color: #777;
+  }
+}
+
+.alerta {
+  font-size: 12px;
+  color: #b26a00;
+}
+
+.table-scroll-container {
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }
+
+  &.inactive {
+    background-color: #eeeeee;
+    color: #616161;
+    border: 1px solid #e0e0e0;
+  }
+}
+
+.mat-accion-botones {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px 16px 16px;
+}
+
+// Abierto como modal (ej. desde el Monitor de Prestamos): el dialogo tiene alto
+// fijo, asi que la tarjeta ocupa todo ese alto y solo el contenido (pestanas)
+// hace scroll - el encabezado con el titulo y la X queda siempre visible, y el
+// tamano no salta al cambiar de pestana.
+:host:has(form.en-modal) {
+  height: 100%;
+  padding: 0;
+  background-color: transparent;
+}
+
+form.en-modal {
+  height: 100%;
+
+  > mat-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: none;
+  }
+
+  .mat-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+}

@@ -1,0 +1,31 @@
+<main class="contenido">
+  <mat-card appearance="raised" class="monitor-card">
+
+    <mat-card-header class="mat-header">
+      <mat-card-title>MONITOR DE PRÉSTAMOS</mat-card-title>
+
+      <span class="spacer"></span>
+      <mat-form-field appearance="outline" class="select-inline">
+        <mat-label>Tipo de Informe</mat-label>
+        <mat-select [(value)]="reporteSeleccionado">
+          <mat-option value="contratos">📄 Contratos</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card-header>
+
+    <div class="divider"></div>
+    <mat-card-content class="mat-content">
+      <div class="kpi-grid">
+        @for (kpi of kpisData; track kpi.titulo) {
+        <kpiprestamos [titulo]="kpi.titulo" [valor]="kpi.valor" [icono]="kpi.icono" [color]="kpi.color"></kpiprestamos>
+        }
+      </div>
+
+      @if (reporteSeleccionado === 'contratos') {
+      <filtroscontratos (alConsultar)="consultarContratos($event)"></filtroscontratos>
+      <vista-contratos [datos]="lista_contratos" [totalRegistros]="totalRegistros" [pageSize]="pageSize"
+        [filtrosActuales]="filtrosActuales" (paginacion)="paginacionContratos($event)"></vista-contratos>
+      }
+    </mat-card-content>
+  </mat-card>
+</main>

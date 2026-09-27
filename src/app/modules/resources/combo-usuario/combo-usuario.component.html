@@ -4,7 +4,7 @@
         [matAutocomplete]="autoUsuario">
 
     @if (searchControl.value) {
-    <button mat-icon-button matSuffix (click)="limpiarBusqueda($event)" type="button">
+    <button mat-icon-button matSuffix (click)="limpiarBusqueda($event)" type="button" [disabled]="editMode()">
         <mat-icon>close</mat-icon>
     </button>
     }
